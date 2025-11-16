@@ -187,6 +187,14 @@ export class LocalSoundscapeView extends ItemView {
 			})
 		);
 
+		// Do the rest asynchronously to avoid blocking the view from opening
+		void this.initializeViewAsync();
+	}
+
+	/**
+	 * Complete view initialization asynchronously (called from onOpen)
+	 */
+	private async initializeViewAsync(): Promise<void> {
 		// Wait for the workspace leaf to have dimensions before proceeding
 		// The leaf container needs to be sized before our flex layout can work
 		await this.waitForLeafReady();

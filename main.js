@@ -157,7 +157,6 @@ var init_logging = __esm({
         return LOG_LEVELS[_LoggerFactory.logLevel];
       }
       // For future configuration
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Config structure varies by environment
       initialize(config) {
         if (config && config.logLevel) {
           void _LoggerFactory.setLogLevel(config.logLevel);
@@ -3458,7 +3457,7 @@ function createObsidianToggle(container, initialValue, onChange, options) {
           void checkboxContainer.removeClass("is-enabled");
         }
         logger3.debug("ui", "Calling onChange callback", { checkboxId });
-        await onChange(newValue);
+        onChange(newValue);
         logger3.debug("ui", "Checkbox onChange callback completed", { checkboxId, newValue });
       } catch (error) {
         logger3.error("ui", "Error in checkbox change handler", { checkboxId, error });
@@ -4077,7 +4076,6 @@ var init_material_components = __esm({
       constructor(options) {
         this.container = this.createButton(options);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Component options support heterogeneous value types
       createButton(options) {
         const button = document.createElement("button");
         button.className = `ospcc-button ospcc-button--${options.variant || "filled"} ${options.className || ""}`;
@@ -10417,9 +10415,7 @@ var init_GraphDemoModal = __esm({
     GraphDemoModal = class extends import_obsidian3.Modal {
       constructor(app) {
         super(app);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         this.svg = null;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         this.simulation = null;
         this.nodes = [];
         this.links = [];
@@ -10430,7 +10426,7 @@ var init_GraphDemoModal = __esm({
       onOpen() {
         const { contentEl } = this;
         void contentEl.empty();
-        contentEl.createEl("h2", { text: "D3-Force Animation Demo" });
+        contentEl.createEl("h2", { text: "D3-force animation demo" });
         contentEl.createEl("p", { text: "A simple demonstration of temporal graph animation" });
         const graphContainer = contentEl.createDiv("sonigraph-demo-container");
         void this.createSampleData();
@@ -10543,18 +10539,18 @@ var init_GraphDemoModal = __esm({
       }
       addControls(container) {
         const controlsContainer = container.createDiv("sonigraph-demo-controls");
-        const restartBtn = controlsContainer.createEl("button", { text: "Restart Animation" });
+        const restartBtn = controlsContainer.createEl("button", { text: "Restart animation" });
         restartBtn.classList.add("mod-cta");
         restartBtn.onclick = () => {
           if (this.simulation) {
             this.simulation.alpha(1).restart();
           }
         };
-        const temporalBtn = controlsContainer.createEl("button", { text: "Show Temporal Animation" });
+        const temporalBtn = controlsContainer.createEl("button", { text: "Show temporal animation" });
         temporalBtn.onclick = () => this.startTemporalAnimation();
-        const labelsBtn = controlsContainer.createEl("button", { text: "Toggle Labels" });
+        const labelsBtn = controlsContainer.createEl("button", { text: "Toggle labels" });
         labelsBtn.onclick = () => this.toggleLabels();
-        const resetBtn = controlsContainer.createEl("button", { text: "Reset View" });
+        const resetBtn = controlsContainer.createEl("button", { text: "Reset view" });
         resetBtn.onclick = () => this.resetView();
         const infoText = controlsContainer.createDiv("info-text");
         infoText.appendText("Blue = Notes, Orange = Images");
@@ -13344,7 +13340,6 @@ var init_GraphRenderer = __esm({
       /**
        * Generate consistent link ID for D3.js data binding
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js link data can be node objects or node IDs
       getLinkId(link, index2) {
         const sourceId = typeof link.source === "string" ? link.source : link.source.id;
         const targetId = typeof link.target === "string" ? link.target : link.target.id;
@@ -13360,7 +13355,6 @@ var init_GraphRenderer = __esm({
       /**
        * Get offset position for path-based grouping
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Folder groups have varying structures from graph analysis
       getPathBasedOffset(filePath, groups) {
         const radius = 100;
         for (let i = 0; i < groups.length; i++) {
@@ -13736,7 +13730,7 @@ var init_GraphRenderer = __esm({
           linkCount: this.links.length
         });
         try {
-          this.clusteringResult = await this.smartClustering.clusterGraph(this.nodes, this.links);
+          this.clusteringResult = this.smartClustering.clusterGraph(this.nodes, this.links);
           logger11.debug("smart-clustering", "Clustering completed", {
             clusterCount: this.clusteringResult.clusters.length,
             coverage: this.clusteringResult.coverage,
@@ -13782,7 +13776,6 @@ var init_GraphRenderer = __esm({
       /**
        * Render temporal positioning zones
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and zone data have dynamic structures
       renderTemporalZones(debugGroup, zones) {
         const zoneSelection = debugGroup.selectAll(".temporal-zone").data(zones, (d) => d.name);
         const zoneEnter = zoneSelection.enter().append("circle").attr("class", "temporal-zone").attr("fill", "none").attr("stroke-dasharray", "5,5").attr("stroke-opacity", 0.3).attr("stroke-width", 2);
@@ -13818,7 +13811,6 @@ var init_GraphRenderer = __esm({
       /**
        * Render tag connection links
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and connection data have dynamic structures
       renderTagConnections(debugGroup, connections) {
         const connectionSelection = debugGroup.selectAll(".tag-connection").data(connections, (d) => `${d.sourceId}-${d.targetId}`);
         const connectionEnter = connectionSelection.enter().append("line").attr("class", "tag-connection").attr("stroke", "#f59e0b").attr("stroke-opacity", 0.4).attr("stroke-dasharray", "3,3");
@@ -13840,7 +13832,6 @@ var init_GraphRenderer = __esm({
       /**
        * Render hub node indicators
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and hub data have dynamic structures
       renderHubIndicators(debugGroup, hubs) {
         const hubSelection = debugGroup.selectAll(".hub-indicator").data(hubs, (d) => d.nodeId);
         const hubEnter = hubSelection.enter().append("circle").attr("class", "hub-indicator").attr("fill", "none").attr("stroke", "#ef4444").attr("stroke-opacity", 0.6).attr("stroke-width", 3);
@@ -14062,7 +14053,6 @@ var init_GraphRenderer = __esm({
       /**
        * Check if a node has valid coordinates (not NaN or undefined)
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Node can be GraphNode or D3 simulation node with partial data
       hasValidCoordinates(node) {
         return node && typeof node.x === "number" && typeof node.y === "number" && !isNaN(node.x) && !isNaN(node.y) && isFinite(node.x) && isFinite(node.y);
       }
@@ -14097,7 +14087,6 @@ var init_GraphRenderer = __esm({
       /**
        * Check if a node is within the viewport bounds
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Node can be GraphNode or D3 simulation node with partial data
       isNodeInViewport(node, bounds) {
         if (!this.hasValidCoordinates(node)) {
           return false;
@@ -16190,7 +16179,7 @@ var init_client = __esm({
         const validated = [];
         const rejected = [];
         for (const sample of uniqueSamples) {
-          if (await this.validateSample(sample, query)) {
+          if (this.validateSample(sample, query)) {
             void validated.push(sample);
           } else {
             void rejected.push(sample);
@@ -16770,7 +16759,7 @@ var init_whale_audio_manager = __esm({
         if (!this.vault)
           return;
         try {
-          const cacheStats = await this.getCacheStats();
+          const cacheStats = this.getCacheStats();
           if (cacheStats.totalSizeGB > maxSizeGB) {
             logger19.info("cache-cleanup", "Starting cache cleanup", {
               currentSize: `${cacheStats.totalSizeGB.toFixed(2)}GB`,
@@ -17887,7 +17876,7 @@ var init_FreesoundSearchModal = __esm({
         });
         clearFiltersBtn.addEventListener("click", () => this.clearFilters());
         const filtersGrid = this.filtersSection.createDiv({ cls: "freesound-filters-grid" });
-        new import_obsidian11.Setting(filtersGrid).setName("License").setDesc("Filter by Creative Commons license").addDropdown(
+        new import_obsidian11.Setting(filtersGrid).setName("License").setDesc("Filter by creative commons license").addDropdown(
           (dropdown) => dropdown.addOption("any", "Any license").addOption("cc0", "CC0 (Public Domain)").addOption("cc-by", "CC BY (Attribution)").addOption("cc-by-sa", "CC BY-SA (ShareAlike)").setValue(this.filters.license).onChange((value) => {
             this.filters.license = value;
             void this.updateFilterCount();
@@ -17946,7 +17935,7 @@ var init_FreesoundSearchModal = __esm({
       }
       createResultsSection(container) {
         const resultsSection = container.createDiv({ cls: "freesound-results-section" });
-        resultsSection.createEl("h3", { text: "Search Results" });
+        resultsSection.createEl("h3", { text: "Search results" });
         this.resultsContainer = resultsSection.createDiv({ cls: "freesound-results-container" });
         this.resultsContainer.createEl("p", {
           text: "Enter a search query above to find samples",
@@ -18188,13 +18177,13 @@ var init_FreesoundSearchModal = __esm({
         this.resultsContainer.empty();
         const errorState = this.resultsContainer.createDiv({ cls: "freesound-error-state" });
         (0, import_obsidian11.setIcon)(errorState, "alert-circle");
-        errorState.createEl("p", { text: "Search Error" });
+        errorState.createEl("p", { text: "Search error" });
         const errorMessage = error instanceof Error ? error.message : "Failed to search Freesound. Please check your API key and connection.";
         errorState.createEl("span", {
           text: errorMessage
         });
         const retryBtn = errorState.createEl("button", {
-          text: "Try Again",
+          text: "Try again",
           cls: "freesound-retry-btn"
         });
         retryBtn.addEventListener("click", () => void this.performSearch());
@@ -18291,7 +18280,7 @@ var init_SampleTableBrowser = __esm({
       renderHeader() {
         const header = this.container.createDiv({ cls: "sonigraph-sample-table-header" });
         const titleRow = header.createDiv({ cls: "sonigraph-sample-table-title-row" });
-        titleRow.createEl("h4", { text: "Sample Library", cls: "sonigraph-sample-table-title" });
+        titleRow.createEl("h4", { text: "Sample library", cls: "sonigraph-sample-table-title" });
         const searchBtn = titleRow.createEl("button", {
           text: "Search Freesound",
           cls: "sonigraph-sample-table-search-btn"
@@ -18340,7 +18329,7 @@ var init_SampleTableBrowser = __esm({
        * Populate tag filter dropdown with unique tags
        */
       populateTagFilter(select) {
-        select.createEl("option", { text: "All Tags", value: "" });
+        select.createEl("option", { text: "All tags", value: "" });
         const samples = this.plugin.settings.freesoundSamples || [];
         const tags = /* @__PURE__ */ new Set();
         samples.forEach((sample) => {
@@ -18357,7 +18346,7 @@ var init_SampleTableBrowser = __esm({
        * Populate license filter dropdown
        */
       populateLicenseFilter(select) {
-        select.createEl("option", { text: "All Licenses", value: "" });
+        select.createEl("option", { text: "All licenses", value: "" });
         const samples = this.plugin.settings.freesoundSamples || [];
         const licenses = /* @__PURE__ */ new Set();
         samples.forEach((sample) => {
@@ -18760,7 +18749,7 @@ var init_SampleTableBrowser = __esm({
       onOpen() {
         const { contentEl } = this;
         void contentEl.empty();
-        contentEl.createEl("h3", { text: "Edit Tags" });
+        contentEl.createEl("h3", { text: "Edit tags" });
         contentEl.createEl("p", {
           text: `Sample: ${this.sample.title || this.sample.name}`,
           cls: "sonigraph-tag-editor-sample-name"
@@ -18804,11 +18793,11 @@ var init_SampleTableBrowser = __esm({
             }
           }
         });
-        contentEl.createEl("h4", { text: "Current Tags" });
+        contentEl.createEl("h4", { text: "Current tags" });
         this.tagListEl = contentEl.createDiv({ cls: "sonigraph-tag-editor-list" });
         void this.renderTags();
         const commonSection = contentEl.createDiv({ cls: "sonigraph-tag-common-section" });
-        commonSection.createEl("h4", { text: "Common Tags" });
+        commonSection.createEl("h4", { text: "Common tags" });
         const commonTagsEl = commonSection.createDiv({ cls: "sonigraph-tag-common-grid" });
         const commonTags = [
           "drone",
@@ -20312,7 +20301,7 @@ var init_FreesoundSampleLoader = __esm({
         try {
           void logger26.info("initialization", "Initializing FreesoundSampleLoader");
           if (this.apiKey) {
-            await this.testApiConnection();
+            this.testApiConnection();
           }
           void this.startCacheCleanup();
           this.isInitialized = true;
@@ -21365,7 +21354,7 @@ var init_control_panel = __esm({
         const sonicGraphIcon = createLucideIcon("chart-network", 16);
         void sonicGraphBtn.appendChild(sonicGraphIcon);
         void sonicGraphBtn.appendText("Sonic Graph");
-        sonicGraphBtn.addEventListener("click", () => this.launchSonicGraphView());
+        sonicGraphBtn.addEventListener("click", () => void this.launchSonicGraphView());
       }
       /**
        * Create navigation drawer
@@ -21504,13 +21493,13 @@ var init_control_panel = __esm({
         const quickStartContent = quickStartCard.getContent();
         const stepsList = quickStartContent.createEl("ol", { cls: "osp-guide-steps" });
         stepsList.createEl("li", {
-          text: "Enable Instruments: Go to the Keyboard, Strings, or Electronic tabs and enable 3-5 instruments you like. Start with Piano, Strings, and Lead Synth for a balanced sound."
+          text: "Enable instruments: go to the keyboard, strings, or electronic tabs and enable 3-5 instruments you like. start with piano, strings, and lead synth for a balanced sound."
         });
         stepsList.createEl("li", {
-          text: "Configure Musical Settings: Visit the Musical tab to set your preferred scale (try C Major) and tempo (60-120 BPM works well for most vaults)."
+          text: "Configure musical settings: visit the musical tab to set your preferred scale (try c major) and tempo (60-120 BPM works well for most vaults)."
         });
         stepsList.createEl("li", {
-          text: 'Try Local Soundscape: Right-click any note in your vault and select "Open in Local Soundscape" to hear how it connects to other notes.'
+          text: 'Try Local Soundscape: right-click any note in your vault and select "open in Local Soundscape" to hear how it connects to other notes.'
         });
         this.contentContainer.appendChild(quickStartCard.getElement());
         const featuresCard = new MaterialCard({
@@ -21524,7 +21513,7 @@ var init_control_panel = __esm({
         const lsFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
         lsFeature.createEl("strong", { text: "Local Soundscape" });
         lsFeature.createEl("p", {
-          text: "Visualize and sonify a single note and its connections. Notes at different depths play different instrument families, creating layers of harmony. Enable Musical Enhancements in the Local Soundscape tab for richer, more musical results."
+          text: "Visualize and sonify a single note and its connections. notes at different depths play different instrument families, creating layers of harmony. enable musical enhancements in the Local Soundscape tab for richer, more musical results."
         });
         const sgFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
         sgFeature.createEl("strong", { text: "Sonic Graph" });
@@ -21532,14 +21521,14 @@ var init_control_panel = __esm({
           text: "See and hear your entire vault as an animated graph. Watch temporal patterns unfold as your knowledge base comes alive with sound and motion."
         });
         const meFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
-        meFeature.createEl("strong", { text: "Musical Enhancements" });
+        meFeature.createEl("strong", { text: "Musical enhancements" });
         meFeature.createEl("p", {
-          text: "Transform basic sonification into rich musical experiences with Scale Quantization, Chord Voicing, Rhythmic Patterns, Tension Tracking, Turn-Taking, and Dynamic Panning. Configure these in the Local Soundscape tab."
+          text: "Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. configure these in the Local Soundscape tab."
         });
         const clFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
-        clFeature.createEl("strong", { text: "Continuous Layers" });
+        clFeature.createEl("strong", { text: "Continuous layers" });
         clFeature.createEl("p", {
-          text: "Add ambient background soundscapes from curated audio libraries. Browse and preview samples from Freesound.org to create the perfect atmosphere for focused work."
+          text: "Add ambient background soundscapes from curated audio libraries. browse and preview samples from Freesound.org to create the perfect atmosphere for focused work."
         });
         this.contentContainer.appendChild(featuresCard.getElement());
         const meGuideCard = new MaterialCard({
@@ -21550,27 +21539,27 @@ var init_control_panel = __esm({
         });
         const meGuideContent = meGuideCard.getContent();
         meGuideContent.createEl("p", {
-          text: "Musical Enhancements transform raw sonification into expressive, harmonic compositions. Here are recommended settings for different goals:",
+          text: "Musical enhancements transform raw sonification into expressive, harmonic compositions. here are recommended settings for different goals:",
           cls: "osp-guide-text"
         });
         const preset1 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
-        preset1.createEl("strong", { text: "For Harmonic Beauty:" });
+        preset1.createEl("strong", { text: "For harmonic beauty:" });
         const preset1List = preset1.createEl("ul");
-        preset1List.createEl("li", { text: "Enable Scale Quantization (C Major, 80% strength)" });
-        preset1List.createEl("li", { text: "Enable Adaptive Pitch Ranges" });
-        preset1List.createEl("li", { text: "Enable Chord Voicing (50% density)" });
+        preset1List.createEl("li", { text: "Enable scale quantization (c major, 80% strength)" });
+        preset1List.createEl("li", { text: "Enable adaptive pitch ranges" });
+        preset1List.createEl("li", { text: "Enable chord voicing (50% density)" });
         const preset2 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
-        preset2.createEl("strong", { text: "For Rhythmic Interest:" });
+        preset2.createEl("strong", { text: "For rhythmic interest:" });
         const preset2List = preset2.createEl("ul");
-        preset2List.createEl("li", { text: "Enable Rhythmic Patterns (60 BPM)" });
-        preset2List.createEl("li", { text: "Enable Tension Tracking (Rise-Fall arc, 60% peak)" });
+        preset2List.createEl("li", { text: "Enable rhythmic patterns (60 BPM)" });
+        preset2List.createEl("li", { text: "Enable tension tracking (rise-fall arc, 60% peak)" });
         const preset3 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
-        preset3.createEl("strong", { text: "For Spatial Clarity:" });
+        preset3.createEl("strong", { text: "For spatial clarity:" });
         const preset3List = preset3.createEl("ul");
-        preset3List.createEl("li", { text: "Enable Turn-Taking (Call-Response, 4 beats)" });
-        preset3List.createEl("li", { text: "Enable Dynamic Panning (30% smoothing, 2x speed)" });
+        preset3List.createEl("li", { text: "Enable turn-taking (call-response, 4 beats)" });
+        preset3List.createEl("li", { text: "Enable dynamic panning (30% smoothing, 2x speed)" });
         const preset4 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
-        preset4.createEl("strong", { text: "For Full Musical Experience:" });
+        preset4.createEl("strong", { text: "For full musical experience:" });
         preset4.createEl("p", { text: "Enable all of the above for maximum musicality and expressiveness." });
         this.contentContainer.appendChild(meGuideCard.getElement());
         const tipsCard = new MaterialCard({
@@ -21582,13 +21571,13 @@ var init_control_panel = __esm({
         const tipsContent = tipsCard.getContent();
         const tipsList = tipsContent.createEl("ul", { cls: "osp-guide-tips" });
         tipsList.createEl("li", {
-          text: "Start Simple: Enable 3-5 instruments initially. Too many instruments can create sonic clutter."
+          text: "Start simple: enable 3-5 instruments initially. too many instruments can create sonic clutter."
         });
         tipsList.createEl("li", {
-          text: "Mix Instrument Types: Combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound."
+          text: "Mix instrument types: combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound."
         });
         tipsList.createEl("li", {
-          text: "Use Scale Quantization: This is the single most impactful Musical Enhancement for making soundscapes harmonious."
+          text: "Use scale quantization: this is the single most impactful musical enhancement for making soundscapes harmonious."
         });
         tipsList.createEl("li", {
           text: "Adjust Depth in Local Soundscape: Depth 2 is ideal for most notes. Higher depths show more context but may become overwhelming."
@@ -21886,7 +21875,6 @@ var init_control_panel = __esm({
       /**
        * Render the sample browser UI with table layout
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       renderSampleBrowser(container, sampleLoader) {
         const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
         void tableBrowser.render();
@@ -21967,7 +21955,6 @@ var init_control_panel = __esm({
       /**
        * Preview a Freesound sample
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       async previewSample(sample, button) {
         if (button.textContent === "Stop") {
           void this.stopPreview();
@@ -22842,7 +22829,6 @@ var init_control_panel = __esm({
       /**
        * Create horizontal effect section for Master Effects
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       createHorizontalEffectSection(container, effectName, iconName, enabled, parameters) {
         const section = container.createDiv({ cls: "osp-effect-section-horizontal" });
         const header = section.createDiv({ cls: "osp-effect-header-horizontal" });
@@ -23004,7 +22990,7 @@ var init_control_panel = __esm({
             excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
             excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
           });
-          const graphData = await extractor.extractGraphData();
+          const graphData = extractor.extractGraphData();
           void loadingDiv.remove();
           this.graphRenderer = new GraphRenderer(container, {
             width: container.clientWidth,
@@ -23030,7 +23016,7 @@ var init_control_panel = __esm({
             excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
             excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
           });
-          const graphData = await extractor.extractGraphData();
+          const graphData = extractor.extractGraphData();
           const filesValue = filesEl.querySelector(".osp-stat-value");
           const linksValue = linksEl.querySelector(".osp-stat-value");
           if (filesValue)
@@ -23053,11 +23039,11 @@ var init_control_panel = __esm({
       /**
        * Launch the full Sonic Graph view
        */
-      launchSonicGraphView() {
+      async launchSonicGraphView() {
         void logger28.debug("ui", "Launching Sonic Graph view from Control Center");
         void this.close();
         try {
-          this.plugin.activateSonicGraphView();
+          await this.plugin.activateSonicGraphView();
           void logger28.debug("ui", "Sonic Graph view activated");
         } catch (error) {
           logger28.error("ui", "Failed to launch Sonic Graph view:", error.message);
@@ -23259,7 +23245,6 @@ var init_control_panel = __esm({
       /**
        * Create family overview card with stats and bulk actions
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       createFamilyOverviewCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: `${tabConfig.name} family overview`,
@@ -23299,7 +23284,6 @@ var init_control_panel = __esm({
       /**
        * Create instruments card for family
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       createInstrumentsCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: "Individual instruments",
@@ -23490,7 +23474,6 @@ var init_control_panel = __esm({
       /**
        * Create family effects card
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       createFamilyEffectsCard(familyId, tabConfig) {
         const card = new MaterialCard({
           title: `${tabConfig.name} effects`,
@@ -23920,7 +23903,7 @@ var init_control_panel = __esm({
                 }
               });
               if (this.plugin.audioEngine) {
-                this.plugin.audioEngine.updateSettings(this.plugin.settings);
+                void this.plugin.audioEngine.updateSettings(this.plugin.settings);
                 logger28.debug("ui", "Audio engine settings updated after bulk enable", {
                   familyId,
                   action: "bulk-enable-audio-update"
@@ -23982,7 +23965,7 @@ var init_control_panel = __esm({
                 action: "disable-all-complete"
               });
               if (this.plugin.audioEngine) {
-                this.plugin.audioEngine.updateSettings(this.plugin.settings);
+                void this.plugin.audioEngine.updateSettings(this.plugin.settings);
                 logger28.debug("ui", "Audio engine settings updated after bulk disable", {
                   familyId,
                   action: "bulk-disable-audio-update"
@@ -24018,7 +24001,7 @@ var init_control_panel = __esm({
         }
         void this.updateNavigationCounts();
         if (this.plugin.audioEngine) {
-          this.plugin.audioEngine.updateSettings(this.plugin.settings);
+          void this.plugin.audioEngine.updateSettings(this.plugin.settings);
           logger28.debug("ui", "Audio engine settings updated after instrument enable/disable", {
             instrument,
             enabled
@@ -24082,7 +24065,6 @@ var init_control_panel = __esm({
         });
         void this.plugin.saveSettings();
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
       getDefaultEffectParams(effectType) {
         switch (effectType) {
           case "reverb":
@@ -57398,16 +57380,12 @@ var init_MusicalGenreEngine = __esm({
         this.isPlaying = false;
         // Synthesis components
         this.primarySynth = null;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supporting synths use heterogeneous Tone.js instrument types
         this.supportingSynths = /* @__PURE__ */ new Map();
         // Effects chain
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effects have heterogeneous types without common interface
         this.effects = /* @__PURE__ */ new Map();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effects chain contains heterogeneous Tone.js effect types
         this.effectsChain = [];
         // Modulation
         this.lfos = /* @__PURE__ */ new Map();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Modulation targets vary by parameter type
         this.modulationTargets = /* @__PURE__ */ new Map();
         // Sample integration
         this.sampleLoader = null;
@@ -57507,7 +57485,7 @@ var init_MusicalGenreEngine = __esm({
           if (wasPlaying) {
             await this.stop();
           }
-          await this.cleanup();
+          this.cleanup();
           this.currentGenre = genre;
           this.isInitialized = false;
           await this.initialize();
@@ -57559,7 +57537,6 @@ var init_MusicalGenreEngine = __esm({
       /**
        * Connect to audio destination
        */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js audio nodes use dynamic typing
       connect(destination) {
         this.synthVolume.connect(destination);
       }
@@ -57591,7 +57568,7 @@ var init_MusicalGenreEngine = __esm({
         logger61.info("cleanup", `Disposing genre engine: ${this.currentGenre}`);
         try {
           await this.stop();
-          await this.cleanup();
+          this.cleanup();
           this.synthVolume.dispose();
           logger61.info("cleanup", `Genre engine disposed: ${this.currentGenre}`);
         } catch (error) {
@@ -57612,7 +57589,6 @@ var init_MusicalGenreEngine = __esm({
           await this.loadGenreSamples(genreConfig.sampleCategories);
         }
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Returns various Tone.js synth types based on genre
       createSynth(type2, params) {
         switch (type2) {
           case "fm":
@@ -57758,7 +57734,7 @@ var init_MusicalGenreEngine = __esm({
         }
         try {
           for (const category of categories) {
-            const samples = await this.sampleLoader.getSamplesForCategory(category);
+            const samples = this.sampleLoader.getSamplesForCategory(category);
             if (samples.length > 0) {
               const sampleUrl = samples[0].previewUrl;
               const sampler = new Sampler({
@@ -59590,7 +59566,7 @@ var init_ContinuousLayerManager = __esm({
           this.delayBus.dispose();
           this.modLFO.dispose();
           await this.genreEngine.dispose();
-          await this.sampleLoader.dispose();
+          this.sampleLoader.dispose();
           await this.rhythmicLayer.dispose();
           await this.harmonicLayer.dispose();
           this.isInitialized = false;
@@ -61716,7 +61692,7 @@ var init_FileCollisionModal = __esm({
         const { contentEl } = this;
         void contentEl.empty();
         void contentEl.addClass("sonigraph-file-collision-modal");
-        contentEl.createEl("h2", { text: "File Already Exists" });
+        contentEl.createEl("h2", { text: "File already exists" });
         const infoContainer = contentEl.createDiv("collision-info");
         infoContainer.createEl("p", {
           text: "The file already exists:",
@@ -61989,7 +61965,7 @@ var init_ExportModal = __esm({
       createPresetsSection(container) {
         var _a;
         const section = container.createDiv("export-section");
-        section.createEl("h3", { text: "Quick Presets" });
+        section.createEl("h3", { text: "Quick presets" });
         const presetButtons = section.createDiv("sonigraph-export-preset-buttons");
         const presets = ((_a = this.plugin.settings.exportSettings) == null ? void 0 : _a.exportPresets) || [];
         if (presets.length === 0) {
@@ -62017,7 +61993,7 @@ var init_ExportModal = __esm({
           });
         }
         const savePresetBtn = presetButtons.createEl("button", {
-          text: "\u{1F4BE} Save Current as Preset",
+          text: "\u{1F4BE} save current as preset",
           cls: "sonigraph-export-preset-save"
         });
         savePresetBtn.addEventListener("click", () => void this.saveCurrentAsPreset());
@@ -62186,8 +62162,8 @@ var init_ExportModal = __esm({
        */
       createFormatSection(container) {
         const section = container.createDiv("export-section");
-        section.createEl("h3", { text: "Format & Quality" });
-        new import_obsidian29.Setting(section).setName("Format").setDesc("Audio file format. Compressed audio uses native platform codecs (M4A/AAC, WebM/Opus, or OGG/Vorbis).").addDropdown((dropdown) => {
+        section.createEl("h3", { text: "Format & quality" });
+        new import_obsidian29.Setting(section).setName("Format").setDesc("Audio file format. compressed audio uses native platform codecs (m4a/aac, webm/opus, or ogg/vorbis).").addDropdown((dropdown) => {
           this.formatDropdown = dropdown;
           dropdown.addOption("wav", "WAV (Lossless Audio)").addOption("mp3", "Compressed Audio (M4A/WebM/OGG)").setValue(this.config.format || "wav").onChange((value) => {
             this.config.format = value;
@@ -62208,7 +62184,7 @@ var init_ExportModal = __esm({
        */
       createLocationSection(container) {
         const section = container.createDiv("export-section");
-        section.createEl("h3", { text: "Save Location" });
+        section.createEl("h3", { text: "Save location" });
         new import_obsidian29.Setting(section).setName("Location type").setDesc("Save to vault or system location").addDropdown((dropdown) => {
           this.locationTypeDropdown = dropdown;
           dropdown.addOption("vault", "Vault Folder").addOption("system", "System Location").setValue(this.config.locationType || "vault").onChange((value) => {
@@ -62270,7 +62246,7 @@ var init_ExportModal = __esm({
         var _a;
         const section = container.createDiv("export-section");
         const header = section.createDiv("sonigraph-export-metadata-header");
-        header.createEl("span", { text: "Metadata (Optional) \u25BC" });
+        header.createEl("span", { text: "Metadata (optional) \u25BC" });
         void header.addClass("clickable");
         this.metadataContainer = section.createDiv("sonigraph-export-metadata-content");
         header.addEventListener("click", () => {
@@ -65910,11 +65886,8 @@ var TemporalGraphAnimator = class {
       },
       // Performance settings
       performance: {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         adaptiveDetail: ((_f = (_e = this.loggingContext.visualSettings) == null ? void 0 : _e.adaptiveDetail) == null ? void 0 : _f.enabled) || false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         maxNodes: ((_i = (_h = (_g = this.loggingContext.visualSettings) == null ? void 0 : _g.adaptiveDetail) == null ? void 0 : _h.overrides) == null ? void 0 : _i.maximumVisibleNodes) || -1,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Visual settings structure varies, requires runtime type assertion
         temporalClustering: ((_j = this.loggingContext.visualSettings) == null ? void 0 : _j.temporalClustering) || false
       },
       // Context information
@@ -72988,7 +72961,7 @@ var DepthBasedMapper = class {
     });
     this.currentCenterNodePath = data.centerNode.path;
     const mappings = [];
-    const centerMapping = await this.mapNode(data.centerNode, 0, contextModifiers, proseAnalysis);
+    const centerMapping = this.mapNode(data.centerNode, 0, contextModifiers, proseAnalysis);
     if (centerMapping) {
       void mappings.push(centerMapping);
     }
@@ -73000,7 +72973,7 @@ var DepthBasedMapper = class {
         selectedNodes: limitedNodes.length
       });
       for (const node of limitedNodes) {
-        const mapping = await this.mapNode(node, depth, contextModifiers, proseAnalysis);
+        const mapping = this.mapNode(node, depth, contextModifiers, proseAnalysis);
         if (mapping) {
           void mappings.push(mapping);
         }
@@ -74764,7 +74737,7 @@ var CommunityAudioAnalyzer = class {
       linkCount: links.length
     });
     try {
-      const clusteringResult = await this.clusteringAlgorithms.clusterGraph(nodes, links);
+      const clusteringResult = this.clusteringAlgorithms.clusterGraph(nodes, links);
       const communityClusters = clusteringResult.clusters.filter(
         (cluster) => cluster.type === "community"
       );
@@ -78937,7 +78910,7 @@ var MusicalMapper = class {
   async processClustersForAudio(clusters) {
     if (!this.isClusterAudioEnabled || !this.clusterAudioMapper)
       return;
-    await this.clusterAudioMapper.processClusters(clusters);
+    this.clusterAudioMapper.processClusters(clusters);
   }
   /**
    * Phase 6.2: Initialize dynamic orchestration manager
@@ -79127,7 +79100,6 @@ var MusicalMapper = class {
   /**
    * Phase 6.3: Get panner node for audio routing
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Type definition requires any for maximum flexibility
   getPannerForNode(nodeId) {
     if (!this.spatialAudioManager || !this.isSpatialAudioEnabled)
       return null;
@@ -80649,7 +80621,6 @@ var SpectrumRenderer = class {
   /**
    * Connect to Web Audio API for real-time spectrum analysis
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Canvas rendering API uses dynamic types
   connectToAudioContext(audioContext, sourceNode) {
     if (!audioContext) {
       void logger66.warn("audio", "No audio context provided for spectrum analyzer");
@@ -81516,7 +81487,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   getIcon() {
     return "chart-network";
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   async setState(state, result) {
     var _a, _b, _c, _d, _e, _f;
     void logger78.debug("state", "Restoring view state", state);
@@ -81565,7 +81535,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     }
     void logger78.info("state", "View state restoration complete");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   getState() {
     var _a, _b;
     logger78.info("state", "getState() called - capturing view state", {
@@ -82130,7 +82099,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     this.settingsButton.addEventListener("click", () => this.toggleSettings());
     const pluginSettingsBtn = buttonGroup.createEl("button", {
       cls: "sonic-graph-header-btn sonic-graph-plugin-settings-btn",
-      text: "Plugin Settings"
+      text: "Plugin settings"
     });
     const pluginSettingsIcon = createLucideIcon("cog", 16);
     void pluginSettingsBtn.insertBefore(pluginSettingsIcon, pluginSettingsBtn.firstChild);
@@ -82186,7 +82155,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const visualHeaderControls = visualHeader.createDiv({ cls: "sonic-graph-visual-display-controls" });
     const modeTabs = visualHeaderControls.createDiv({ cls: "sonic-graph-visual-mode-tabs" });
     const pianoRollTab = modeTabs.createEl("button", {
-      text: "Piano Roll",
+      text: "Piano roll",
       cls: "sonic-graph-visual-mode-tab active"
     });
     const spectrumTab = modeTabs.createEl("button", {
@@ -82266,7 +82235,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         excludeFiles: this.graphDataExtractor["excludeFiles"]
       });
       const graphData = await this.executeWhenIdle(async () => {
-        return await this.graphDataExtractor.extractGraphData();
+        return this.graphDataExtractor.extractGraphData();
       });
       logger78.info("sonic-graph-data", `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
       if (graphData.nodes.length === 0) {
@@ -82632,7 +82601,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   createSettingsContent() {
     const settingsHeader = this.settingsPanel.createDiv({ cls: "sonic-graph-settings-header" });
     settingsHeader.createEl("h3", {
-      text: "\u2699\uFE0F Timeline Settings",
+      text: "\u2699\uFE0F timeline settings",
       cls: "sonic-graph-settings-title"
     });
     const closeButton = settingsHeader.createEl("button", {
@@ -82652,7 +82621,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   createControlCenterLink(container) {
     const linkSection = container.createDiv({ cls: "sonic-graph-settings-section control-center-link-section" });
-    linkSection.createEl("div", { text: "ADVANCED SETTINGS", cls: "sonic-graph-settings-section-title" });
+    linkSection.createEl("div", { text: "Advanced settings", cls: "sonic-graph-settings-section-title" });
     const description = linkSection.createEl("p", { cls: "sonic-graph-settings-description sonic-graph-small-text" });
     description.textContent = "Audio layers, musical theory, spatial audio, and other advanced features are available in the Control Center for a better experience with organized tabs.";
     const button = linkSection.createEl("button", {
@@ -82674,8 +82643,8 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       return;
     }
     const section = container.createDiv({ cls: "sonic-graph-settings-section adaptive-detail-override" });
-    section.createEl("div", { text: "ADAPTIVE DETAIL", cls: "sonic-graph-settings-section-title" });
-    new import_obsidian30.Setting(section).setName("Disable for this session").setDesc("The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
+    section.createEl("div", { text: "Adaptive detAIL", cls: "sonic-graph-settings-section-title" });
+    new import_obsidian30.Setting(section).setName("Disable for this session").setDesc("The adaptive detail system automatically hides nodes and links based on zoom level to improve performance. disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
       (toggle) => toggle.setValue(false).onChange((isOverridden) => {
         if (this.adaptiveDetailManager) {
           this.adaptiveDetailManager.setSessionOverride(isOverridden);
@@ -82699,7 +82668,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const noteItem = section.createDiv({ cls: "sonic-graph-setting-item adaptive-detail-note" });
     noteItem.createEl("div", {
-      text: "Configure adaptive detail settings in Plugin Settings > Sonic Graph Settings",
+      text: "Configure adaptive detail settings in plugin settings > Sonic Graph settings",
       cls: "sonic-graph-setting-note sonic-graph-small-text"
     });
   }
@@ -82765,7 +82734,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       return;
     }
     const section = container.createDiv({ cls: "sonic-graph-settings-section" });
-    section.createEl("div", { text: "CONTENT-AWARE POSITIONING", cls: "sonic-graph-settings-section-title" });
+    section.createEl("div", { text: "Content-aware positioning", cls: "sonic-graph-settings-section-title" });
     const tagWeightItem = section.createDiv({ cls: "sonic-graph-setting-item" });
     tagWeightItem.createEl("label", { text: "Tag influence weight", cls: "sonic-graph-setting-label" });
     tagWeightItem.createEl("div", {
@@ -82897,7 +82866,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       return;
     }
     const section = container.createDiv({ cls: "sonic-graph-settings-section" });
-    section.createEl("div", { text: "SMART CLUSTERING", cls: "sonic-graph-settings-section-title" });
+    section.createEl("div", { text: "Smart clustering", cls: "sonic-graph-settings-section-title" });
     const algorithmItem = section.createDiv({ cls: "sonic-graph-setting-item" });
     algorithmItem.createEl("label", { text: "Clustering algorithm", cls: "sonic-graph-setting-label" });
     algorithmItem.createEl("div", {
@@ -82924,7 +82893,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void this.updateClusteringAlgorithm(algorithm);
     });
     const weightsHeader = section.createDiv({ cls: "sonic-graph-weights-header" });
-    weightsHeader.createEl("h4", { text: "Multi-Factor Weights", cls: "sonic-graph-weights-title" });
+    weightsHeader.createEl("h4", { text: "Multi-factor weights", cls: "sonic-graph-weights-title" });
     weightsHeader.createEl("div", {
       text: "Adjust the relative importance of different clustering factors",
       cls: "sonic-graph-setting-description"
@@ -82974,7 +82943,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       "Controls how much creation and modification dates influence clustering. Higher values group files created or modified around the same time periods together."
     );
     const parametersHeader = section.createDiv({ cls: "sonic-graph-parameters-header" });
-    parametersHeader.createEl("h4", { text: "Clustering Parameters", cls: "sonic-graph-parameters-title" });
+    parametersHeader.createEl("h4", { text: "Clustering parameters", cls: "sonic-graph-parameters-title" });
     const minSizeItem = section.createDiv({ cls: "sonic-graph-setting-item" });
     minSizeItem.createEl("label", { text: "Minimum cluster size", cls: "sonic-graph-setting-label" });
     minSizeItem.createEl("div", {
@@ -83023,7 +82992,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const visualizationHeader = section.createDiv({ cls: "sonic-graph-visualization-header" });
     visualizationHeader.createEl("h4", { text: "Visualization", cls: "sonic-graph-visualization-title" });
-    new import_obsidian30.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. Labels help identify the content theme of each group, such as "Projects", "Daily Notes", or topic-based clusters.').addToggle(
+    new import_obsidian30.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. labels help identify the content theme of each group, such as "projects", "daily notes", or topic-based clusters.').addToggle(
       (toggle) => toggle.setValue(settings.visualization.showClusterLabels).onChange((value) => {
         void this.updateClusteringVisualization("showClusterLabels", value);
       })
@@ -83076,7 +83045,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const section = container.createDiv({ cls: "sonic-graph-settings-section connection-type-mapping-section" });
     const header = section.createDiv({ cls: "sonic-graph-collapsible-header" });
     header.createEl("div", {
-      text: "CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)",
+      text: "Connection type audio differentiation (phase 4.4)",
       cls: "sonic-graph-settings-section-title"
     });
     const toggleIcon = header.createEl("span", {
@@ -83100,7 +83069,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     });
     const settings = this.getSonicGraphSettings().connectionTypeMapping;
-    new import_obsidian30.Setting(content).setName("Enable Connection Type Audio Differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
+    new import_obsidian30.Setting(content).setName("Enable connection type audio differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
       (toggle) => toggle.setValue(settings.enabled || false).onChange(async (value) => {
         try {
           const currentSettings = this.getSonicGraphSettings();
@@ -83122,23 +83091,23 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         }
       })
     );
-    new import_obsidian30.Setting(content).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of Phase 4.1 content-aware mapping system").addToggle(
+    new import_obsidian30.Setting(content).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of phase 4.1 content-aware mapping system").addToggle(
       (toggle) => toggle.setValue(settings.independentFromContentAware).onChange((value) => {
         this.updateConnectionTypeMappingConfig("independentFromContentAware", value);
       })
     );
-    new import_obsidian30.Setting(content).setName("Connection Volume Mix").setDesc("Overall volume level for connection audio").addSlider(
+    new import_obsidian30.Setting(content).setName("Connection volume mix").setDesc("Overall volume level for connection audio").addSlider(
       (slider) => slider.setLimits(0, 100, 5).setValue(settings.globalSettings.connectionVolumeMix * 100).setDynamicTooltip().onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("connectionVolumeMix", value / 100);
       })
     );
-    new import_obsidian30.Setting(content).setName("Maximum Simultaneous Connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
+    new import_obsidian30.Setting(content).setName("Maximum simultaneous connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
       (slider) => slider.setLimits(5, 50, 1).setValue(settings.globalSettings.maxSimultaneousConnections).setDynamicTooltip().onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("maxSimultaneousConnections", value);
       })
     );
     const connectionTypesSection = content.createDiv({ cls: "connection-types-toggles" });
-    connectionTypesSection.createEl("h5", { text: "Connection Types", cls: "connection-type-subsection-title" });
+    connectionTypesSection.createEl("h5", { text: "Connection types", cls: "connection-type-subsection-title" });
     new import_obsidian30.Setting(connectionTypesSection).setName("Wikilinks ([[internal links]])").setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
       (toggle) => toggle.setValue(settings.mappings.wikilink.enabled).onChange((value) => {
         this.updateConnectionTypeMapping("wikilink", "enabled", value);
@@ -83150,14 +83119,14 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       })
     );
     if (settings.mappings.markdown) {
-      new import_obsidian30.Setting(connectionTypesSection).setName("Markdown Links ([link](path))").setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+      new import_obsidian30.Setting(connectionTypesSection).setName("Markdown links ([link](path))").setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
         (toggle) => toggle.setValue(settings.mappings.markdown.enabled).onChange((value) => {
           this.updateConnectionTypeMapping("markdown", "enabled", value);
         })
       );
     }
     if (settings.mappings.tag) {
-      new import_obsidian30.Setting(connectionTypesSection).setName("Tag Connections (shared tags)").setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+      new import_obsidian30.Setting(connectionTypesSection).setName("Tag connections (shared tags)").setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
         (toggle) => toggle.setValue(settings.mappings.tag.enabled).onChange((value) => {
           this.updateConnectionTypeMapping("tag", "enabled", value);
         })
@@ -83165,19 +83134,19 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     }
     const performanceSection = section.createDiv({ cls: "connection-type-performance" });
     performanceSection.createEl("h5", { text: "Performance", cls: "connection-type-subsection-title" });
-    new import_obsidian30.Setting(performanceSection).setName("Enable Caching").setDesc("Cache connection analysis results for better performance").addToggle(
+    new import_obsidian30.Setting(performanceSection).setName("Enable caching").setDesc("Cache connection analysis results for better performance").addToggle(
       (toggle) => toggle.setValue(settings.globalSettings.enableCaching).onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("enableCaching", value);
       })
     );
-    new import_obsidian30.Setting(performanceSection).setName("Selective Processing").setDesc("Only process visible connections to improve performance").addToggle(
+    new import_obsidian30.Setting(performanceSection).setName("Selective processing").setDesc("Only process visible connections to improve performance").addToggle(
       (toggle) => toggle.setValue(settings.globalSettings.selectiveProcessing).onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("selectiveProcessing", value);
       })
     );
     const noteSection = section.createDiv({ cls: "connection-type-note" });
     noteSection.createEl("div", {
-      text: "For detailed connection type configuration, audio characteristics, and preset management, use the Plugin Settings > Sonic Graph Settings panel.",
+      text: "For detailed connection type configuration, audio characteristics, and preset management, use the plugin settings > Sonic Graph settings panel.",
       cls: "sonic-graph-setting-note sonic-graph-small-text"
     });
   }
@@ -83553,7 +83522,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const enhancementHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     enhancementHeader.createEl("label", {
-      text: "Audio Enhancement (Phase 1 & 2)",
+      text: "Audio enhancement (phase 1 & 2)",
       cls: "sonic-graph-setting-label sonic-graph-setting-header"
     });
     enhancementHeader.createEl("div", {
@@ -83628,7 +83597,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const layersHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     layersHeader.createEl("label", {
-      text: "Continuous Audio Layers (Phase 3)",
+      text: "Continuous audio layers (phase 3)",
       cls: "sonic-graph-setting-label sonic-graph-setting-header"
     });
     layersHeader.createEl("div", {
@@ -83779,7 +83748,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const clusterHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     clusterHeader.createEl("label", {
-      text: "Smart Clustering Audio (Phase 5)",
+      text: "Smart clustering audio (phase 5)",
       cls: "sonic-graph-setting-label sonic-graph-setting-header"
     });
     clusterHeader.createEl("div", {
@@ -83842,7 +83811,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     );
     const clusterTypesHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     clusterTypesHeader.createEl("h4", {
-      text: "Cluster Type Audio Themes",
+      text: "Cluster type audio themes",
       cls: "sonic-graph-setting-label"
     });
     clusterTypesHeader.createEl("div", {
@@ -83886,7 +83855,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     );
     const transitionHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     transitionHeader.createEl("h4", {
-      text: "Cluster Transition Audio",
+      text: "Cluster transition audio",
       cls: "sonic-graph-setting-label"
     });
     transitionHeader.createEl("div", {
@@ -83915,7 +83884,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     }
     const advancedHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     advancedHeader.createEl("h4", {
-      text: "Advanced Settings",
+      text: "Advanced settings",
       cls: "sonic-graph-setting-label"
     });
     new import_obsidian30.Setting(container).setName("Real-time updates").setDesc("Update cluster audio immediately as clusters change during animation").addToggle(
@@ -83946,7 +83915,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     );
     const performanceHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     performanceHeader.createEl("h4", {
-      text: "Performance Settings",
+      text: "Performance settings",
       cls: "sonic-graph-setting-label"
     });
     new import_obsidian30.Setting(container).setName("Max simultaneous clusters").setDesc("Limit concurrent cluster audio for performance").addSlider(
@@ -83975,7 +83944,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const headerContainer = container.createDiv({ cls: "sonic-graph-setting-item" });
     headerContainer.createEl("h3", {
-      text: "Phase 5.2: Hub Node Orchestration",
+      text: "Phase 5.2: hub node orchestration",
       cls: "sonic-graph-section-header"
     });
     headerContainer.createEl("div", {
@@ -83984,7 +83953,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const enabledItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     enabledItem.createEl("label", {
-      text: "Enable Hub Orchestration",
+      text: "Enable hub orchestration",
       cls: "sonic-graph-setting-label"
     });
     enabledItem.createEl("div", {
@@ -84029,7 +83998,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const settings = this.plugin.settings.hubOrchestration;
     const modeItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     modeItem.createEl("label", {
-      text: "Orchestration Mode",
+      text: "Orchestration mode",
       cls: "sonic-graph-setting-label"
     });
     modeItem.createEl("div", {
@@ -84054,7 +84023,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const thresholdItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     thresholdItem.createEl("label", {
-      text: "Hub Threshold",
+      text: "Hub threshold",
       cls: "sonic-graph-setting-label"
     });
     thresholdItem.createEl("div", {
@@ -84082,7 +84051,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const prominenceItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     prominenceItem.createEl("label", {
-      text: "Hub Prominence",
+      text: "Hub prominence",
       cls: "sonic-graph-setting-label"
     });
     prominenceItem.createEl("div", {
@@ -84110,7 +84079,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const weightsHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     weightsHeader.createEl("h4", {
-      text: "Centrality Algorithm Weights",
+      text: "Centrality algorithm weights",
       cls: "sonic-graph-subsection-header"
     });
     weightsHeader.createEl("div", {
@@ -84171,7 +84140,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     );
     const transitionsItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     transitionsItem.createEl("label", {
-      text: "Hub Transition Audio",
+      text: "Hub transition audio",
       cls: "sonic-graph-setting-label"
     });
     transitionsItem.createEl("div", {
@@ -84225,7 +84194,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const communityHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     communityHeader.createEl("label", {
-      text: "Community Detection Audio (Phase 5.3)",
+      text: "Community detection audio (phase 5.3)",
       cls: "sonic-graph-setting-label sonic-graph-setting-header"
     });
     communityHeader.createEl("div", {
@@ -84284,7 +84253,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     );
     const communityTypesHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     communityTypesHeader.createEl("h4", {
-      text: "Community Type Audio Themes",
+      text: "Community type audio themes",
       cls: "sonic-graph-setting-label"
     });
     communityTypesHeader.createEl("div", {
@@ -84328,7 +84297,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     );
     const analysisHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     analysisHeader.createEl("h4", {
-      text: "Community Analysis",
+      text: "Community analysis",
       cls: "sonic-graph-setting-label"
     });
     analysisHeader.createEl("div", {
@@ -84357,7 +84326,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     }
     const spatialHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     spatialHeader.createEl("h4", {
-      text: "Spatial Audio",
+      text: "Spatial audio",
       cls: "sonic-graph-setting-label"
     });
     new import_obsidian30.Setting(container).setName("Enable spatial audio").setDesc("Position community themes in stereo field based on community centroid").addToggle(
@@ -84388,7 +84357,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const evolutionHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     evolutionHeader.createEl("label", {
-      text: "Community Evolution Audio (Phase 5.3)",
+      text: "Community evolution audio (phase 5.3)",
       cls: "sonic-graph-setting-label sonic-graph-setting-header"
     });
     evolutionHeader.createEl("div", {
@@ -84443,7 +84412,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const settings = this.plugin.settings.communityEvolution;
     const eventTypesHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     eventTypesHeader.createEl("h4", {
-      text: "Evolution Event Types",
+      text: "Evolution event types",
       cls: "sonic-graph-setting-label"
     });
     eventTypesHeader.createEl("div", {
@@ -84501,7 +84470,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     );
     const thresholdsHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     thresholdsHeader.createEl("h4", {
-      text: "Evolution Thresholds",
+      text: "Evolution thresholds",
       cls: "sonic-graph-setting-label"
     });
     thresholdsHeader.createEl("div", {
@@ -84522,7 +84491,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     );
     const performanceHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     performanceHeader.createEl("h4", {
-      text: "Performance Settings",
+      text: "Performance settings",
       cls: "sonic-graph-setting-label"
     });
     new import_obsidian30.Setting(container).setName("Event throttle (ms)").setDesc("Minimum time between evolution events to prevent audio overload").addSlider(
@@ -84545,7 +84514,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const headerContainer = container.createDiv({ cls: "sonic-graph-setting-item" });
     headerContainer.createEl("h3", {
-      text: "Phase 6.1: Musical Theory Integration",
+      text: "Phase 6.1: musical theory integration",
       cls: "sonic-graph-section-header"
     });
     headerContainer.createEl("div", {
@@ -84554,7 +84523,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const enabledItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     enabledItem.createEl("label", {
-      text: "Enable Musical Theory",
+      text: "Enable musical theory",
       cls: "sonic-graph-setting-label"
     });
     enabledItem.createEl("div", {
@@ -84596,7 +84565,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const settings = this.plugin.settings.musicalTheory;
     const rootNoteItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     rootNoteItem.createEl("label", {
-      text: "Root Note",
+      text: "Root note",
       cls: "sonic-graph-setting-label"
     });
     rootNoteItem.createEl("div", {
@@ -84621,7 +84590,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const scaleItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     scaleItem.createEl("label", {
-      text: "Scale Type",
+      text: "Scale type",
       cls: "sonic-graph-setting-label"
     });
     scaleItem.createEl("div", {
@@ -84661,7 +84630,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const quantStrengthItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     quantStrengthItem.createEl("label", {
-      text: "Quantization Strength",
+      text: "Quantization strength",
       cls: "sonic-graph-setting-label"
     });
     quantStrengthItem.createEl("div", {
@@ -84692,7 +84661,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const dissonanceItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     dissonanceItem.createEl("label", {
-      text: "Dissonance Threshold",
+      text: "Dissonance threshold",
       cls: "sonic-graph-setting-label"
     });
     dissonanceItem.createEl("div", {
@@ -84723,7 +84692,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const enforceHarmonyItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     enforceHarmonyItem.createEl("label", {
-      text: "Enforce Scale Harmony",
+      text: "Enforce scale harmony",
       cls: "sonic-graph-setting-label"
     });
     enforceHarmonyItem.createEl("div", {
@@ -84741,7 +84710,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const chromaticItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     chromaticItem.createEl("label", {
-      text: "Allow Chromatic Passing Tones",
+      text: "Allow chromatic passing tones",
       cls: "sonic-graph-setting-label"
     });
     chromaticItem.createEl("div", {
@@ -84759,7 +84728,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const modulationItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     modulationItem.createEl("label", {
-      text: "Dynamic Scale Modulation",
+      text: "Dynamic scale modulation",
       cls: "sonic-graph-setting-label"
     });
     modulationItem.createEl("div", {
@@ -84805,7 +84774,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const headerItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     headerItem.createEl("label", {
-      text: "Phase 6.2: Dynamic Orchestration",
+      text: "Phase 6.2: dynamic orchestration",
       cls: "sonic-graph-setting-label sonic-graph-setting-header"
     });
     headerItem.createEl("div", {
@@ -84814,7 +84783,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const enabledItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     enabledItem.createEl("label", {
-      text: "Enable Dynamic Orchestration",
+      text: "Enable dynamic orchestration",
       cls: "sonic-graph-setting-label"
     });
     enabledItem.createEl("div", {
@@ -84854,7 +84823,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const settings = this.plugin.settings.dynamicOrchestration;
     const temporalItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     temporalItem.createEl("label", {
-      text: "Temporal Influence",
+      text: "Temporal influence",
       cls: "sonic-graph-setting-label"
     });
     temporalItem.createEl("div", {
@@ -84872,7 +84841,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const timeOfDayItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     timeOfDayItem.createEl("label", {
-      text: "Time of Day Influence",
+      text: "Time of day influence",
       cls: "sonic-graph-setting-label"
     });
     timeOfDayItem.createEl("div", {
@@ -84899,7 +84868,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const seasonalItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     seasonalItem.createEl("label", {
-      text: "Seasonal Influence",
+      text: "Seasonal influence",
       cls: "sonic-graph-setting-label"
     });
     seasonalItem.createEl("div", {
@@ -84926,7 +84895,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const transitionItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     transitionItem.createEl("label", {
-      text: "Transition Duration",
+      text: "Transition duration",
       cls: "sonic-graph-setting-label"
     });
     transitionItem.createEl("div", {
@@ -84953,7 +84922,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const autoAdjustItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     autoAdjustItem.createEl("label", {
-      text: "Auto-Adjust",
+      text: "Auto-adjust",
       cls: "sonic-graph-setting-label"
     });
     autoAdjustItem.createEl("div", {
@@ -84999,7 +84968,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     container.createEl("hr", { cls: "sonic-graph-settings-divider" });
     const headerItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     headerItem.createEl("label", {
-      text: "Phase 6.3: Spatial Audio & Panning",
+      text: "Phase 6.3: spatial audio & panning",
       cls: "sonic-graph-setting-label sonic-graph-setting-header"
     });
     headerItem.createEl("div", {
@@ -85008,7 +84977,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const enabledItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     enabledItem.createEl("label", {
-      text: "Enable Spatial Audio",
+      text: "Enable spatial audio",
       cls: "sonic-graph-setting-label"
     });
     enabledItem.createEl("div", {
@@ -85073,7 +85042,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const settings = this.plugin.settings.spatialAudio;
     const modeItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     modeItem.createEl("label", {
-      text: "Panning Mode",
+      text: "Panning mode",
       cls: "sonic-graph-setting-label"
     });
     modeItem.createEl("div", {
@@ -85105,7 +85074,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const intensityItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     intensityItem.createEl("label", {
-      text: "Pan Intensity",
+      text: "Pan intensity",
       cls: "sonic-graph-setting-label"
     });
     intensityItem.createEl("div", {
@@ -85132,7 +85101,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const curveItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     curveItem.createEl("label", {
-      text: "Panning Curve",
+      text: "Panning curve",
       cls: "sonic-graph-setting-label"
     });
     curveItem.createEl("div", {
@@ -85163,7 +85132,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const dampingItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     dampingItem.createEl("label", {
-      text: "Velocity Damping",
+      text: "Velocity damping",
       cls: "sonic-graph-setting-label"
     });
     dampingItem.createEl("div", {
@@ -85335,7 +85304,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   /**
    * Get default audio enhancement settings
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   getDefaultAudioEnhancementSettings() {
     return {
       contentAwareMapping: {
@@ -85475,7 +85443,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const loggingItem = section.createDiv({ cls: "sonic-graph-setting-item" });
     loggingItem.createEl("label", { text: "Logging level", cls: "sonic-graph-setting-label" });
     loggingItem.createEl("div", {
-      text: 'Control the verbosity of plugin logs. Default is "Warnings".',
+      text: 'Control the verbosity of plugin logs. default is "warnings".',
       cls: "sonic-graph-setting-description"
     });
     const loggingSelect = loggingItem.createEl("select", { cls: "sonic-graph-setting-select" });
@@ -85509,7 +85477,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-setting-description"
     });
     const exportButton = exportItem.createEl("button", {
-      text: "Export Logs",
+      text: "Export logs",
       cls: "sonic-graph-export-logs-btn"
     });
     exportButton.addEventListener("click", async () => {
@@ -85673,7 +85641,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   /**
    * Phase 3.8: Update layout setting and apply to renderer
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   updateLayoutSetting(key, value) {
     this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
     logger78.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${value}`);
@@ -85769,7 +85736,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   /**
    * Format group label in type:name format
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   formatGroupLabel(group) {
     let type2 = "path";
     if (group.name.toLowerCase().includes("file") || group.path.includes(".")) {
@@ -86068,7 +86034,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     });
     const debugBtn = errorContainer.createEl("button", {
-      text: "Copy Debug Info",
+      text: "Copy debug info",
       cls: "sonic-graph-error-debug"
     });
     debugBtn.addEventListener("click", () => {
@@ -86089,7 +86055,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   async initializeTemporalAnimator() {
     try {
       void logger78.debug("ui", "Initializing temporal animator");
-      const graphData = await this.graphDataExtractor.extractGraphData();
+      const graphData = this.graphDataExtractor.extractGraphData();
       const spacingConfig = this.getSpacingConfiguration();
       this.temporalAnimator = new TemporalGraphAnimator(
         graphData.nodes,
@@ -86199,7 +86165,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   /**
    * Update time markers along the timeline
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   updateTimeMarkers(timelineInfo) {
     const markersContainer = this.timelineInfo.querySelector(".sonic-graph-timeline-markers");
     if (!markersContainer)
@@ -86375,7 +86340,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   /**
    * Create a musical mapping for a graph node
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   createMusicalMappingForNode(node) {
     const settings = this.getSonicGraphSettings();
     this.nodeAppearanceCounter++;
@@ -86458,7 +86422,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    * Calculate scale-aware pitch for a node
    * Uses scale degrees instead of chromatic hashing for more musical results
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   calculateScaleAwarePitch(node, settings) {
     var _a;
     const theorySettings = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory;
@@ -86586,7 +86549,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    * Calculate rhythmic duration with phrase-aware patterns
    * Creates rhythmic variety through phrase position and file properties
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   calculateRhythmicDuration(node, settings) {
     const baseDuration = settings.audio.noteDuration || 0.3;
     const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
@@ -86635,7 +86597,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    * Calculate dynamic velocity with phrase expression curves
    * Creates musical dynamics through crescendo/diminuendo and accents
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   calculateDynamicVelocity(node, settings) {
     const baseVelocity = 0.5;
     const positionInPhrase = this.notesInCurrentPhrase % this.phraseLengthInNotes;
@@ -87360,7 +87321,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   /**
    * Create fallback mapping when no instruments are enabled
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   createFallbackMapping(node, fallbackInstrument) {
     const baseFreq = 261.63;
     const fileNameHash = this.hashString(node.title);
@@ -87556,7 +87516,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     this.resizeObserver.observe(canvasElement);
     void logger78.debug("responsive-setup", "Resize observer set up for responsive graph sizing");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   scheduleSettingsUpdate(key, value) {
     this.pendingSettingsUpdates.set(key, value);
     if (this.settingsUpdateTimeout) {
@@ -87718,7 +87677,6 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   /**
    * Update clustering visualization setting and save to plugin settings
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   updateClusteringVisualization(vizType, value) {
     this.scheduleSettingsUpdate(`smartClustering.visualization.${vizType}`, value);
     logger78.debug("smart-clustering", "Clustering visualization updated", { vizType, value });
@@ -89267,12 +89225,13 @@ var NoteCentricMapper = class {
         const posInPhrase = i / (notesInPhrase - 1 || 1);
         let pitch = phraseStartPitch;
         switch (contourType) {
-          case "ascending":
+          case "ascending": {
             const ascendStep = (seed + i * 7) % 5 + 1;
             pitch += ascendStep * i;
             if ((seed + i) % 4 === 0)
               pitch -= ascendStep;
             break;
+          }
           case "descending":
             const descendStep = (seed + i * 7) % 5 + 1;
             pitch -= descendStep * i;
@@ -90108,7 +90067,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
     void this.createFileTypeFiltersSection(contentEl);
     void this.createLinkDirectionFiltersSection(contentEl);
     const buttonContainer = contentEl.createDiv({ cls: "modal-button-container" });
-    const clearButton = buttonContainer.createEl("button", { text: "Clear All" });
+    const clearButton = buttonContainer.createEl("button", { text: "Clear all" });
     clearButton.addEventListener("click", () => {
       void this.clearAllFilters();
     });
@@ -90126,7 +90085,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
   }
   createTagFiltersSection(container) {
     const section = container.createDiv({ cls: "filter-section" });
-    section.createEl("h3", { text: "Tag Filters" });
+    section.createEl("h3", { text: "Tag filters" });
     new import_obsidian33.Setting(section).setName("Include tags").setDesc("Only show notes with these tags (leave empty for all)").addText((text) => {
       text.setPlaceholder("tag1, tag2, tag3").setValue(this.filters.includeTags.join(", ")).onChange((value) => {
         this.filters.includeTags = value.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
@@ -90162,7 +90121,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
   }
   createFolderFiltersSection(container) {
     const section = container.createDiv({ cls: "filter-section" });
-    section.createEl("h3", { text: "Folder Filters" });
+    section.createEl("h3", { text: "Folder filters" });
     new import_obsidian33.Setting(section).setName("Include folders").setDesc("Only show notes from these folders (leave empty for all)").addText((text) => {
       text.setPlaceholder("folder1, folder2/subfolder").setValue(this.filters.includeFolders.join(", ")).onChange((value) => {
         this.filters.includeFolders = value.split(",").map((f) => f.trim()).filter((f) => f.length > 0);
@@ -90198,7 +90157,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
   }
   createFileTypeFiltersSection(container) {
     const section = container.createDiv({ cls: "filter-section" });
-    section.createEl("h3", { text: "File Type Filters" });
+    section.createEl("h3", { text: "File type filters" });
     const fileTypes = ["md", "pdf", "image", "audio", "video"];
     new import_obsidian33.Setting(section).setName("Include file types").setDesc("Only show these file types (leave empty for all)");
     const checkboxContainer = section.createDiv({ cls: "filter-checkbox-group" });
@@ -90218,7 +90177,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
   }
   createLinkDirectionFiltersSection(container) {
     const section = container.createDiv({ cls: "filter-section" });
-    section.createEl("h3", { text: "Link Direction Filters" });
+    section.createEl("h3", { text: "Link direction filters" });
     new import_obsidian33.Setting(section).setName("Show link directions").setDesc("Which link types to display");
     const checkboxContainer = section.createDiv({ cls: "filter-checkbox-group" });
     const directions = [
@@ -90324,7 +90283,6 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     this.noteCentricPlayer = null;
     this.currentNoteCentricMapping = null;
     this.currentMappings = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     this.continuousLayerManager = null;
     // ContinuousLayerManager (lazily loaded)
     // Audio state
@@ -90429,6 +90387,12 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
         void this.handleActiveFileChange();
       })
     );
+    void this.initializeViewAsync();
+  }
+  /**
+   * Complete view initialization asynchronously (called from onOpen)
+   */
+  async initializeViewAsync() {
     await this.waitForLeafReady();
     const activeFile = this.app.workspace.getActiveFile();
     if (activeFile) {
@@ -91158,7 +91122,15 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
           this.visualizationManager.forceResize();
           void logger85.debug("init-visualization", "Forced visualization resize after initialization");
         }
-      }, 100);
+      }, 500);
+      const resizeObserver = new ResizeObserver(() => {
+        if (this.visualizationManager) {
+          this.visualizationManager.forceResize();
+          void logger85.debug("resize-observer", "Visualization resized due to container size change");
+        }
+      });
+      resizeObserver.observe(this.visualizationContainer);
+      this.register(() => resizeObserver.disconnect());
       void logger85.info("init-visualization", "Visualization manager initialized and started");
     } catch (error) {
       void logger85.error("init-visualization", "Failed to initialize visualization", error);
@@ -91242,7 +91214,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       cls: "placeholder-text"
     });
     placeholder.createEl("p", {
-      text: 'Right-click a note and select "Open in Local Soundscape"',
+      text: 'Right-click a note and select "open in Local Soundscape"',
       cls: "placeholder-hint"
     });
   }
@@ -91252,7 +91224,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   async setCenterFile(file) {
     logger85.info("set-center", "Setting center file", { file: file.path });
     if (this.isPlaying) {
-      await this.stopPlayback();
+      this.stopPlayback();
     }
     this.centerFile = file;
     const centerNoteName = this.headerContainer.querySelector(".center-note-name");
@@ -91364,7 +91336,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     const wasPlaying = this.isPlaying;
     if (this.isPlaying) {
       void logger85.info("set-depth", "Stopping playback for depth change");
-      await this.stopPlayback();
+      this.stopPlayback();
     }
     this.currentDepth = depth;
     new import_obsidian34.Notice(`Updating to depth ${depth}...`);
@@ -91386,7 +91358,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     void logger85.info("refresh", "Refreshing graph");
     if (this.centerFile) {
       if (this.isPlaying) {
-        await this.stopPlayback();
+        this.stopPlayback();
       }
       try {
         await this.waitForContainerReady();
@@ -91865,7 +91837,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       if (width === 0 || height === 0) {
         logger85.error("render-error", "Container has no dimensions, cannot render", { width, height });
         const errorDiv = this.graphContainer.createDiv({ cls: "error-message" });
-        errorDiv.createEl("p", { text: "Error: Container not ready. Please try connecting again." });
+        errorDiv.createEl("p", { text: "Error: container not ready. please try connecting again." });
         return;
       }
       const rendererConfig = {
@@ -91927,7 +91899,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       return;
     void statsContainer.empty();
     const statsHeader = statsContainer.createDiv({ cls: "stats-header" });
-    statsHeader.createEl("h4", { text: "Graph Statistics" });
+    statsHeader.createEl("h4", { text: "Graph statistics" });
     const toggleButton = statsHeader.createEl("button", {
       cls: "stats-toggle",
       attr: { "aria-label": "Toggle statistics" }
@@ -91966,7 +91938,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       return;
     }
     if (this.isPlaying) {
-      await this.pausePlayback();
+      this.pausePlayback();
     } else {
       await this.startPlayback();
     }
@@ -92425,7 +92397,6 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   /**
    * Restore view state from persistence
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
   async setState(state, result) {
     void logger85.info("set-state", "Restoring view state", state);
     if (state.currentDepth) {
@@ -95644,7 +95615,6 @@ var AudioEngine = class {
     this.app = app;
     this.instruments = /* @__PURE__ */ new Map();
     this.instrumentVolumes = /* @__PURE__ */ new Map();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effects have heterogeneous types that don't share a common interface
     this.instrumentEffects = /* @__PURE__ */ new Map();
     // Per-instrument effects
     this.isInitialized = false;
@@ -95725,11 +95695,9 @@ var AudioEngine = class {
   /**
    * Effect chain management delegates
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effect instances lack common type interface
   getEffectChain(instrumentName) {
     return this.effectBusManager.getEffectChain(instrumentName);
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effect types are heterogeneous constructor functions
   addEffectToChain(instrumentName, effectType, position) {
     return this.effectBusManager.addEffectToChain(instrumentName, effectType, position);
   }
@@ -95742,18 +95710,15 @@ var AudioEngine = class {
   toggleEnhancedEffectBypass(instrumentName, effectId) {
     return this.effectBusManager.toggleEffectBypass(instrumentName, effectId);
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effect parameters vary by effect type without unified schema
   updateEffectParameters(instrumentName, effectId, parameters) {
     return this.effectBusManager.updateEffectParameters(instrumentName, effectId, parameters);
   }
   /**
    * Bus management delegates
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Bus instances include various Tone.js audio nodes without common interface
   getSendBuses() {
     return this.effectBusManager.getSendBuses();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Return buses contain heterogeneous Tone.js audio node types
   getReturnBuses() {
     return this.effectBusManager.getReturnBuses();
   }
@@ -95770,46 +95735,35 @@ var AudioEngine = class {
       this.effectBusManager.disableEnhancedRouting();
     }
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: effect chains contain heterogeneous Tone.js types
   get effectChains() {
     const legacyChains = /* @__PURE__ */ new Map();
     return legacyChains;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: send buses use mixed Tone.js audio node types
   get sendBuses() {
     return this.effectBusManager.getSendBuses();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: return buses use mixed Tone.js audio node types
   get returnBuses() {
     return this.effectBusManager.getReturnBuses();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: master effects collection contains various effect types
   get masterEffectsNodes() {
     return /* @__PURE__ */ new Map();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: effect instances are heterogeneous Tone.js objects
   get effectNodeInstances() {
     return /* @__PURE__ */ new Map();
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: reverb effect instance type varies
   get masterReverb() {
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various reverb effect configurations
   set masterReverb(value) {
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: EQ effect instance type varies
   get masterEQ() {
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various EQ effect configurations
   set masterEQ(value) {
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: compressor effect instance type varies
   get masterCompressor() {
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various compressor configurations
   set masterCompressor(value) {
   }
   // === DELEGATE METHODS FOR VOICE MANAGEMENT ===
@@ -95962,7 +95916,7 @@ var AudioEngine = class {
       if (this.volume && hasPercussionEnabled) {
         void logger97.debug("percussion", "Percussion instruments enabled, initializing percussion engine");
         this.percussionEngine = new PercussionEngine(this.volume, "ogg");
-        await this.percussionEngine.initializePercussion();
+        this.percussionEngine.initializePercussion();
         void logger97.debug("percussion", "Advanced percussion synthesis initialized");
       } else {
         logger97.info("percussion", "\u{1F680} ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)");
@@ -95971,7 +95925,7 @@ var AudioEngine = class {
       if (this.volume && hasElectronicEnabled) {
         void logger97.debug("electronic", "Electronic instruments enabled, initializing electronic engine");
         this.electronicEngine = new ElectronicEngine(this.volume);
-        await this.electronicEngine.initializeElectronic();
+        this.electronicEngine.initializeElectronic();
         void logger97.debug("electronic", "Advanced electronic synthesis initialized");
       } else {
         logger97.info("electronic", "Skipping electronic engine initialization (no electronic instruments enabled)");
@@ -96252,7 +96206,6 @@ var AudioEngine = class {
     }
     void logger97.debug("enhanced-routing", "Enhanced instrument connections established");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Accepts any Tone.js audio node as instrument output
   connectToMasterChain(instrumentOutput) {
     let output = instrumentOutput;
     if (this.masterEffectsNodes.has("compressor")) {
@@ -97350,7 +97303,7 @@ var AudioEngine = class {
     this.realtimeStartTime = getContext().currentTime;
     this.lastTriggerTime = 0;
     if (getContext().state === "suspended") {
-      getContext().resume();
+      void getContext().resume();
       void logger97.debug("context", "Resumed suspended audio context for real-time playback");
     }
     try {
@@ -98599,11 +98552,12 @@ var AudioEngine = class {
     switch (mode) {
       case "day":
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      case "week":
+      case "week": {
         const oneJan = new Date(date.getFullYear(), 0, 1);
         const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1e3));
         const weekNumber = Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
         return `${date.getFullYear()}-W${String(weekNumber).padStart(2, "0")}`;
+      }
       case "month":
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       case "year":
@@ -100111,11 +100065,12 @@ var AudioEngine = class {
           const subLevel = frequency < 200 ? Math.min(velocity * 1.5, 1) : velocity * 0.5;
           this.electronicEngine.triggerBassSynth(note, velocity, duration2, subLevel);
           break;
-        case "arpSynth":
+        case "arpSynth": {
           const patterns = ["up", "down", "updown"];
           const patternIndex = Math.floor(frequency / 100 % patterns.length);
           this.electronicEngine.triggerArpSynth(note, velocity, duration2, patterns[patternIndex]);
           break;
+        }
       }
       logger97.debug("advanced-electronic", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration2}`);
     } catch (error) {
@@ -101078,11 +101033,7 @@ var SonigraphPlugin = class extends import_obsidian35.Plugin {
     const leaves = workspace.getLeavesOfType(VIEW_TYPE_LOCAL_SOUNDSCAPE);
     if (leaves.length > 0) {
       leaf = leaves[0];
-      void logger99.debug("ui", "Local Soundscape view already exists, updating center file");
-      const view = leaf.view;
-      if (view instanceof LocalSoundscapeView) {
-        await view.setCenterFile(file);
-      }
+      void logger99.debug("ui", "Local Soundscape view already exists, reusing it");
     } else {
       leaf = workspace.getRightLeaf(false);
       if (leaf) {
@@ -101091,10 +101042,6 @@ var SonigraphPlugin = class extends import_obsidian35.Plugin {
           active: true
         });
         void logger99.debug("ui", "Created new Local Soundscape view in right sidebar");
-        const view = leaf.view;
-        if (view instanceof LocalSoundscapeView) {
-          await view.setCenterFile(file);
-        }
       }
     }
     if (leaf) {
@@ -101102,8 +101049,13 @@ var SonigraphPlugin = class extends import_obsidian35.Plugin {
       if (rightSplit && rightSplit.collapsed) {
         workspace.rightSplit.expand();
       }
+      workspace.setActiveLeaf(leaf, { focus: true });
       void workspace.revealLeaf(leaf);
-      logger99.info("ui", "Local Soundscape view activated and revealed for file", { file: file.path });
+      logger99.info("ui", "Local Soundscape view activated and revealed");
+      const view = leaf.view;
+      if (view instanceof LocalSoundscapeView) {
+        void view.setCenterFile(file);
+      }
     }
   }
   /**
@@ -101611,7 +101563,6 @@ var SonigraphPlugin = class extends import_obsidian35.Plugin {
   /**
    * Get curated Freesound samples for initial library
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Freesound API response structure varies
   getCuratedSamples() {
     const curatedSamples = require_curated_samples_transformed();
     return curatedSamples;
