@@ -96244,6 +96244,7 @@ var AudioEngine = class {
     const allInstruments = [
       "piano",
       "organ",
+      "harmonium",
       "strings",
       "flute",
       "clarinet",

@@ -889,10 +889,10 @@ export class AudioEngine {
 		
 		// Get all instruments that are enabled in settings
 		const allInstruments = [
-			'piano', 'organ', 'strings', 'flute', 'clarinet', 'saxophone', 
-			'electricPiano', 'harpsichord', 'accordion', 'celesta', 
-			'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 
-			'trumpet', 'frenchHorn', 'trombone', 'tuba', 'bassoon', 'oboe', 
+			'piano', 'organ', 'harmonium', 'strings', 'flute', 'clarinet', 'saxophone',
+			'electricPiano', 'harpsichord', 'accordion', 'celesta',
+			'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp',
+			'trumpet', 'frenchHorn', 'trombone', 'tuba', 'bassoon', 'oboe',
 			'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback'
 		];
 		
