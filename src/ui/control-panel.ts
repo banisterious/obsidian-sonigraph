@@ -3,7 +3,7 @@ import SonigraphPlugin from '../main';
 import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
 import { INSTRUMENT_INFO } from '../utils/constants';
-import { TAB_CONFIGS, createLucideIcon, getFamilyIcon, getInstrumentIcon, LucideIconName } from './lucide-icons';
+import { TAB_CONFIGS, createLucideIcon, setLucideIcon, getFamilyIcon, getInstrumentIcon, LucideIconName } from './lucide-icons';
 import { MaterialCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
 import { PlayButtonManager, PlayButtonState } from './play-button-manager';
 import { PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from '../audio/playback-events';

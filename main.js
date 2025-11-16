@@ -3454,7 +3454,7 @@ var init_components = __esm({
 });
 
 // src/ui/lucide-icons.ts
-function setLucideIcon2(element, iconName, size = 20) {
+function setLucideIcon(element, iconName, size = 20) {
   void element.empty();
   const actualIconName = LUCIDE_ICONS[iconName] || iconName;
   (0, import_obsidian2.setIcon)(element, actualIconName);
@@ -3464,7 +3464,7 @@ function setLucideIcon2(element, iconName, size = 20) {
 }
 function createLucideIcon(iconName, size = 20) {
   const iconElement = document.createElement("span");
-  setLucideIcon2(iconElement, iconName, size);
+  setLucideIcon(iconElement, iconName, size);
   return iconElement;
 }
 function getFamilyIcon(familyName) {
