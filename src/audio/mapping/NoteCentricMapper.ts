@@ -350,13 +350,14 @@ export class NoteCentricMapper {
 				let pitch = phraseStartPitch;
 
 				switch (contourType) {
-					case 'ascending':
+					case 'ascending': {
 						// Mix stepwise and leaps - more natural ascent
 						const ascendStep = ((seed + i * 7) % 5) + 1; // 1-5 semitones
 						pitch += ascendStep * i;
 						// Occasional rests on plateau
 						if ((seed + i) % 4 === 0) pitch -= ascendStep;
 						break;
+         }
 					case 'descending':
 						// Mix stepwise and leaps - more natural descent
 						const descendStep = ((seed + i * 7) % 5) + 1;

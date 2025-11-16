@@ -163,13 +163,13 @@ export class FileTypeAnalyzer {
         try {
             // Basic file analysis
             const fileType = this.determineFileType(file);
-            const complexity = await this.calculateComplexity(file, node, fileType);
+            const complexity = this.calculateComplexity(file, node, fileType);
             
             // Get Obsidian metadata cache
             const cache = this.app.metadataCache.getFileCache(file);
             
             // Analyze metadata based on file type
-            const metadata = await this.analyzeMetadata(file, node, fileType, cache);
+            const metadata = this.analyzeMetadata(file, node, fileType, cache);
             
             // Analyze structure
             const structure = this.analyzeStructure(file, node, cache);
@@ -287,7 +287,7 @@ export class FileTypeAnalyzer {
                     complexity += 0.1; // Documents are generally more complex
                     break;
                     
-                case 'text':
+                case 'text': {
                     // Text complexity based on word count and structure
                     const wordCount = node.wordCount || 0;
                     const wordComplexity = Math.min(0.15, wordCount / 5000);
@@ -296,6 +296,7 @@ export class FileTypeAnalyzer {
                     const headingCount = node.headings?.length || 0;
                     if (headingCount > 3) complexity += 0.1;
                     break;
+                    }
                     
                 case 'code':
                     // Code is inherently complex

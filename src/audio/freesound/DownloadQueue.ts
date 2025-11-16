@@ -183,7 +183,7 @@ export class DownloadQueue {
     /**
      * Private: Process queue
      */
-    private async processQueue(): Promise<void> {
+    private processQueue(): void {
         // Check if we can start more downloads
         while (this.activeDownloads.size < this.maxConcurrent) {
             const nextTask = this.getNextTask();

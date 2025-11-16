@@ -185,7 +185,7 @@ export class ContentAwareMapper {
             };
 
             // Use InstrumentSelector to get the best instrument
-            const instrumentName = await this.instrumentSelector.selectInstrument(criteria, this.config);
+            const instrumentName = this.instrumentSelector.selectInstrument(criteria, this.config);
             
             // Get the instrument configuration
             const instrumentConfig = this.availableInstruments.get(instrumentName);
@@ -232,14 +232,14 @@ export class ContentAwareMapper {
             let semanticResult: SemanticMappingResult | null = null;
             if (this.tagSemanticMapper && this.config.enhancedMapping.weightings.semantics > 0) {
                 void reasoning.push('Performing semantic tag analysis');
-                semanticResult = await this.tagSemanticMapper.performSemanticMapping(node, context);
+                semanticResult = this.tagSemanticMapper.performSemanticMapping(node, context);
             }
 
             // Step 3: Perform folder hierarchy analysis if enabled
             let folderResult: FolderCharacteristics | null = null;
             if (this.folderHierarchyMapper && this.config.folderHierarchy?.enabled) {
                 void reasoning.push('Analyzing folder hierarchy and path mapping');
-                folderResult = await this.folderHierarchyMapper.analyzeFolderPath(node.path);
+                folderResult = this.folderHierarchyMapper.analyzeFolderPath(node.path);
             }
 
             // Step 4: Combine all analysis results
@@ -356,7 +356,7 @@ export class ContentAwareMapper {
                 }
                 break;
 
-            case 'text':
+            case 'text': {
                 // Word count and heading structure influence pitch
                 const wordCount = characteristics.metadata.wordCount || 0;
                 const headingCount = characteristics.structure.headingCount || 0;
@@ -372,6 +372,7 @@ export class ContentAwareMapper {
                     range = 12; // Narrow
                 }
                 break;
+                }
         }
 
         // Apply complexity modifier

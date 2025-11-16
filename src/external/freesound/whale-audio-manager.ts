@@ -483,7 +483,7 @@ export class WhaleAudioManager {
         if (!this.vault) return;
 
         try {
-            const cacheStats = await this.getCacheStats();
+            const cacheStats = this.getCacheStats();
             
             if (cacheStats.totalSizeGB > maxSizeGB) {
                 logger.info('cache-cleanup', 'Starting cache cleanup', {

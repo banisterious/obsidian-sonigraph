@@ -295,7 +295,7 @@ export class FreesoundAPIClient {
         const rejected: FreesoundSample[] = [];
 
         for (const sample of uniqueSamples) {
-            if (await this.validateSample(sample, query)) {
+            if (this.validateSample(sample, query)) {
                 void validated.push(sample);
             } else {
                 void rejected.push(sample);

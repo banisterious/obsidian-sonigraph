@@ -74,7 +74,7 @@ export class SampleTableBrowser {
 		const header = this.container.createDiv({ cls: 'sonigraph-sample-table-header' });
 
 		const titleRow = header.createDiv({ cls: 'sonigraph-sample-table-title-row' });
-		titleRow.createEl('h4', { text: 'Sample Library', cls: 'sonigraph-sample-table-title' });
+		titleRow.createEl('h4', { text: 'Sample library', cls: 'sonigraph-sample-table-title' });
 
 		const searchBtn = titleRow.createEl('button', {
 			text: 'Search Freesound',
@@ -134,7 +134,7 @@ export class SampleTableBrowser {
 	 * Populate tag filter dropdown with unique tags
 	 */
 	private populateTagFilter(select: HTMLSelectElement): void {
-		select.createEl('option', { text: 'All Tags', value: '' });
+		select.createEl('option', { text: 'All tags', value: '' });
 
 		const samples = this.plugin.settings.freesoundSamples || [];
 		const tags = new Set<string>();
@@ -155,7 +155,7 @@ export class SampleTableBrowser {
 	 * Populate license filter dropdown
 	 */
 	private populateLicenseFilter(select: HTMLSelectElement): void {
-		select.createEl('option', { text: 'All Licenses', value: '' });
+		select.createEl('option', { text: 'All licenses', value: '' });
 
 		const samples = this.plugin.settings.freesoundSamples || [];
 		const licenses = new Set<string>();
@@ -644,7 +644,7 @@ class TagEditorModal extends Modal {
 		const { contentEl } = this;
 		void contentEl.empty();
 
-		contentEl.createEl('h3', { text: 'Edit Tags' });
+		contentEl.createEl('h3', { text: 'Edit tags' });
 		contentEl.createEl('p', {
 			text: `Sample: ${this.sample.title || this.sample.name}`,
 			cls: 'sonigraph-tag-editor-sample-name'
@@ -700,13 +700,13 @@ class TagEditorModal extends Modal {
 		});
 
 		// Current tags display
-		contentEl.createEl('h4', { text: 'Current Tags' });
+		contentEl.createEl('h4', { text: 'Current tags' });
 		this.tagListEl = contentEl.createDiv({ cls: 'sonigraph-tag-editor-list' });
 		void this.renderTags();
 
 		// Common tags section
 		const commonSection = contentEl.createDiv({ cls: 'sonigraph-tag-common-section' });
-		commonSection.createEl('h4', { text: 'Common Tags' });
+		commonSection.createEl('h4', { text: 'Common tags' });
 		const commonTagsEl = commonSection.createDiv({ cls: 'sonigraph-tag-common-grid' });
 
 		const commonTags = ['drone', 'ambient', 'atmospheric', 'electronic', 'oceanic',

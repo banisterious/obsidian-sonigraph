@@ -64,8 +64,7 @@ interface SynthWithVoiceTracking {
 export class AudioEngine {
 	private instruments: Map<string, PolySynth | Sampler> = new Map();
 	private instrumentVolumes: Map<string, Volume> = new Map();
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effects have heterogeneous types that don't share a common interface
-	private instrumentEffects: Map<string, Map<string, any>> = new Map(); // Per-instrument effects
+	private instrumentEffects: Map<string, Map<string, unknown>> = new Map(); // Per-instrument effects
 	private isInitialized = false;
 	private isPlaying = false;
 	private isMinimalMode = false; // Issue #010 Fix: Track if we're in minimal initialization mode
@@ -169,13 +168,11 @@ export class AudioEngine {
 	/**
 	 * Effect chain management delegates
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effect instances lack common type interface
-	getEffectChain(instrumentName: string): any[] {
+	getEffectChain(instrumentName: string): unknown[] {
 		return this.effectBusManager.getEffectChain(instrumentName);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effect types are heterogeneous constructor functions
-	addEffectToChain(instrumentName: string, effectType: any, position?: number): string {
+	addEffectToChain(instrumentName: string, effectType: unknown, position?: number): string {
 		return this.effectBusManager.addEffectToChain(instrumentName, effectType, position);
 	}
 
@@ -191,21 +188,18 @@ export class AudioEngine {
 		return this.effectBusManager.toggleEffectBypass(instrumentName, effectId);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effect parameters vary by effect type without unified schema
-	updateEffectParameters(instrumentName: string, effectId: string, parameters: any): void {
+	updateEffectParameters(instrumentName: string, effectId: string, parameters: Record<string, unknown>): void {
 		return this.effectBusManager.updateEffectParameters(instrumentName, effectId, parameters);
 	}
 
 	/**
 	 * Bus management delegates
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Bus instances include various Tone.js audio nodes without common interface
-	getSendBuses(): Map<string, any> {
+	getSendBuses(): Map<string, unknown> {
 		return this.effectBusManager.getSendBuses();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Return buses contain heterogeneous Tone.js audio node types
-	getReturnBuses(): Map<string, any> {
+	getReturnBuses(): Map<string, new (...args: unknown[]) => unknown> {
 		return this.effectBusManager.getReturnBuses();
 	}
 
@@ -224,63 +218,52 @@ export class AudioEngine {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: effect chains contain heterogeneous Tone.js types
-	get effectChains(): Map<string, any[]> {
+	get effectChains(): Map<string, unknown[]> {
 		// Convert EffectBusManager chains to legacy format
 		const legacyChains = new Map();
 		// Implementation would go here if needed
 		return legacyChains;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: send buses use mixed Tone.js audio node types
-	get sendBuses(): Map<string, any> {
+	get sendBuses(): Map<string, new (...args: unknown[]) => unknown> {
 		return this.effectBusManager.getSendBuses();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: return buses use mixed Tone.js audio node types
-	get returnBuses(): Map<string, any> {
+	get returnBuses(): Map<string, unknown> {
 		return this.effectBusManager.getReturnBuses();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: master effects collection contains various effect types
-	get masterEffectsNodes(): Map<string, any> {
+	get masterEffectsNodes(): Map<string, unknown> {
 		// Legacy access to master effects - could be implemented if needed
 		return new Map();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: effect instances are heterogeneous Tone.js objects
-	get effectNodeInstances(): Map<string, any> {
+	get effectNodeInstances(): Map<string, unknown> {
 		// Legacy access to effect instances - could be implemented if needed
 		return new Map();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: reverb effect instance type varies
-	get masterReverb(): any {
+	get masterReverb(): unknown {
 		return null; // Legacy property access
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various reverb effect configurations
-	set masterReverb(value: any) {
+	set masterReverb(value: unknown) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: EQ effect instance type varies
-	get masterEQ(): any {
+	get masterEQ(): unknown {
 		return null; // Legacy property access
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various EQ effect configurations
-	set masterEQ(value: any) {
+	set masterEQ(value: unknown) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: compressor effect instance type varies
-	get masterCompressor(): any {
+	get masterCompressor(): unknown {
 		return null; // Legacy property access
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Legacy API: accepts various compressor configurations
-	set masterCompressor(value: any) {
+	set masterCompressor(value: unknown) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
@@ -477,7 +460,7 @@ export class AudioEngine {
 			if (this.volume && hasPercussionEnabled) {
 				void logger.debug('percussion', 'Percussion instruments enabled, initializing percussion engine');
 				this.percussionEngine = new PercussionEngine(this.volume, 'ogg');
-				await this.percussionEngine.initializePercussion();
+				this.percussionEngine.initializePercussion();
 				void logger.debug('percussion', 'Advanced percussion synthesis initialized');
 			} else {
 				logger.info('percussion', '🚀 ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)');
@@ -488,7 +471,7 @@ export class AudioEngine {
 			if (this.volume && hasElectronicEnabled) {
 				void logger.debug('electronic', 'Electronic instruments enabled, initializing electronic engine');
 				this.electronicEngine = new ElectronicEngine(this.volume);
-				await this.electronicEngine.initializeElectronic();
+				this.electronicEngine.initializeElectronic();
 				void logger.debug('electronic', 'Advanced electronic synthesis initialized');
 			} else {
 				logger.info('electronic', 'Skipping electronic engine initialization (no electronic instruments enabled)');
@@ -599,8 +582,7 @@ export class AudioEngine {
 			this.instrumentVolumes.set(instrumentName, volume);
 			
 			// Create effects with settings from constants or defaults
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effect map stores heterogeneous Tone.js effect instances
-			const effectMap = new Map<string, any>();
+			const effectMap = new Map<string, unknown>();
 			const effectSettings = instrumentSettings?.effects ?? DEFAULT_SETTINGS.instruments[instrumentName as keyof typeof DEFAULT_SETTINGS.instruments]?.effects;
 			
 			// Create reverb for this instrument
@@ -804,7 +786,6 @@ export class AudioEngine {
 		}
 	}
 
-
 	private initializeSendReturnBuses(): void {
 		const routingMatrix = this.settings.enhancedRouting?.routingMatrix;
 		if (!routingMatrix) return;
@@ -856,8 +837,7 @@ export class AudioEngine {
 		void logger.debug('enhanced-routing', 'Enhanced instrument connections established');
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Accepts any Tone.js audio node as instrument output
-	private connectToMasterChain(instrumentOutput: any): void {
+	private connectToMasterChain(instrumentOutput: unknown): void {
 		let output = instrumentOutput;
 		
 		// Connect through master effects if enabled
@@ -1348,8 +1328,7 @@ export class AudioEngine {
 		const maxVoices = this.getInstrumentPolyphonyLimit(whaleType);
 
 		// Define whale-specific synthesis characteristics based on species
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Whale synthesis config varies by species without unified type
-		let config: any;
+		let config: unknown;
 		
 		switch (whaleType) {
 			case 'whaleBlue':
@@ -2160,7 +2139,7 @@ export class AudioEngine {
 		
 		// Start the audio context if suspended and optimize for latency
 		if (getContext().state === 'suspended') {
-			getContext().resume();
+			void getContext().resume();
 			void logger.debug('context', 'Resumed suspended audio context for real-time playback');
 		}
 		
@@ -2304,16 +2283,12 @@ export class AudioEngine {
 			
 			const instrumentKey = instrumentName as keyof typeof this.settings.instruments;
 			
-			
 			const instrumentSettings = this.settings.instruments[instrumentKey];
-			
-			
 			
 			// Check if instrument is enabled in settings
 			if (!instrumentSettings?.enabled) {
 				return;
 			}
-
 
 			// Use specialized synthesis engines if available
 			if (this.percussionEngine && this.isPercussionInstrument(instrumentName)) {
@@ -3749,13 +3724,14 @@ export class AudioEngine {
 			case 'day':
 				return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
-			case 'week':
+			case 'week': {
 				// ISO week number
 				const oneJan = new Date(date.getFullYear(), 0, 1);
 				const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1000));
 				const weekNumber = Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
 				return `${date.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
 
+       }
 			case 'month':
 				return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
@@ -5070,7 +5046,6 @@ export class AudioEngine {
 		return instrumentBypasses?.get(effectType) || false;
 	}
 
-
 	/**
 	 * Update performance metrics
 	 */
@@ -5656,12 +5631,13 @@ export class AudioEngine {
 					this.electronicEngine.triggerBassSynth(note, velocity, duration, subLevel);
 					break;
 					
-				case 'arpSynth':
+				case 'arpSynth': {
 					// Arpeggiator pattern based on note position in scale
 					const patterns = ['up', 'down', 'updown'] as const;
 					const patternIndex = Math.floor((frequency / 100) % patterns.length);
 					this.electronicEngine.triggerArpSynth(note, velocity, duration, patterns[patternIndex]);
 					break;
+        }
 			}
 			
 			logger.debug('advanced-electronic', `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
@@ -6335,9 +6311,6 @@ export class AudioEngine {
 			// Missing from CDN (confirmed in external-sample-sources-guide.md)
 			missingInstruments: {
 				// Vocal Family (0/6 available)
-				
-
-
 				
 				// Percussion Family (3/4 missing)
 				timpani: { status: 'MISSING', path: 'timpani/', reason: 'Directory does not exist on nbrosowsky CDN' },

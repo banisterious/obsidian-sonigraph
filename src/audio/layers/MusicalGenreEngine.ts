@@ -65,20 +65,16 @@ export class MusicalGenreEngine {
 
   // Synthesis components
   private primarySynth: PolySynth | FMSynth | AMSynth | NoiseSynth | MetalSynth | Sampler | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supporting synths use heterogeneous Tone.js instrument types
-  private supportingSynths: Map<string, any> = new Map();
+  private supportingSynths: Map<string, unknown> = new Map();
   private synthVolume: Volume;
 
   // Effects chain
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js effects have heterogeneous types without common interface
-  private effects: Map<string, any> = new Map();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effects chain contains heterogeneous Tone.js effect types
-  private effectsChain: any[] = [];
+  private effects: Map<string, unknown> = new Map();
+  private effectsChain: unknown[] = [];
 
   // Modulation
   private lfos: Map<string, LFO> = new Map();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Modulation targets vary by parameter type
-  private modulationTargets: Map<string, any> = new Map();
+  private modulationTargets: Map<string, unknown> = new Map();
 
   // Sample integration
   private sampleLoader: FreesoundSampleLoader | null = null;
@@ -233,7 +229,7 @@ export class MusicalGenreEngine {
       }
       
       // Clean up current synths and effects
-      await this.cleanup();
+      this.cleanup();
       
       // Update genre
       this.currentGenre = genre;
@@ -311,8 +307,7 @@ export class MusicalGenreEngine {
   /**
    * Connect to audio destination
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Tone.js audio nodes use dynamic typing
-  connect(destination: any): void {
+  connect(destination: unknown): void {
     this.synthVolume.connect(destination);
   }
   
@@ -348,7 +343,7 @@ export class MusicalGenreEngine {
     
     try {
       await this.stop();
-      await this.cleanup();
+      this.cleanup();
       
       this.synthVolume.dispose();
       
@@ -380,8 +375,7 @@ export class MusicalGenreEngine {
     }
   }
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Returns various Tone.js synth types based on genre
-  private createSynth(type: string, params: GenreParameters): any {
+  private createSynth(type: string, params: GenreParameters): unknown {
     switch (type) {
       case 'fm':
         return new FMSynth({
@@ -464,8 +458,7 @@ export class MusicalGenreEngine {
     const params = genreConfig.parameters;
 
     for (const effectType of genreConfig.effectChain) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Effect type varies by effect name
-      let effect: any;
+      let effect: unknown;
       
       switch (effectType) {
         case 'reverb':
@@ -532,8 +525,7 @@ export class MusicalGenreEngine {
   }
   
   private connectAudioChain(): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Audio chain nodes have heterogeneous types
-    let currentNode: any = this.primarySynth;
+    let currentNode: unknown = this.primarySynth;
     
     // Connect supporting synths to a gain node first
     // (Simplified - would need proper mixing in full implementation)
@@ -555,7 +547,7 @@ export class MusicalGenreEngine {
     
     try {
       for (const category of categories) {
-        const samples = await this.sampleLoader.getSamplesForCategory(category);
+        const samples = this.sampleLoader.getSamplesForCategory(category);
         if (samples.length > 0) {
           // Create sampler with first sample (simplified)
           const sampleUrl = samples[0].previewUrl;

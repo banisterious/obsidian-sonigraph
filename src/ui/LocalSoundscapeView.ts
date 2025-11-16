@@ -52,8 +52,7 @@ export class LocalSoundscapeView extends ItemView {
 	private noteCentricPlayer: NoteCentricPlayer | null = null;
 	private currentNoteCentricMapping: NoteCentricMapping | null = null;
 	private currentMappings: DepthMapping[] = [];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private continuousLayerManager: any = null; // ContinuousLayerManager (lazily loaded)
+	private continuousLayerManager: unknown = null; // ContinuousLayerManager (lazily loaded)
 
 	// Audio state
 	private isPlaying: boolean = false;
@@ -1214,8 +1213,7 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		// Listen to note events from audio engine
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		this.plugin.audioEngine.on('note-triggered', (noteData: any) => {
+		this.plugin.audioEngine.on('note-triggered', (noteData: unknown) => {
 			logger.debug('viz-note-received', 'Received note-triggered event', {
 				pitch: noteData.pitch,
 				layer: noteData.layer,
@@ -1260,7 +1258,7 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'placeholder-text'
 		});
 		placeholder.createEl('p', {
-			text: 'Right-click a note and select "Open in Local Soundscape"',
+			text: 'Right-click a note and select "open in Local Soundscape"',
 			cls: 'placeholder-hint'
 		});
 	}
@@ -1273,7 +1271,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Stop any playing audio when switching to a new center file
 		if (this.isPlaying) {
-			await this.stopPlayback();
+			this.stopPlayback();
 		}
 
 		this.centerFile = file;
@@ -1419,7 +1417,7 @@ export class LocalSoundscapeView extends ItemView {
 		const wasPlaying = this.isPlaying;
 		if (this.isPlaying) {
 			void logger.info('set-depth', 'Stopping playback for depth change');
-			await this.stopPlayback();
+			this.stopPlayback();
 		}
 
 		this.currentDepth = depth;
@@ -1454,7 +1452,7 @@ export class LocalSoundscapeView extends ItemView {
 		if (this.centerFile) {
 			// Stop audio if playing
 			if (this.isPlaying) {
-				await this.stopPlayback();
+				this.stopPlayback();
 			}
 
 			try {
@@ -1976,7 +1974,6 @@ export class LocalSoundscapeView extends ItemView {
 		}
 	}
 
-
 	/**
 	 * Mark graph as up-to-date (just refreshed)
 	 */
@@ -2095,7 +2092,7 @@ export class LocalSoundscapeView extends ItemView {
 			if (width === 0 || height === 0) {
 				logger.error('render-error', 'Container has no dimensions, cannot render', { width, height });
 				const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
-				errorDiv.createEl('p', { text: 'Error: Container not ready. Please try connecting again.' });
+				errorDiv.createEl('p', { text: 'Error: container not ready. please try connecting again.' });
 				return;
 			}
 
@@ -2183,7 +2180,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Create collapsible section
 		const statsHeader = statsContainer.createDiv({ cls: 'stats-header' });
-		statsHeader.createEl('h4', { text: 'Graph Statistics' });
+		statsHeader.createEl('h4', { text: 'Graph statistics' });
 
 		const toggleButton = statsHeader.createEl('button', {
 			cls: 'stats-toggle',
@@ -2230,7 +2227,7 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		if (this.isPlaying) {
-			await this.pausePlayback();
+			this.pausePlayback();
 		} else {
 			await this.startPlayback();
 		}
@@ -2851,8 +2848,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Restore view state from persistence
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	async setState(state: LocalSoundscapeViewState, result: any): Promise<void> {
+	async setState(state: LocalSoundscapeViewState, result: unknown): Promise<void> {
 		void logger.info('set-state', 'Restoring view state', state);
 
 		if (state.currentDepth) {

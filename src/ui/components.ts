@@ -111,7 +111,7 @@ export function createObsidianToggle(
 
 				// Call the onChange callback
 				logger.debug('ui', 'Calling onChange callback', { checkboxId });
-				await onChange(newValue);
+				onChange(newValue);
 				logger.debug('ui', 'Checkbox onChange callback completed', { checkboxId, newValue });
 			} catch (error) {
 				logger.error('ui', 'Error in checkbox change handler', { checkboxId, error });

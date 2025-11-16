@@ -49,7 +49,7 @@ export class FileCollisionModal extends Modal {
         void contentEl.addClass('sonigraph-file-collision-modal');
 
         // Header
-        contentEl.createEl('h2', { text: 'File Already Exists' });
+        contentEl.createEl('h2', { text: 'File already exists' });
 
         // File info
         const infoContainer = contentEl.createDiv('collision-info');

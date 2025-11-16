@@ -73,7 +73,7 @@ export class FreesoundSampleLoader {
       
       // Test API connection if key is provided
       if (this.apiKey) {
-        await this.testApiConnection();
+        this.testApiConnection();
       }
       
       // Start cache cleanup timer

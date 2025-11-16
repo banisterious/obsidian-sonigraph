@@ -514,7 +514,7 @@ export class DepthBasedMapper {
 		const mappings: DepthMapping[] = [];
 
 		// Map center node
-		const centerMapping = await this.mapNode(data.centerNode, 0, contextModifiers, proseAnalysis);
+		const centerMapping = this.mapNode(data.centerNode, 0, contextModifiers, proseAnalysis);
 		if (centerMapping) {
 			void mappings.push(centerMapping);
 		}
@@ -532,7 +532,7 @@ export class DepthBasedMapper {
 			});
 
 			for (const node of limitedNodes) {
-				const mapping = await this.mapNode(node, depth, contextModifiers, proseAnalysis);
+				const mapping = this.mapNode(node, depth, contextModifiers, proseAnalysis);
 				if (mapping) {
 					void mappings.push(mapping);
 				}

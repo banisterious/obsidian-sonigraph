@@ -1054,8 +1054,7 @@ export class GraphRenderer {
   /**
    * Generate consistent link ID for D3.js data binding
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js link data can be node objects or node IDs
-  private getLinkId(link: any, index: number): string {
+  private getLinkId(link: unknown, index: number): string {
     const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
     const targetId = typeof link.target === 'string' ? link.target : link.target.id;
     return `${sourceId}-${targetId}-${index}`;
@@ -1073,8 +1072,7 @@ export class GraphRenderer {
   /**
    * Get offset position for path-based grouping
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Folder groups have varying structures from graph analysis
-  private getPathBasedOffset(filePath: string, groups: any[]): { x: number; y: number } {
+  private getPathBasedOffset(filePath: string, groups: unknown[]): { x: number; y: number } {
     const radius = 100; // Distance from center for group clusters
     
     // Find which group this file belongs to
@@ -1531,7 +1529,7 @@ export class GraphRenderer {
     
     try {
       // Run clustering algorithm
-      this.clusteringResult = await this.smartClustering.clusterGraph(this.nodes, this.links);
+      this.clusteringResult = this.smartClustering.clusterGraph(this.nodes, this.links);
       
       logger.debug('smart-clustering', 'Clustering completed', {
         clusterCount: this.clusteringResult.clusters.length,
@@ -1564,12 +1562,9 @@ export class GraphRenderer {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Debug data structure varies, requires runtime type assertion
-    const tagConnections = (debugData.tagConnections as any) || [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Debug data structure varies, requires runtime type assertion
-    const temporalZones = (debugData.temporalZones as any) || [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Debug data structure varies, requires runtime type assertion
-    const hubNodes = (debugData.hubNodes as any) || [];
+    const tagConnections = (debugData.tagConnections as unknown) || [];
+    const temporalZones = (debugData.temporalZones as unknown) || [];
+    const hubNodes = (debugData.hubNodes as unknown) || [];
 
     logger.debug('debug-viz', 'Updating debug visualization', {
       tagConnections: tagConnections.length || 0,
@@ -1596,8 +1591,7 @@ export class GraphRenderer {
   /**
    * Render temporal positioning zones
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and zone data have dynamic structures
-  private renderTemporalZones(debugGroup: any, zones: any[]): void {
+  private renderTemporalZones(debugGroup: unknown, zones: unknown[]): void {
     const zoneSelection = debugGroup.selectAll('.temporal-zone')
       .data(zones, (d: unknown) => d.name);
 
@@ -1658,8 +1652,7 @@ export class GraphRenderer {
   /**
    * Render tag connection links
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and connection data have dynamic structures
-  private renderTagConnections(debugGroup: any, connections: any[]): void {
+  private renderTagConnections(debugGroup: unknown, connections: unknown[]): void {
     const connectionSelection = debugGroup.selectAll('.tag-connection')
       .data(connections, (d: unknown) => `${d.sourceId}-${d.targetId}`);
 
@@ -1698,8 +1691,7 @@ export class GraphRenderer {
   /**
    * Render hub node indicators
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and hub data have dynamic structures
-  private renderHubIndicators(debugGroup: any, hubs: any[]): void {
+  private renderHubIndicators(debugGroup: unknown, hubs: unknown[]): void {
     const hubSelection = debugGroup.selectAll('.hub-indicator')
       .data(hubs, (d: unknown) => d.nodeId);
 
@@ -2030,8 +2022,7 @@ export class GraphRenderer {
   /**
    * Check if a node has valid coordinates (not NaN or undefined)
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Node can be GraphNode or D3 simulation node with partial data
-  private hasValidCoordinates(node: any): boolean {
+  private hasValidCoordinates(node: unknown): boolean {
     return node && 
            typeof node.x === 'number' && 
            typeof node.y === 'number' && 
@@ -2081,8 +2072,7 @@ export class GraphRenderer {
   /**
    * Check if a node is within the viewport bounds
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Node can be GraphNode or D3 simulation node with partial data
-  private isNodeInViewport(node: any, bounds: { x: number; y: number; width: number; height: number }): boolean {
+  private isNodeInViewport(node: unknown, bounds: { x: number; y: number; width: number; height: number }): boolean {
     if (!this.hasValidCoordinates(node)) {
       return false;
     }

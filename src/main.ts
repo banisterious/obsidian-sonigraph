@@ -740,8 +740,6 @@ export default class SonigraphPlugin extends Plugin {
 			};
 		}
 
-
-		
 		// Ensure woodwind instruments exist (for users upgrading from 6 to 9 instruments)
 		if (!this.settings.instruments.flute) {
 			void logger.info('settings', 'Adding missing Flute instrument');
@@ -788,8 +786,6 @@ export default class SonigraphPlugin extends Plugin {
 			};
 		}
 		
-
-
 		// Ensure new string instruments exist (for users upgrading to include new nbrosowsky instruments)
 		if (!this.settings.instruments.contrabass) {
 			logger.info('settings', 'Adding missing Contrabass instrument (new string instrument)');
@@ -999,8 +995,7 @@ export default class SonigraphPlugin extends Plugin {
 	/**
 	 * Get curated Freesound samples for initial library
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Freesound API response structure varies
-	private getCuratedSamples(): any[] {
+	private getCuratedSamples(): unknown[] {
 		// Import the transformed curated samples
 		 
 		const curatedSamples = require('../curated-samples-transformed.json');

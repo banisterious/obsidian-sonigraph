@@ -108,7 +108,7 @@ export class ExportModal extends Modal {
      */
     private createPresetsSection(container: HTMLElement): void {
         const section = container.createDiv('export-section');
-        section.createEl('h3', { text: 'Quick Presets' });
+        section.createEl('h3', { text: 'Quick presets' });
 
         const presetButtons = section.createDiv('sonigraph-export-preset-buttons');
 
@@ -146,7 +146,7 @@ export class ExportModal extends Modal {
 
         // Save current as preset button
         const savePresetBtn = presetButtons.createEl('button', {
-            text: '💾 Save Current as Preset',
+            text: '💾 save current as preset',
             cls: 'sonigraph-export-preset-save'
         });
         savePresetBtn.addEventListener('click', () => void this.saveCurrentAsPreset());
@@ -370,12 +370,12 @@ export class ExportModal extends Modal {
      */
     private createFormatSection(container: HTMLElement): void {
         const section = container.createDiv('export-section');
-        section.createEl('h3', { text: 'Format & Quality' });
+        section.createEl('h3', { text: 'Format & quality' });
 
         // Format
         new Setting(section)
             .setName('Format')
-            .setDesc('Audio file format. Compressed audio uses native platform codecs (M4A/AAC, WebM/Opus, or OGG/Vorbis).')
+            .setDesc('Audio file format. compressed audio uses native platform codecs (m4a/aac, webm/opus, or ogg/vorbis).')
             .addDropdown(dropdown => {
                 this.formatDropdown = dropdown;
 
@@ -417,7 +417,7 @@ export class ExportModal extends Modal {
      */
     private createLocationSection(container: HTMLElement): void {
         const section = container.createDiv('export-section');
-        section.createEl('h3', { text: 'Save Location' });
+        section.createEl('h3', { text: 'Save location' });
 
         // Location type
         new Setting(section)
@@ -531,7 +531,7 @@ export class ExportModal extends Modal {
         const section = container.createDiv('export-section');
 
         const header = section.createDiv('sonigraph-export-metadata-header');
-        header.createEl('span', { text: 'Metadata (Optional) ▼' });
+        header.createEl('span', { text: 'Metadata (optional) ▼' });
         void header.addClass('clickable');
 
         this.metadataContainer = section.createDiv('sonigraph-export-metadata-content');

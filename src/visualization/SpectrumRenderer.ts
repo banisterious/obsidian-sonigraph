@@ -67,8 +67,7 @@ export class SpectrumRenderer implements VisualizationRenderer {
     /**
      * Connect to Web Audio API for real-time spectrum analysis
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Canvas rendering API uses dynamic types
-    public connectToAudioContext(audioContext: AudioContext, sourceNode?: any): void {
+    public connectToAudioContext(audioContext: AudioContext, sourceNode?: unknown): void {
         if (!audioContext) {
             void logger.warn('audio', 'No audio context provided for spectrum analyzer');
             return;

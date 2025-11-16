@@ -42,14 +42,11 @@ type EffectsMap = Record<string, EffectConfig>;
  */
 interface PluginWithOptionalIntegrations extends SonigraphPlugin {
 	continuousLayerManager?: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		sampleLoader?: any;
+		sampleLoader?: unknown;
 	};
 	whaleIntegration?: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		whaleManager?: any;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		updateSettings?: (settings: any) => void;
+		whaleManager?: unknown;
+		updateSettings?: (settings: unknown) => void;
 		cleanup?: () => void;
 	};
 }
@@ -63,8 +60,7 @@ type PolyphonicDensity = 'sparse' | 'moderate' | 'maximum';
 type VoiceLeadingStyle = 'smooth' | 'chromatic' | 'parallel';
 type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): any | undefined {
+function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): unknown | undefined {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
 		return instruments[instrumentKey as InstrumentKey];
@@ -72,21 +68,18 @@ function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): 
 	return undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-function setInstrumentSetting<K extends keyof any>(
+function setInstrumentSetting<K extends keyof unknown>(
 	plugin: SonigraphPlugin,
 	instrumentKey: string,
 	settingKey: K,
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	value: any
+	value: unknown
 ): boolean {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
 		const instrument = instruments[instrumentKey as InstrumentKey];
 		if (instrument && typeof instrument === 'object') {
 			// Dynamic property assignment on known instrument settings object
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			(instrument as Record<string, any>)[settingKey as string] = value;
+			(instrument as Record<string, unknown>)[settingKey as string] = value;
 			return true;
 		}
 	}
@@ -186,7 +179,6 @@ export class MaterialControlPanelModal extends Modal {
 			this.sonicGraphSettingsTabs = null;
 		}
 	}
-
 
 	/**
 	 * Create contained modal structure with sticky header
@@ -297,7 +289,7 @@ export class MaterialControlPanelModal extends Modal {
 		const sonicGraphIcon = createLucideIcon('chart-network', 16);
 		void sonicGraphBtn.appendChild(sonicGraphIcon);
 		void sonicGraphBtn.appendText('Sonic Graph');
-		sonicGraphBtn.addEventListener('click', () => this.launchSonicGraphView());
+		sonicGraphBtn.addEventListener('click', () => void this.launchSonicGraphView());
 	}
 
 	/**
@@ -472,15 +464,15 @@ export class MaterialControlPanelModal extends Modal {
 		const stepsList = quickStartContent.createEl('ol', { cls: 'osp-guide-steps' });
 
 		stepsList.createEl('li', {
-			text: 'Enable Instruments: Go to the Keyboard, Strings, or Electronic tabs and enable 3-5 instruments you like. Start with Piano, Strings, and Lead Synth for a balanced sound.'
+			text: 'Enable instruments: go to the keyboard, strings, or electronic tabs and enable 3-5 instruments you like. start with piano, strings, and lead synth for a balanced sound.'
 		});
 
 		stepsList.createEl('li', {
-			text: 'Configure Musical Settings: Visit the Musical tab to set your preferred scale (try C Major) and tempo (60-120 BPM works well for most vaults).'
+			text: 'Configure musical settings: visit the musical tab to set your preferred scale (try c major) and tempo (60-120 BPM works well for most vaults).'
 		});
 
 		stepsList.createEl('li', {
-			text: 'Try Local Soundscape: Right-click any note in your vault and select "Open in Local Soundscape" to hear how it connects to other notes.'
+			text: 'Try Local Soundscape: right-click any note in your vault and select "open in Local Soundscape" to hear how it connects to other notes.'
 		});
 
 		this.contentContainer.appendChild(quickStartCard.getElement());
@@ -500,7 +492,7 @@ export class MaterialControlPanelModal extends Modal {
 		const lsFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
 		lsFeature.createEl('strong', { text: 'Local Soundscape' });
 		lsFeature.createEl('p', {
-			text: 'Visualize and sonify a single note and its connections. Notes at different depths play different instrument families, creating layers of harmony. Enable Musical Enhancements in the Local Soundscape tab for richer, more musical results.'
+			text: 'Visualize and sonify a single note and its connections. notes at different depths play different instrument families, creating layers of harmony. enable musical enhancements in the Local Soundscape tab for richer, more musical results.'
 		});
 
 		// Sonic Graph feature
@@ -512,16 +504,16 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Musical Enhancements feature
 		const meFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
-		meFeature.createEl('strong', { text: 'Musical Enhancements' });
+		meFeature.createEl('strong', { text: 'Musical enhancements' });
 		meFeature.createEl('p', {
-			text: 'Transform basic sonification into rich musical experiences with Scale Quantization, Chord Voicing, Rhythmic Patterns, Tension Tracking, Turn-Taking, and Dynamic Panning. Configure these in the Local Soundscape tab.'
+			text: 'Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. configure these in the Local Soundscape tab.'
 		});
 
 		// Continuous Layers feature
 		const clFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
-		clFeature.createEl('strong', { text: 'Continuous Layers' });
+		clFeature.createEl('strong', { text: 'Continuous layers' });
 		clFeature.createEl('p', {
-			text: 'Add ambient background soundscapes from curated audio libraries. Browse and preview samples from Freesound.org to create the perfect atmosphere for focused work.'
+			text: 'Add ambient background soundscapes from curated audio libraries. browse and preview samples from Freesound.org to create the perfect atmosphere for focused work.'
 		});
 
 		this.contentContainer.appendChild(featuresCard.getElement());
@@ -537,35 +529,35 @@ export class MaterialControlPanelModal extends Modal {
 		const meGuideContent = meGuideCard.getContent();
 
 		meGuideContent.createEl('p', {
-			text: 'Musical Enhancements transform raw sonification into expressive, harmonic compositions. Here are recommended settings for different goals:',
+			text: 'Musical enhancements transform raw sonification into expressive, harmonic compositions. here are recommended settings for different goals:',
 			cls: 'osp-guide-text'
 		});
 
 		// Preset 1: Harmonic Beauty
 		const preset1 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
-		preset1.createEl('strong', { text: 'For Harmonic Beauty:' });
+		preset1.createEl('strong', { text: 'For harmonic beauty:' });
 		const preset1List = preset1.createEl('ul');
-		preset1List.createEl('li', { text: 'Enable Scale Quantization (C Major, 80% strength)' });
-		preset1List.createEl('li', { text: 'Enable Adaptive Pitch Ranges' });
-		preset1List.createEl('li', { text: 'Enable Chord Voicing (50% density)' });
+		preset1List.createEl('li', { text: 'Enable scale quantization (c major, 80% strength)' });
+		preset1List.createEl('li', { text: 'Enable adaptive pitch ranges' });
+		preset1List.createEl('li', { text: 'Enable chord voicing (50% density)' });
 
 		// Preset 2: Rhythmic Interest
 		const preset2 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
-		preset2.createEl('strong', { text: 'For Rhythmic Interest:' });
+		preset2.createEl('strong', { text: 'For rhythmic interest:' });
 		const preset2List = preset2.createEl('ul');
-		preset2List.createEl('li', { text: 'Enable Rhythmic Patterns (60 BPM)' });
-		preset2List.createEl('li', { text: 'Enable Tension Tracking (Rise-Fall arc, 60% peak)' });
+		preset2List.createEl('li', { text: 'Enable rhythmic patterns (60 BPM)' });
+		preset2List.createEl('li', { text: 'Enable tension tracking (rise-fall arc, 60% peak)' });
 
 		// Preset 3: Spatial Clarity
 		const preset3 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
-		preset3.createEl('strong', { text: 'For Spatial Clarity:' });
+		preset3.createEl('strong', { text: 'For spatial clarity:' });
 		const preset3List = preset3.createEl('ul');
-		preset3List.createEl('li', { text: 'Enable Turn-Taking (Call-Response, 4 beats)' });
-		preset3List.createEl('li', { text: 'Enable Dynamic Panning (30% smoothing, 2x speed)' });
+		preset3List.createEl('li', { text: 'Enable turn-taking (call-response, 4 beats)' });
+		preset3List.createEl('li', { text: 'Enable dynamic panning (30% smoothing, 2x speed)' });
 
 		// Full Experience
 		const preset4 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
-		preset4.createEl('strong', { text: 'For Full Musical Experience:' });
+		preset4.createEl('strong', { text: 'For full musical experience:' });
 		preset4.createEl('p', { text: 'Enable all of the above for maximum musicality and expressiveness.' });
 
 		this.contentContainer.appendChild(meGuideCard.getElement());
@@ -582,15 +574,15 @@ export class MaterialControlPanelModal extends Modal {
 		const tipsList = tipsContent.createEl('ul', { cls: 'osp-guide-tips' });
 
 		tipsList.createEl('li', {
-			text: 'Start Simple: Enable 3-5 instruments initially. Too many instruments can create sonic clutter.'
+			text: 'Start simple: enable 3-5 instruments initially. too many instruments can create sonic clutter.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Mix Instrument Types: Combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound.'
+			text: 'Mix instrument types: combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Use Scale Quantization: This is the single most impactful Musical Enhancement for making soundscapes harmonious.'
+			text: 'Use scale quantization: this is the single most impactful musical enhancement for making soundscapes harmonious.'
 		});
 
 		tipsList.createEl('li', {
@@ -735,8 +727,6 @@ export class MaterialControlPanelModal extends Modal {
 		this.contentContainer.appendChild(card.getElement());
 	}
 
-
-
 	private getEnabledInstrumentsList(): Array<{name: string, activeVoices: number, maxVoices: number}> {
 		const enabled: Array<{name: string, activeVoices: number, maxVoices: number}> = [];
 
@@ -806,7 +796,6 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Performance settings card
 			void this.createLocalSoundscapePerformanceCard();
-
 
 			// Note-centric musicality settings card
 			void this.createNoteCentricMusicalityCard();
@@ -1052,8 +1041,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Render the sample browser UI with table layout
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private renderSampleBrowser(container: HTMLElement, sampleLoader: any): void {
+	private renderSampleBrowser(container: HTMLElement, sampleLoader: unknown): void {
 		// Use the new table-based browser
 		const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
 		void tableBrowser.render();
@@ -1064,8 +1052,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private renderSampleItem(
 		container: HTMLElement,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		sample: any,
+		sample: unknown,
 		number: number,
 		isUserSample: boolean
 	): void {
@@ -1165,8 +1152,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Preview a Freesound sample
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
+	private async previewSample(sample: unknown, button: HTMLButtonElement): Promise<void> {
 		// If already playing this sample, stop it
 		if (button.textContent === 'Stop') {
 			void this.stopPreview();
@@ -2233,12 +2219,10 @@ export class MaterialControlPanelModal extends Modal {
 		this.contentContainer.appendChild(performanceCard.getElement());
 	}
 
-
 	/**
 	 * Create horizontal effect section for Master Effects
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: any[]): void {
+	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: unknown[]): void {
 		const section = container.createDiv({ cls: 'osp-effect-section-horizontal' });
 		
 		// Header with effect name and toggle
@@ -2464,7 +2448,7 @@ export class MaterialControlPanelModal extends Modal {
 				excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
 				excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
 			});
-			const graphData = await extractor.extractGraphData();
+			const graphData = extractor.extractGraphData();
 			
 			// Remove loading indicator
 			void loadingDiv.remove();
@@ -2495,7 +2479,7 @@ export class MaterialControlPanelModal extends Modal {
 				excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
 				excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
 			});
-			const graphData = await extractor.extractGraphData();
+			const graphData = extractor.extractGraphData();
 			
 			const filesValue = filesEl.querySelector('.osp-stat-value');
 			const linksValue = linksEl.querySelector('.osp-stat-value');
@@ -2525,7 +2509,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Launch the full Sonic Graph view
 	 */
-	private launchSonicGraphView(): void {
+	private async launchSonicGraphView(): Promise<void> {
 		void logger.debug('ui', 'Launching Sonic Graph view from Control Center');
 
 		// Close Control Center first for smooth transition
@@ -2533,7 +2517,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		try {
 			// Open Sonic Graph view (primary interface)
-			this.plugin.activateSonicGraphView();
+			await this.plugin.activateSonicGraphView();
 			void logger.debug('ui', 'Sonic Graph view activated');
 		} catch (error) {
 			logger.error('ui', 'Failed to launch Sonic Graph view:', (error as Error).message);
@@ -2807,8 +2791,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family overview card with stats and bulk actions
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private createFamilyOverviewCard(familyId: string, tabConfig: any): void {
+	private createFamilyOverviewCard(familyId: string, tabConfig: unknown): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} family overview`,
 			iconName: getFamilyIcon(familyId),
@@ -2860,8 +2843,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create instruments card for family
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private createInstrumentsCard(familyId: string, tabConfig: any): void {
+	private createInstrumentsCard(familyId: string, tabConfig: unknown): void {
 		const card = new MaterialCard({
 			title: 'Individual instruments',
 			iconName: 'list',
@@ -3118,8 +3100,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family effects card
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private createFamilyEffectsCard(familyId: string, tabConfig: any): void {
+	private createFamilyEffectsCard(familyId: string, tabConfig: unknown): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} effects`,
 			iconName: 'sliders-horizontal',
@@ -3252,7 +3233,6 @@ export class MaterialControlPanelModal extends Modal {
 		
 		return card.getElement();
 	}
-
 
 	// Utility methods
 	private getEnabledCount(familyId: string): number {
@@ -3455,7 +3435,6 @@ export class MaterialControlPanelModal extends Modal {
 			// TODO: Show user notification about the error
 		}
 	}
-
 
 	private handleMasterVolumeChange(volume: number): void {
 		logger.info('ui', `Master volume changed to ${volume}`);
@@ -3677,7 +3656,7 @@ export class MaterialControlPanelModal extends Modal {
 					
 					// Update audio engine with new settings
 					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						void this.plugin.audioEngine.updateSettings(this.plugin.settings);
 						logger.debug('ui', 'Audio engine settings updated after bulk enable', { 
 							familyId, 
 							action: 'bulk-enable-audio-update' 
@@ -3751,7 +3730,7 @@ export class MaterialControlPanelModal extends Modal {
 					
 					// Update audio engine with new settings
 					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						void this.plugin.audioEngine.updateSettings(this.plugin.settings);
 						logger.debug('ui', 'Audio engine settings updated after bulk disable', { 
 							familyId, 
 							action: 'bulk-disable-audio-update' 
@@ -3799,7 +3778,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Update audio engine if available
 		if (this.plugin.audioEngine) {
-			this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			void this.plugin.audioEngine.updateSettings(this.plugin.settings);
 			logger.debug('ui', 'Audio engine settings updated after instrument enable/disable', { 
 				instrument, 
 				enabled 
@@ -3881,8 +3860,7 @@ export class MaterialControlPanelModal extends Modal {
 		void this.plugin.saveSettings();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private getDefaultEffectParams(effectType: string): any {
+	private getDefaultEffectParams(effectType: string): unknown {
 		switch (effectType) {
 			case 'reverb':
 				return { decay: 2.0, preDelay: 0.1, wet: 0.3 };
