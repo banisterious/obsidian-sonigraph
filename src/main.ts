@@ -327,14 +327,9 @@ export default class SonigraphPlugin extends Plugin {
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_LOCAL_SOUNDSCAPE);
 
 		if (leaves.length > 0) {
-			// View already exists, use it and update center file
+			// View already exists, use it
 			leaf = leaves[0];
-			void logger.debug('ui', 'Local Soundscape view already exists, updating center file');
-
-			const view = leaf.view;
-			if (view instanceof LocalSoundscapeView) {
-				await view.setCenterFile(file);
-			}
+			void logger.debug('ui', 'Local Soundscape view already exists, reusing it');
 		} else {
 			// Create new leaf in right sidebar
 			leaf = workspace.getRightLeaf(false);
@@ -344,16 +339,10 @@ export default class SonigraphPlugin extends Plugin {
 					active: true
 				});
 				void logger.debug('ui', 'Created new Local Soundscape view in right sidebar');
-
-				// Set the center file
-				const view = leaf.view;
-				if (view instanceof LocalSoundscapeView) {
-					await view.setCenterFile(file);
-				}
 			}
 		}
 
-		// Reveal the leaf and ensure right sidebar is open
+		// Reveal the leaf and ensure right sidebar is open FIRST (before loading file)
 		if (leaf) {
 			// Explicitly open the right sidebar if it's collapsed
 			const rightSplit = workspace.rightSplit;
@@ -364,7 +353,13 @@ export default class SonigraphPlugin extends Plugin {
 			// Make the leaf active (bring it to front in the sidebar)
 			workspace.setActiveLeaf(leaf, { focus: true });
 			void workspace.revealLeaf(leaf);
-			logger.info('ui', 'Local Soundscape view activated and revealed for file', { file: file.path });
+			logger.info('ui', 'Local Soundscape view activated and revealed');
+
+			// Load the file asynchronously in the background (don't await)
+			const view = leaf.view;
+			if (view instanceof LocalSoundscapeView) {
+				void view.setCenterFile(file);
+			}
 		}
 	}
 
