@@ -3749,13 +3749,14 @@ export class AudioEngine {
 			case 'day':
 				return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
-			case 'week':
+			case 'week': {
 				// ISO week number
 				const oneJan = new Date(date.getFullYear(), 0, 1);
 				const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1000));
 				const weekNumber = Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
 				return `${date.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
 
+       }
 			case 'month':
 				return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
@@ -5656,12 +5657,13 @@ export class AudioEngine {
 					this.electronicEngine.triggerBassSynth(note, velocity, duration, subLevel);
 					break;
 					
-				case 'arpSynth':
+				case 'arpSynth': {
 					// Arpeggiator pattern based on note position in scale
 					const patterns = ['up', 'down', 'updown'] as const;
 					const patternIndex = Math.floor((frequency / 100) % patterns.length);
 					this.electronicEngine.triggerArpSynth(note, velocity, duration, patterns[patternIndex]);
 					break;
+        }
 			}
 			
 			logger.debug('advanced-electronic', `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);

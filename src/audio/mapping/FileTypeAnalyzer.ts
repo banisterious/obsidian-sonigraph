@@ -287,7 +287,7 @@ export class FileTypeAnalyzer {
                     complexity += 0.1; // Documents are generally more complex
                     break;
                     
-                case 'text':
+                case 'text': {
                     // Text complexity based on word count and structure
                     const wordCount = node.wordCount || 0;
                     const wordComplexity = Math.min(0.15, wordCount / 5000);
@@ -296,6 +296,7 @@ export class FileTypeAnalyzer {
                     const headingCount = node.headings?.length || 0;
                     if (headingCount > 3) complexity += 0.1;
                     break;
+                    }
                     
                 case 'code':
                     // Code is inherently complex

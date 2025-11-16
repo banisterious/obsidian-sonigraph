@@ -356,7 +356,7 @@ export class ContentAwareMapper {
                 }
                 break;
 
-            case 'text':
+            case 'text': {
                 // Word count and heading structure influence pitch
                 const wordCount = characteristics.metadata.wordCount || 0;
                 const headingCount = characteristics.structure.headingCount || 0;
@@ -372,6 +372,7 @@ export class ContentAwareMapper {
                     range = 12; // Narrow
                 }
                 break;
+                }
         }
 
         // Apply complexity modifier
