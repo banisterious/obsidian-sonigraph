@@ -96006,7 +96006,7 @@ var AudioEngine = class {
   }
   async initializeEffects() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
-    const instruments = ["piano", "organ", "strings", "flute", "clarinet", "saxophone", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "contrabass", "guitarElectric", "guitarNylon", "bassElectric", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "bassoon", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth", "whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"];
+    const instruments = ["piano", "organ", "harmonium", "strings", "flute", "clarinet", "saxophone", "electricPiano", "harpsichord", "accordion", "celesta", "violin", "cello", "guitar", "contrabass", "guitarElectric", "guitarNylon", "bassElectric", "harp", "trumpet", "frenchHorn", "trombone", "tuba", "oboe", "bassoon", "timpani", "xylophone", "vibraphone", "gongs", "leadSynth", "bassSynth", "arpSynth", "whaleHumpback", "whaleBlue", "whaleOrca", "whaleGray", "whaleSperm", "whaleMinke", "whaleFin", "whaleRight", "whaleSei", "whalePilot"];
     for (const instrumentName of instruments) {
       const instrumentSettings = this.settings.instruments[instrumentName];
       const volumeLevel = (_c = (_b = instrumentSettings == null ? void 0 : instrumentSettings.volume) != null ? _b : (_a = DEFAULT_SETTINGS.instruments[instrumentName]) == null ? void 0 : _a.volume) != null ? _c : 0.7;

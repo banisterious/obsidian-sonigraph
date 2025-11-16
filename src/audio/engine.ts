@@ -571,8 +571,8 @@ export class AudioEngine {
 	}
 
 	private async initializeEffects(): Promise<void> {
-		// Initialize per-instrument effects and volume controls - Phase 8B: Now supporting 49 instruments (Complete Orchestral Vision + Environmental Sounds + New String Instruments + All 10 Whale Species + Bassoon)
-		const instruments = ['piano', 'organ', 'strings', 'flute', 'clarinet', 'saxophone', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'bassoon', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'];
+		// Initialize per-instrument effects and volume controls - Phase 8B: Now supporting 50 instruments (Complete Orchestral Vision + Environmental Sounds + New String Instruments + All 10 Whale Species + Bassoon + Harmonium)
+		const instruments = ['piano', 'organ', 'harmonium', 'strings', 'flute', 'clarinet', 'saxophone', 'electricPiano', 'harpsichord', 'accordion', 'celesta', 'violin', 'cello', 'guitar', 'contrabass', 'guitarElectric', 'guitarNylon', 'bassElectric', 'harp', 'trumpet', 'frenchHorn', 'trombone', 'tuba', 'oboe', 'bassoon', 'timpani', 'xylophone', 'vibraphone', 'gongs', 'leadSynth', 'bassSynth', 'arpSynth', 'whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'];
 		
 		for (const instrumentName of instruments) {
 			// Create volume control with settings from constants or default
