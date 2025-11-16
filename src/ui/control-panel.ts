@@ -2051,7 +2051,7 @@ export class MaterialControlPanelModal extends Modal {
 		logger.info('musical', `Microtuning ${enabled ? 'enabled' : 'disabled'}`);
 		// Update plugin settings
 		this.plugin.settings.microtuning = enabled;
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 	}
 	
 	private handleMasterEffectEnabledChange(effectName: string, enabled: boolean): void {
@@ -2064,7 +2064,7 @@ export class MaterialControlPanelModal extends Modal {
 			this.plugin.settings.effects[effectName] = { enabled: false };
 		}
 		this.plugin.settings.effects[effectName].enabled = enabled;
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 	}
 	
 	private handleMasterEffectChange(effectName: string, paramName: string, value: number): void {
@@ -2077,7 +2077,7 @@ export class MaterialControlPanelModal extends Modal {
 			this.plugin.settings.effects[effectName] = { enabled: false };
 		}
 		this.plugin.settings.effects[effectName][paramName] = value;
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 	}
 
 	// Global high quality samples setting removed - now using per-instrument control
@@ -2674,7 +2674,7 @@ export class MaterialControlPanelModal extends Modal {
 		logger.debug('ui', `Updated settings`, { newList: currentList });
 		
 		// Save settings
-		this.plugin.saveSettings().then(() => {
+		void this.plugin.saveSettings().then(() => {
 			void logger.debug('ui', 'Settings saved successfully');
 			// Refresh the UI after settings are saved
 			void this.refreshExclusionLists();
@@ -2696,8 +2696,8 @@ export class MaterialControlPanelModal extends Modal {
 		if (index >= 0 && index < currentList.length) {
 			const removedItem = currentList.splice(index, 1)[0];
 			this.plugin.settings[settingKey] = currentList;
-			this.plugin.saveSettings();
-			
+			void this.plugin.saveSettings();
+
 			// Refresh the UI
 			void this.refreshExclusionLists();
 			
@@ -3460,7 +3460,7 @@ export class MaterialControlPanelModal extends Modal {
 	private handleMasterVolumeChange(volume: number): void {
 		logger.info('ui', `Master volume changed to ${volume}`);
 		this.plugin.settings.volume = volume;
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 	}
 
 	/**
@@ -3780,7 +3780,7 @@ export class MaterialControlPanelModal extends Modal {
 		}
 		
 		// Save settings and refresh UI
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 		this.updateNavigationCounts(); // Update tab counts in navigation drawer
 		this.showTab(familyId); // Refresh the current tab
 	}
@@ -3791,7 +3791,7 @@ export class MaterialControlPanelModal extends Modal {
 		const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
 		if (this.plugin.settings.instruments[instrumentKey]) {
 			this.plugin.settings.instruments[instrumentKey].enabled = enabled;
-			this.plugin.saveSettings();
+			void this.plugin.saveSettings();
 		}
 		
 		// Update navigation counts immediately
@@ -3813,7 +3813,7 @@ export class MaterialControlPanelModal extends Modal {
 		const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
 		if (this.plugin.settings.instruments[instrumentKey]) {
 			this.plugin.settings.instruments[instrumentKey].volume = volume;
-			this.plugin.saveSettings();
+			void this.plugin.saveSettings();
 		}
 		
 		// Update audio engine if available
@@ -3828,7 +3828,7 @@ export class MaterialControlPanelModal extends Modal {
 		const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
 		if (this.plugin.settings.instruments[instrumentKey]) {
 			this.plugin.settings.instruments[instrumentKey].maxVoices = maxVoices;
-			this.plugin.saveSettings();
+			void this.plugin.saveSettings();
 		}
 	}
 
@@ -3853,8 +3853,8 @@ export class MaterialControlPanelModal extends Modal {
 				}
 			}
 		});
-		
-		this.plugin.saveSettings();
+
+		void this.plugin.saveSettings();
 	}
 
 	private handleEffectParameterChange(familyId: string, effectType: string, parameter: string, value: number): void {
@@ -3877,8 +3877,8 @@ export class MaterialControlPanelModal extends Modal {
 				effectsMap[effectType].params[parameter] = value;
 			}
 		});
-		
-		this.plugin.saveSettings();
+
+		void this.plugin.saveSettings();
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
@@ -4147,10 +4147,10 @@ export class MaterialControlPanelModal extends Modal {
 					instrumentSettings.effects.filter.enabled = enabled;
 					break;
 			}
-			
+
 			// Save settings
-			this.plugin.saveSettings();
-			
+			void this.plugin.saveSettings();
+
 			// Update audio engine if available
 			if (this.plugin.audioEngine) {
 				// Audio engine would handle the effect enable/disable
@@ -4295,9 +4295,9 @@ export class MaterialControlPanelModal extends Modal {
 				break;
 
 		}
-		
+
 		if (selected) {
-			this.plugin.saveSettings();
+			void this.plugin.saveSettings();
 			// Refresh current tab to show updated state
 			void this.showTab(this.activeTab);
 		}
