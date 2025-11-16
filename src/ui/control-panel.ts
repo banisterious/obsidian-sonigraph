@@ -3314,7 +3314,7 @@ export class MaterialControlPanelModal extends Modal {
 			experimental: [], // Whale instruments temporarily disabled
 			// experimental: ['whaleHumpback', 'whaleBlue', 'whaleOrca', 'whaleGray', 'whaleSperm', 'whaleMinke', 'whaleFin', 'whaleRight', 'whaleSei', 'whalePilot'],
 			// Additional families for other instruments
-			keyboard: ['piano', 'organ', 'electricPiano', 'harpsichord', 'accordion', 'celesta']
+			keyboard: ['piano', 'organ', 'harmonium', 'electricPiano', 'harpsichord', 'accordion', 'celesta']
 		};
 		
 		const familyInstruments = familyMap[familyId] || [];

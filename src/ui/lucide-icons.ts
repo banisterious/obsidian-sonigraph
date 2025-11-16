@@ -319,8 +319,8 @@ export const TAB_CONFIGS = [
     id: 'keyboard',
     name: 'Keyboard',
     icon: 'piano',
-    description: '6 keyboard instruments',
-    instrumentCount: 6
+    description: '7 keyboard instruments',
+    instrumentCount: 7
   },
   {
     id: 'strings',
