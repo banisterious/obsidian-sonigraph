@@ -260,7 +260,7 @@ export class FreesoundSampleLoader {
   /**
    * Clean up resources
    */
-  async dispose(): Promise<void> {
+  dispose(): void {
     void logger.info('cleanup', 'Disposing FreesoundSampleLoader');
 
     void this.stopCacheCleanup();
@@ -351,7 +351,7 @@ export class FreesoundSampleLoader {
     }
   }
   
-  private async testApiConnection(): Promise<void> {
+  private testApiConnection(): void {
     // Connection test disabled - actual API calls will fail gracefully if key is invalid
     // This avoids noisy 404 errors from testing non-existent sound IDs
     return;

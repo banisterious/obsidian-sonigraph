@@ -15,7 +15,8 @@
 	],
 	"parserOptions": {
 		"sourceType": "module",
-		"ecmaVersion": 2020
+		"ecmaVersion": 2020,
+		"project": "./tsconfig.json"
 	},
 	"rules": {
 		// Base rule overrides
@@ -55,7 +56,8 @@
 		"@typescript-eslint/require-await": "error", // Catch async functions without await
 		"@typescript-eslint/no-require-imports": "error", // Enforce ES6 imports over require()
 		"no-case-declarations": "error", // Require braces around case block lexical declarations
-		"@typescript-eslint/no-unnecessary-type-assertion": "error" // Remove redundant type assertions
+		"@typescript-eslint/no-unnecessary-type-assertion": "error", // Remove redundant type assertions
+		"@typescript-eslint/no-floating-promises": "error" // Require proper Promise handling
 	},
 	"overrides": [
 		{

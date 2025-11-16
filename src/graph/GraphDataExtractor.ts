@@ -113,7 +113,7 @@ export class GraphDataExtractor {
   /**
    * Extract complete graph data from the vault
    */
-  async extractGraphData(forceRefresh: boolean = false): Promise<GraphData> {
+  extractGraphData(forceRefresh: boolean = false): GraphData {
     const now = Date.now();
     
     // Return cached data if still valid and not forcing refresh
@@ -296,7 +296,7 @@ export class GraphDataExtractor {
   /**
    * Create a node from a TFile (legacy method)
    */
-  private async createNodeFromFile(file: TFile): Promise<GraphNode | null> {
+  private createNodeFromFile(file: TFile): GraphNode | null {
     const metadata = this.metadataCache.getFileCache(file);
     const stat = file.stat;
 

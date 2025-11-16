@@ -319,7 +319,7 @@ export class FreesoundAPIClient {
     /**
      * Validate sample quality based on research criteria
      */
-    private async validateSample(sample: FreesoundSample, query: WhaleSearchQuery): Promise<boolean> {
+    private validateSample(sample: FreesoundSample, query: WhaleSearchQuery): boolean {
         // Layer 1: Metadata validation
         if (!this.validateMetadata(sample)) return false;
         

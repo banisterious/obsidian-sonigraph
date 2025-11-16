@@ -275,7 +275,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         return state;
     }
 
-    async onOpen() {
+    onOpen(): void {
         logger.info('sonic-graph-init', 'View onOpen() started');
 
         try {
@@ -800,7 +800,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         void logger.info('visual-display', 'Audio engine integration setup complete');
     }
 
-    async onClose() {
+    onClose(): void {
         void logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
 
         try {

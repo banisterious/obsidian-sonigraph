@@ -67,9 +67,9 @@ export class ElectronicEngine {
 		void logger.debug('initialization', 'ElectronicEngine created');
 	}
 
-	async initializeElectronic(): Promise<void> {
+	initializeElectronic(): void {
 		void logger.info('initialization', 'Initializing advanced electronic synthesis');
-		
+
 		try {
 			void this.initializeLeadSynth();
 			void this.initializeBassSynth();

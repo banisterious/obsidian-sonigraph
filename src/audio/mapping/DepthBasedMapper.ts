@@ -815,12 +815,12 @@ export class DepthBasedMapper {
 	/**
 	 * Map a single node to musical parameters
 	 */
-	private async mapNode(
+	private mapNode(
 		node: LocalSoundscapeNode,
 		depth: number,
 		contextModifiers?: ContextModifiers,
 		proseAnalysis?: { overallComplexity: number; density: { contentDensity: number }; musicalExpressiveness: number; structure: { complexityScore: number } }
-	): Promise<DepthMapping | null> {
+	): DepthMapping | null {
 		try {
 			// Get file for metadata analysis
 			const file = this.app.vault.getAbstractFileByPath(node.path);

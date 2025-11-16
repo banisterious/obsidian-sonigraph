@@ -72,7 +72,7 @@ export class SmartClusteringAlgorithms {
   /**
    * Main clustering interface - processes graph data and returns clusters
    */
-  public async clusterGraph(nodes: GraphNode[], links: GraphLink[]): Promise<ClusteringResult> {
+  public clusterGraph(nodes: GraphNode[], links: GraphLink[]): ClusteringResult {
     this.nodes = [...nodes];
     this.links = [...links];
 

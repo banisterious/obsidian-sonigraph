@@ -359,7 +359,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 			.setDesc('Download all plugin logs as a JSON file for support or debugging.')
 			.addButton(button => button
 				.setButtonText('Export Logs')
-				.onClick(async () => {
+				.onClick(() => {
 					const now = new Date();
 					const pad = (n: number) => n.toString().padStart(2, '0');
 					const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;

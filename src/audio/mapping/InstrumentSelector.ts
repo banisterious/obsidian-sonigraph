@@ -97,7 +97,7 @@ export class InstrumentSelector {
     /**
      * Select the best instrument based on file characteristics
      */
-    async selectInstrument(criteria: InstrumentSelectionCriteria, config: AudioMappingConfig): Promise<string> {
+    selectInstrument(criteria: InstrumentSelectionCriteria, config: AudioMappingConfig): string {
         const cacheKey = this.createCacheKey(criteria);
         
         // Check cache first

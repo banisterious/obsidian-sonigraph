@@ -221,7 +221,7 @@ export class AudioExporter {
     /**
      * Render audio based on export scope
      */
-    private async render(config: ExportConfig): Promise<AudioBuffer> {
+    private render(config: ExportConfig): Promise<AudioBuffer> {
         switch (config.scope) {
             case 'full-timeline':
                 return this.renderTimeline(config);
@@ -240,7 +240,7 @@ export class AudioExporter {
     /**
      * Render timeline animation
      */
-    private async renderTimeline(config: ExportConfig): Promise<AudioBuffer> {
+    private renderTimeline(config: ExportConfig): Promise<AudioBuffer> {
         if (!this.animator) {
             throw new Error('Animator not set');
         }

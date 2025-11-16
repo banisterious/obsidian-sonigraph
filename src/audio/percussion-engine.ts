@@ -53,7 +53,7 @@ export class PercussionEngine {
 		void logger.debug('initialization', 'PercussionEngine created');
 	}
 
-	async initializePercussion(): Promise<void> {
+	initializePercussion(): void {
 		void logger.info('initialization', 'Initializing advanced percussion synthesis');
 
 		try {
@@ -61,7 +61,7 @@ export class PercussionEngine {
 			void this.initializeXylophone();
 			void this.initializeVibraphone();
 			void this.initializeGongs();
-			
+
 			void logger.info('initialization', 'Advanced percussion synthesis ready');
 		} catch (error) {
 			void logger.error('initialization', 'Failed to initialize percussion', error);
@@ -356,7 +356,7 @@ export class PercussionEngine {
 	 * Update audio format and re-initialize all percussion instruments
 	 * Issue #005 Fix: Ensures percussion engines use correct sample format
 	 */
-	async updateAudioFormat(format: 'wav' | 'ogg' | 'mp3'): Promise<void> {
+	updateAudioFormat(format: 'wav' | 'ogg' | 'mp3'): void {
 		if (this.audioFormat === format) {
 			return; // No change needed
 		}

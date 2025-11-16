@@ -1504,7 +1504,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Export soundscape audio
 	 */
-	private async exportSoundscapeAudio(): Promise<void> {
+	private exportSoundscapeAudio(): void {
 		// Check if we have either playback mode's data
 		const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
 		const hasNoteCentricData = this.currentNoteCentricMapping !== null;
@@ -1712,7 +1712,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Export graph as PNG image
 	 */
-	private async exportGraph(): Promise<void> {
+	private exportGraph(): void {
 		if (!this.graphData || !this.centerFile) {
 			new Notice('No graph to export');
 			return;
@@ -2441,7 +2441,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Pause audio playback
 	 */
-	private async pausePlayback(): Promise<void> {
+	private pausePlayback(): void {
 		if (!this.plugin.audioEngine) {
 			void logger.warn('playback-pause', 'Cannot pause - audio engine not available');
 			return;
@@ -2474,7 +2474,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Stop audio playback
 	 */
-	private async stopPlayback(): Promise<void> {
+	private stopPlayback(): void {
 		if (!this.plugin.audioEngine) {
 			void logger.warn('playback-stop', 'Cannot stop - audio engine not available');
 			return;
@@ -2840,7 +2840,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Get current view state for persistence
 	 */
-	async getState(): Promise<LocalSoundscapeViewState> {
+	getState(): LocalSoundscapeViewState {
 		return {
 			centerFilePath: this.centerFile?.path || null,
 			currentDepth: this.currentDepth,

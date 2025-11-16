@@ -89,7 +89,7 @@ export class TagSemanticMapper {
     /**
      * Perform complete semantic analysis of tags and generate musical mapping
      */
-    async performSemanticMapping(node: EnhancedGraphNode, context?: MusicalContext): Promise<SemanticMappingResult> {
+    performSemanticMapping(node: EnhancedGraphNode, context?: MusicalContext): SemanticMappingResult {
         if (!this.config.tagSemantics.enabled) {
             return this.createFallbackMapping(node);
         }

@@ -238,7 +238,7 @@ export class ExportModal extends Modal {
     /**
      * Prompt user for preset name
      */
-    private async promptForPresetName(): Promise<string | null> {
+    private promptForPresetName(): Promise<string | null> {
         return new Promise((resolve) => {
             const modal = new Modal(this.app);
             modal.titleEl.setText('Save Preset');
