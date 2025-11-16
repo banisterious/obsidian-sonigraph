@@ -1152,12 +1152,26 @@ export class LocalSoundscapeView extends ItemView {
 			this.visualizationManager.start(0);
 
 			// Force resize to ensure proper canvas sizing after initialization
+			// Use longer timeout for cold start (when Obsidian just launched)
 			setTimeout(() => {
 				if (this.visualizationManager) {
 					this.visualizationManager.forceResize();
 					void logger.debug('init-visualization', 'Forced visualization resize after initialization');
 				}
-			}, 100);
+			}, 500);
+
+			// Set up ResizeObserver to automatically resize when container size changes
+			// This handles cases like window resize, split pane changes, or delayed layout
+			const resizeObserver = new ResizeObserver(() => {
+				if (this.visualizationManager) {
+					this.visualizationManager.forceResize();
+					void logger.debug('resize-observer', 'Visualization resized due to container size change');
+				}
+			});
+			resizeObserver.observe(this.visualizationContainer);
+
+			// Clean up observer when view closes
+			this.register(() => resizeObserver.disconnect());
 
 			void logger.info('init-visualization', 'Visualization manager initialized and started');
 		} catch (error) {
