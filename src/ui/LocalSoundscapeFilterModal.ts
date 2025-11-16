@@ -54,7 +54,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 		// Buttons
 		const buttonContainer = contentEl.createDiv({ cls: 'modal-button-container' });
 
-		const clearButton = buttonContainer.createEl('button', { text: 'Clear All' });
+		const clearButton = buttonContainer.createEl('button', { text: 'Clear all' });
 		clearButton.addEventListener('click', () => {
 			void this.clearAllFilters();
 		});
@@ -75,7 +75,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 
 	private createTagFiltersSection(container: HTMLElement): void {
 		const section = container.createDiv({ cls: 'filter-section' });
-		section.createEl('h3', { text: 'Tag Filters' });
+		section.createEl('h3', { text: 'Tag filters' });
 
 		// Include tags
 		new Setting(section)
@@ -134,7 +134,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 
 	private createFolderFiltersSection(container: HTMLElement): void {
 		const section = container.createDiv({ cls: 'filter-section' });
-		section.createEl('h3', { text: 'Folder Filters' });
+		section.createEl('h3', { text: 'Folder filters' });
 
 		// Include folders
 		new Setting(section)
@@ -193,7 +193,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 
 	private createFileTypeFiltersSection(container: HTMLElement): void {
 		const section = container.createDiv({ cls: 'filter-section' });
-		section.createEl('h3', { text: 'File Type Filters' });
+		section.createEl('h3', { text: 'File type filters' });
 
 		const fileTypes = ['md', 'pdf', 'image', 'audio', 'video'];
 
@@ -219,7 +219,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 
 	private createLinkDirectionFiltersSection(container: HTMLElement): void {
 		const section = container.createDiv({ cls: 'filter-section' });
-		section.createEl('h3', { text: 'Link Direction Filters' });
+		section.createEl('h3', { text: 'Link direction filters' });
 
 		new Setting(section)
 			.setName('Show link directions')

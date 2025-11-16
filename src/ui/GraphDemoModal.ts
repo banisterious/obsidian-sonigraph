@@ -43,7 +43,7 @@ export class GraphDemoModal extends Modal {
 		void contentEl.empty();
 
 		// Create modal header
-		contentEl.createEl('h2', { text: 'D3-Force Animation Demo' });
+		contentEl.createEl('h2', { text: 'D3-force animation demo' });
 		contentEl.createEl('p', { text: 'A simple demonstration of temporal graph animation' });
 
 		// Create container for the graph
@@ -250,7 +250,7 @@ export class GraphDemoModal extends Modal {
 		const controlsContainer = container.createDiv('sonigraph-demo-controls');
 
 		// Restart animation button
-		const restartBtn = controlsContainer.createEl('button', { text: 'Restart Animation' });
+		const restartBtn = controlsContainer.createEl('button', { text: 'Restart animation' });
 		restartBtn.classList.add('mod-cta');
 		restartBtn.onclick = () => {
 			if (this.simulation) {
@@ -259,15 +259,15 @@ export class GraphDemoModal extends Modal {
 		};
 
 		// Temporal animation button
-		const temporalBtn = controlsContainer.createEl('button', { text: 'Show Temporal Animation' });
+		const temporalBtn = controlsContainer.createEl('button', { text: 'Show temporal animation' });
 		temporalBtn.onclick = () => this.startTemporalAnimation();
 
 		// Toggle labels button
-		const labelsBtn = controlsContainer.createEl('button', { text: 'Toggle Labels' });
+		const labelsBtn = controlsContainer.createEl('button', { text: 'Toggle labels' });
 		labelsBtn.onclick = () => this.toggleLabels();
 
 		// Reset view button
-		const resetBtn = controlsContainer.createEl('button', { text: 'Reset View' });
+		const resetBtn = controlsContainer.createEl('button', { text: 'Reset view' });
 		resetBtn.onclick = () => this.resetView();
 
 		// Info text

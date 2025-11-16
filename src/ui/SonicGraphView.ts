@@ -970,7 +970,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Plugin Settings button
         const pluginSettingsBtn = buttonGroup.createEl('button', {
             cls: 'sonic-graph-header-btn sonic-graph-plugin-settings-btn',
-            text: 'Plugin Settings'
+            text: 'Plugin settings'
         });
         const pluginSettingsIcon = createLucideIcon('cog', 16);
         void pluginSettingsBtn.insertBefore(pluginSettingsIcon, pluginSettingsBtn.firstChild);
@@ -1058,7 +1058,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const modeTabs = visualHeaderControls.createDiv({ cls: 'sonic-graph-visual-mode-tabs' });
 
         const pianoRollTab = modeTabs.createEl('button', {
-            text: 'Piano Roll',
+            text: 'Piano roll',
             cls: 'sonic-graph-visual-mode-tab active'
         });
 
@@ -1671,7 +1671,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Settings header
         const settingsHeader = this.settingsPanel.createDiv({ cls: 'sonic-graph-settings-header' });
         settingsHeader.createEl('h3', {
-            text: '⚙️ Timeline Settings',
+            text: '⚙️ timeline settings',
             cls: 'sonic-graph-settings-title'
         });
 
@@ -1705,7 +1705,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const linkSection = container.createDiv({ cls: 'sonic-graph-settings-section control-center-link-section' });
 
         // Section heading
-        linkSection.createEl('div', { text: 'ADVANCED SETTINGS', cls: 'sonic-graph-settings-section-title' });
+        linkSection.createEl('div', { text: 'Advanced settings', cls: 'sonic-graph-settings-section-title' });
 
         // Descriptive paragraph
         const description = linkSection.createEl('p', { cls: 'sonic-graph-settings-description sonic-graph-small-text' });
@@ -1739,12 +1739,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         const section = container.createDiv({ cls: 'sonic-graph-settings-section adaptive-detail-override' });
-        section.createEl('div', { text: 'ADAPTIVE DETAIL', cls: 'sonic-graph-settings-section-title' });
+        section.createEl('div', { text: 'Adaptive detAIL', cls: 'sonic-graph-settings-section-title' });
         
         // Session override toggle using Obsidian Setting API
         new Setting(section)
             .setName('Disable for this session')
-            .setDesc('The Adaptive Detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.')
+            .setDesc('The adaptive detail system automatically hides nodes and links based on zoom level to improve performance. disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.')
             .addToggle(toggle => toggle
                 .setValue(false) // Start with adaptive detail enabled
                 .onChange((isOverridden) => {
@@ -1779,7 +1779,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Add note about main settings
         const noteItem = section.createDiv({ cls: 'sonic-graph-setting-item adaptive-detail-note' });
         noteItem.createEl('div', { 
-            text: 'Configure adaptive detail settings in Plugin Settings > Sonic Graph Settings', 
+            text: 'Configure adaptive detail settings in plugin settings > Sonic Graph settings', 
             cls: 'sonic-graph-setting-note sonic-graph-small-text' 
         });
     }
@@ -1860,7 +1860,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
-        section.createEl('div', { text: 'CONTENT-AWARE POSITIONING', cls: 'sonic-graph-settings-section-title' });
+        section.createEl('div', { text: 'Content-aware positioning', cls: 'sonic-graph-settings-section-title' });
         
         // Tag Influence Weight
         const tagWeightItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -2044,7 +2044,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
-        section.createEl('div', { text: 'SMART CLUSTERING', cls: 'sonic-graph-settings-section-title' });
+        section.createEl('div', { text: 'Smart clustering', cls: 'sonic-graph-settings-section-title' });
         
         // Algorithm Selection
         const algorithmItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -2082,7 +2082,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Multi-Factor Weights Section
         const weightsHeader = section.createDiv({ cls: 'sonic-graph-weights-header' });
-        weightsHeader.createEl('h4', { text: 'Multi-Factor Weights', cls: 'sonic-graph-weights-title' });
+        weightsHeader.createEl('h4', { text: 'Multi-factor weights', cls: 'sonic-graph-weights-title' });
         weightsHeader.createEl('div', { 
             text: 'Adjust the relative importance of different clustering factors', 
             cls: 'sonic-graph-setting-description' 
@@ -2118,7 +2118,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Clustering Parameters Section
         const parametersHeader = section.createDiv({ cls: 'sonic-graph-parameters-header' });
-        parametersHeader.createEl('h4', { text: 'Clustering Parameters', cls: 'sonic-graph-parameters-title' });
+        parametersHeader.createEl('h4', { text: 'Clustering parameters', cls: 'sonic-graph-parameters-title' });
         
         // Minimum Cluster Size
         const minSizeItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
@@ -2185,7 +2185,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Show Cluster Labels Toggle using Obsidian Setting API
         new Setting(section)
             .setName('Show cluster labels')
-            .setDesc('Display auto-generated names for each cluster. Labels help identify the content theme of each group, such as "Projects", "Daily Notes", or topic-based clusters.')
+            .setDesc('Display auto-generated names for each cluster. labels help identify the content theme of each group, such as "projects", "daily notes", or topic-based clusters.')
             .addToggle(toggle => toggle
                 .setValue(settings.visualization.showClusterLabels)
                 .onChange((value) => {
@@ -2253,7 +2253,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const header = section.createDiv({ cls: 'sonic-graph-collapsible-header' });
 
         header.createEl('div', {
-            text: 'CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)',
+            text: 'Connection type audio differentiation (phase 4.4)',
             cls: 'sonic-graph-settings-section-title'
         });
 
@@ -2286,7 +2286,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Main enable toggle (inside the collapsible content)
         new Setting(content)
-            .setName('Enable Connection Type Audio Differentiation')
+            .setName('Enable connection type audio differentiation')
             .setDesc('Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics')
             .addToggle(toggle => toggle
                 .setValue(settings.enabled || false)
@@ -2318,7 +2318,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Independence toggle
         new Setting(content)
             .setName('Independent from Content-Aware Mapping')
-            .setDesc('Operate independently of Phase 4.1 content-aware mapping system')
+            .setDesc('Operate independently of phase 4.1 content-aware mapping system')
             .addToggle(toggle => toggle
                 .setValue(settings.independentFromContentAware)
                 .onChange(value => {
@@ -2328,7 +2328,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Global volume mix
         new Setting(content)
-            .setName('Connection Volume Mix')
+            .setName('Connection volume mix')
             .setDesc('Overall volume level for connection audio')
             .addSlider(slider => slider
                 .setLimits(0, 100, 5)
@@ -2341,7 +2341,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Max simultaneous connections
         new Setting(content)
-            .setName('Maximum Simultaneous Connections')
+            .setName('Maximum simultaneous connections')
             .setDesc('Limit concurrent connection sounds for performance')
             .addSlider(slider => slider
                 .setLimits(5, 50, 1)
@@ -2354,7 +2354,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Connection type toggles
         const connectionTypesSection = content.createDiv({ cls: 'connection-types-toggles' });
-        connectionTypesSection.createEl('h5', { text: 'Connection Types', cls: 'connection-type-subsection-title' });
+        connectionTypesSection.createEl('h5', { text: 'Connection types', cls: 'connection-type-subsection-title' });
 
         // Wikilinks
         new Setting(connectionTypesSection)
@@ -2381,7 +2381,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Markdown links (if enabled)
         if (settings.mappings.markdown) {
             new Setting(connectionTypesSection)
-                .setName('Markdown Links ([link](path))')
+                .setName('Markdown links ([link](path))')
                 .setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? 'ENABLED' : 'DISABLED'}`)
                 .addToggle(toggle => toggle
                     .setValue(settings.mappings.markdown.enabled)
@@ -2394,7 +2394,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Tag connections (if enabled)
         if (settings.mappings.tag) {
             new Setting(connectionTypesSection)
-                .setName('Tag Connections (shared tags)')
+                .setName('Tag connections (shared tags)')
                 .setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? 'ENABLED' : 'DISABLED'}`)
                 .addToggle(toggle => toggle
                     .setValue(settings.mappings.tag.enabled)
@@ -2409,7 +2409,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         performanceSection.createEl('h5', { text: 'Performance', cls: 'connection-type-subsection-title' });
 
         new Setting(performanceSection)
-            .setName('Enable Caching')
+            .setName('Enable caching')
             .setDesc('Cache connection analysis results for better performance')
             .addToggle(toggle => toggle
                 .setValue(settings.globalSettings.enableCaching)
@@ -2419,7 +2419,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             );
 
         new Setting(performanceSection)
-            .setName('Selective Processing')
+            .setName('Selective processing')
             .setDesc('Only process visible connections to improve performance')
             .addToggle(toggle => toggle
                 .setValue(settings.globalSettings.selectiveProcessing)
@@ -2431,7 +2431,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Note about full configuration
         const noteSection = section.createDiv({ cls: 'connection-type-note' });
         noteSection.createEl('div', {
-            text: 'For detailed connection type configuration, audio characteristics, and preset management, use the Plugin Settings > Sonic Graph Settings panel.',
+            text: 'For detailed connection type configuration, audio characteristics, and preset management, use the plugin settings > Sonic Graph settings panel.',
             cls: 'sonic-graph-setting-note sonic-graph-small-text'
         });
     }
@@ -2926,7 +2926,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Audio Enhancement Header
         const enhancementHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         enhancementHeader.createEl('label', { 
-            text: 'Audio Enhancement (Phase 1 & 2)', 
+            text: 'Audio enhancement (phase 1 & 2)', 
             cls: 'sonic-graph-setting-label sonic-graph-setting-header' 
         });
         enhancementHeader.createEl('div', { 
@@ -3029,7 +3029,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Continuous Layers Header
         const layersHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         layersHeader.createEl('label', { 
-            text: 'Continuous Audio Layers (Phase 3)', 
+            text: 'Continuous audio layers (phase 3)', 
             cls: 'sonic-graph-setting-label sonic-graph-setting-header' 
         });
         layersHeader.createEl('div', { 
@@ -3242,7 +3242,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Cluster Audio Header
         const clusterHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         clusterHeader.createEl('label', {
-            text: 'Smart Clustering Audio (Phase 5)',
+            text: 'Smart clustering audio (phase 5)',
             cls: 'sonic-graph-setting-label sonic-graph-setting-header'
         });
         clusterHeader.createEl('div', {
@@ -3321,7 +3321,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Cluster Type Toggles and Volume Controls
         const clusterTypesHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         clusterTypesHeader.createEl('h4', {
-            text: 'Cluster Type Audio Themes',
+            text: 'Cluster type audio themes',
             cls: 'sonic-graph-setting-label'
         });
         clusterTypesHeader.createEl('div', {
@@ -3352,7 +3352,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Transition Settings
         const transitionHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         transitionHeader.createEl('h4', {
-            text: 'Cluster Transition Audio',
+            text: 'Cluster transition audio',
             cls: 'sonic-graph-setting-label'
         });
         transitionHeader.createEl('div', {
@@ -3405,7 +3405,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Advanced Settings
         const advancedHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         advancedHeader.createEl('h4', {
-            text: 'Advanced Settings',
+            text: 'Advanced settings',
             cls: 'sonic-graph-setting-label'
         });
 
@@ -3464,7 +3464,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Performance Settings
         const performanceHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         performanceHeader.createEl('h4', {
-            text: 'Performance Settings',
+            text: 'Performance settings',
             cls: 'sonic-graph-setting-label'
         });
 
@@ -3514,7 +3514,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Hub Orchestration Header
         const headerContainer = container.createDiv({ cls: 'sonic-graph-setting-item' });
         headerContainer.createEl('h3', {
-            text: 'Phase 5.2: Hub Node Orchestration',
+            text: 'Phase 5.2: hub node orchestration',
             cls: 'sonic-graph-section-header'
         });
         headerContainer.createEl('div', {
@@ -3525,7 +3525,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Enable Hub Orchestration Toggle
         const enabledItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         enabledItem.createEl('label', {
-            text: 'Enable Hub Orchestration',
+            text: 'Enable hub orchestration',
             cls: 'sonic-graph-setting-label'
         });
         enabledItem.createEl('div', {
@@ -3576,7 +3576,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Orchestration Mode Dropdown
         const modeItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         modeItem.createEl('label', {
-            text: 'Orchestration Mode',
+            text: 'Orchestration mode',
             cls: 'sonic-graph-setting-label'
         });
         modeItem.createEl('div', {
@@ -3604,7 +3604,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Hub Threshold Slider
         const thresholdItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         thresholdItem.createEl('label', {
-            text: 'Hub Threshold',
+            text: 'Hub threshold',
             cls: 'sonic-graph-setting-label'
         });
         thresholdItem.createEl('div', {
@@ -3637,7 +3637,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Prominence Multiplier Slider
         const prominenceItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         prominenceItem.createEl('label', {
-            text: 'Hub Prominence',
+            text: 'Hub prominence',
             cls: 'sonic-graph-setting-label'
         });
         prominenceItem.createEl('div', {
@@ -3670,7 +3670,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Centrality Weights Header
         const weightsHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         weightsHeader.createEl('h4', {
-            text: 'Centrality Algorithm Weights',
+            text: 'Centrality algorithm weights',
             cls: 'sonic-graph-subsection-header'
         });
         weightsHeader.createEl('div', {
@@ -3721,7 +3721,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Hub Transitions Toggle
         const transitionsItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         transitionsItem.createEl('label', {
-            text: 'Hub Transition Audio',
+            text: 'Hub transition audio',
             cls: 'sonic-graph-setting-label'
         });
         transitionsItem.createEl('div', {
@@ -3786,7 +3786,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Community Detection Header
         const communityHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         communityHeader.createEl('label', {
-            text: 'Community Detection Audio (Phase 5.3)',
+            text: 'Community detection audio (phase 5.3)',
             cls: 'sonic-graph-setting-label sonic-graph-setting-header'
         });
         communityHeader.createEl('div', {
@@ -3861,7 +3861,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Community Type Toggles and Volume Controls
         const communityTypesHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         communityTypesHeader.createEl('h4', {
-            text: 'Community Type Audio Themes',
+            text: 'Community type audio themes',
             cls: 'sonic-graph-setting-label'
         });
         communityTypesHeader.createEl('div', {
@@ -3892,7 +3892,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Community Analysis Settings
         const analysisHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         analysisHeader.createEl('h4', {
-            text: 'Community Analysis',
+            text: 'Community analysis',
             cls: 'sonic-graph-setting-label'
         });
         analysisHeader.createEl('div', {
@@ -3945,7 +3945,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Spatial Audio Settings
         const spatialHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         spatialHeader.createEl('h4', {
-            text: 'Spatial Audio',
+            text: 'Spatial audio',
             cls: 'sonic-graph-setting-label'
         });
 
@@ -3995,7 +3995,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Community Evolution Header
         const evolutionHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         evolutionHeader.createEl('label', {
-            text: 'Community Evolution Audio (Phase 5.3)',
+            text: 'Community evolution audio (phase 5.3)',
             cls: 'sonic-graph-setting-label sonic-graph-setting-header'
         });
         evolutionHeader.createEl('div', {
@@ -4058,7 +4058,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Evolution Event Types Header
         const eventTypesHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         eventTypesHeader.createEl('h4', {
-            text: 'Evolution Event Types',
+            text: 'Evolution event types',
             cls: 'sonic-graph-setting-label'
         });
         eventTypesHeader.createEl('div', {
@@ -4097,7 +4097,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Evolution Thresholds Header
         const thresholdsHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         thresholdsHeader.createEl('h4', {
-            text: 'Evolution Thresholds',
+            text: 'Evolution thresholds',
             cls: 'sonic-graph-setting-label'
         });
         thresholdsHeader.createEl('div', {
@@ -4136,7 +4136,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Performance Settings
         const performanceHeader = container.createDiv({ cls: 'sonic-graph-setting-item' });
         performanceHeader.createEl('h4', {
-            text: 'Performance Settings',
+            text: 'Performance settings',
             cls: 'sonic-graph-setting-label'
         });
 
@@ -4172,7 +4172,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Musical Theory Header
         const headerContainer = container.createDiv({ cls: 'sonic-graph-setting-item' });
         headerContainer.createEl('h3', {
-            text: 'Phase 6.1: Musical Theory Integration',
+            text: 'Phase 6.1: musical theory integration',
             cls: 'sonic-graph-section-header'
         });
         headerContainer.createEl('div', {
@@ -4183,7 +4183,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Enable Musical Theory Toggle
         const enabledItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         enabledItem.createEl('label', {
-            text: 'Enable Musical Theory',
+            text: 'Enable musical theory',
             cls: 'sonic-graph-setting-label'
         });
         enabledItem.createEl('div', {
@@ -4231,7 +4231,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Root Note Dropdown
         const rootNoteItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         rootNoteItem.createEl('label', {
-            text: 'Root Note',
+            text: 'Root note',
             cls: 'sonic-graph-setting-label'
         });
         rootNoteItem.createEl('div', {
@@ -4259,7 +4259,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Scale Type Dropdown
         const scaleItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         scaleItem.createEl('label', {
-            text: 'Scale Type',
+            text: 'Scale type',
             cls: 'sonic-graph-setting-label'
         });
         scaleItem.createEl('div', {
@@ -4302,7 +4302,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Quantization Strength Slider
         const quantStrengthItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         quantStrengthItem.createEl('label', {
-            text: 'Quantization Strength',
+            text: 'Quantization strength',
             cls: 'sonic-graph-setting-label'
         });
         quantStrengthItem.createEl('div', {
@@ -4339,7 +4339,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Dissonance Threshold Slider
         const dissonanceItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         dissonanceItem.createEl('label', {
-            text: 'Dissonance Threshold',
+            text: 'Dissonance threshold',
             cls: 'sonic-graph-setting-label'
         });
         dissonanceItem.createEl('div', {
@@ -4376,7 +4376,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Enforce Harmony Toggle
         const enforceHarmonyItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         enforceHarmonyItem.createEl('label', {
-            text: 'Enforce Scale Harmony',
+            text: 'Enforce scale harmony',
             cls: 'sonic-graph-setting-label'
         });
         enforceHarmonyItem.createEl('div', {
@@ -4397,7 +4397,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Allow Chromatic Passing Toggle
         const chromaticItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         chromaticItem.createEl('label', {
-            text: 'Allow Chromatic Passing Tones',
+            text: 'Allow chromatic passing tones',
             cls: 'sonic-graph-setting-label'
         });
         chromaticItem.createEl('div', {
@@ -4418,7 +4418,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Dynamic Scale Modulation Toggle
         const modulationItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         modulationItem.createEl('label', {
-            text: 'Dynamic Scale Modulation',
+            text: 'Dynamic scale modulation',
             cls: 'sonic-graph-setting-label'
         });
         modulationItem.createEl('div', {
@@ -4472,7 +4472,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Header
         const headerItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         headerItem.createEl('label', {
-            text: 'Phase 6.2: Dynamic Orchestration',
+            text: 'Phase 6.2: dynamic orchestration',
             cls: 'sonic-graph-setting-label sonic-graph-setting-header'
         });
         headerItem.createEl('div', {
@@ -4483,7 +4483,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Enable toggle
         const enabledItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         enabledItem.createEl('label', {
-            text: 'Enable Dynamic Orchestration',
+            text: 'Enable dynamic orchestration',
             cls: 'sonic-graph-setting-label'
         });
         enabledItem.createEl('div', {
@@ -4529,7 +4529,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Temporal Influence Enable
         const temporalItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         temporalItem.createEl('label', {
-            text: 'Temporal Influence',
+            text: 'Temporal influence',
             cls: 'sonic-graph-setting-label'
         });
         temporalItem.createEl('div', {
@@ -4550,7 +4550,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Time of Day Influence Slider
         const timeOfDayItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         timeOfDayItem.createEl('label', {
-            text: 'Time of Day Influence',
+            text: 'Time of day influence',
             cls: 'sonic-graph-setting-label'
         });
         timeOfDayItem.createEl('div', {
@@ -4580,7 +4580,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Seasonal Influence Slider
         const seasonalItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         seasonalItem.createEl('label', {
-            text: 'Seasonal Influence',
+            text: 'Seasonal influence',
             cls: 'sonic-graph-setting-label'
         });
         seasonalItem.createEl('div', {
@@ -4610,7 +4610,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Transition Duration Slider
         const transitionItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         transitionItem.createEl('label', {
-            text: 'Transition Duration',
+            text: 'Transition duration',
             cls: 'sonic-graph-setting-label'
         });
         transitionItem.createEl('div', {
@@ -4640,7 +4640,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Auto Adjust Toggle
         const autoAdjustItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         autoAdjustItem.createEl('label', {
-            text: 'Auto-Adjust',
+            text: 'Auto-adjust',
             cls: 'sonic-graph-setting-label'
         });
         autoAdjustItem.createEl('div', {
@@ -4694,7 +4694,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Header
         const headerItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         headerItem.createEl('label', {
-            text: 'Phase 6.3: Spatial Audio & Panning',
+            text: 'Phase 6.3: spatial audio & panning',
             cls: 'sonic-graph-setting-label sonic-graph-setting-header'
         });
         headerItem.createEl('div', {
@@ -4705,7 +4705,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Enable toggle
         const enabledItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         enabledItem.createEl('label', {
-            text: 'Enable Spatial Audio',
+            text: 'Enable spatial audio',
             cls: 'sonic-graph-setting-label'
         });
         enabledItem.createEl('div', {
@@ -4776,7 +4776,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Panning Mode
         const modeItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         modeItem.createEl('label', {
-            text: 'Panning Mode',
+            text: 'Panning mode',
             cls: 'sonic-graph-setting-label'
         });
         modeItem.createEl('div', {
@@ -4811,7 +4811,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Pan Intensity
         const intensityItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         intensityItem.createEl('label', {
-            text: 'Pan Intensity',
+            text: 'Pan intensity',
             cls: 'sonic-graph-setting-label'
         });
         intensityItem.createEl('div', {
@@ -4841,7 +4841,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Panning Curve
         const curveItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         curveItem.createEl('label', {
-            text: 'Panning Curve',
+            text: 'Panning curve',
             cls: 'sonic-graph-setting-label'
         });
         curveItem.createEl('div', {
@@ -4875,7 +4875,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Velocity Damping Toggle
         const dampingItem = container.createDiv({ cls: 'sonic-graph-setting-item' });
         dampingItem.createEl('label', {
-            text: 'Velocity Damping',
+            text: 'Velocity damping',
             cls: 'sonic-graph-setting-label'
         });
         dampingItem.createEl('div', {
@@ -5311,7 +5311,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const loggingItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
         loggingItem.createEl('label', { text: 'Logging level', cls: 'sonic-graph-setting-label' });
         loggingItem.createEl('div', { 
-            text: 'Control the verbosity of plugin logs. Default is "Warnings".', 
+            text: 'Control the verbosity of plugin logs. default is "warnings".', 
             cls: 'sonic-graph-setting-description' 
         });
         
@@ -5351,7 +5351,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         
         const exportButton = exportItem.createEl('button', { 
-            text: 'Export Logs',
+            text: 'Export logs',
             cls: 'sonic-graph-export-logs-btn' 
         });
         
@@ -6074,7 +6074,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Add debug information button
         const debugBtn = errorContainer.createEl('button', { 
-            text: 'Copy Debug Info',
+            text: 'Copy debug info',
             cls: 'sonic-graph-error-debug'
         });
         

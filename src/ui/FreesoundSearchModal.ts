@@ -245,7 +245,7 @@ export class FreesoundSearchModal extends Modal {
 		// License filter
 		new Setting(filtersGrid)
 			.setName('License')
-			.setDesc('Filter by Creative Commons license')
+			.setDesc('Filter by creative commons license')
 			.addDropdown(dropdown => dropdown
 				.addOption('any', 'Any license')
 				.addOption('cc0', 'CC0 (Public Domain)')
@@ -326,7 +326,7 @@ export class FreesoundSearchModal extends Modal {
 	private createResultsSection(container: HTMLElement): void {
 		const resultsSection = container.createDiv({ cls: 'freesound-results-section' });
 
-		resultsSection.createEl('h3', { text: 'Search Results' });
+		resultsSection.createEl('h3', { text: 'Search results' });
 
 		this.resultsContainer = resultsSection.createDiv({ cls: 'freesound-results-container' });
 		this.resultsContainer.createEl('p', {
@@ -629,14 +629,14 @@ export class FreesoundSearchModal extends Modal {
 
 		const errorState = this.resultsContainer.createDiv({ cls: 'freesound-error-state' });
 		setIcon(errorState, 'alert-circle');
-		errorState.createEl('p', { text: 'Search Error' });
+		errorState.createEl('p', { text: 'Search error' });
 		const errorMessage = error instanceof Error ? error.message : 'Failed to search Freesound. Please check your API key and connection.';
 		errorState.createEl('span', {
 			text: errorMessage
 		});
 
 		const retryBtn = errorState.createEl('button', {
-			text: 'Try Again',
+			text: 'Try again',
 			cls: 'freesound-retry-btn'
 		});
 		retryBtn.addEventListener('click', () => void this.performSearch());

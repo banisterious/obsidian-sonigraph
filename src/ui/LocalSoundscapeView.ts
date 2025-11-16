@@ -1260,7 +1260,7 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'placeholder-text'
 		});
 		placeholder.createEl('p', {
-			text: 'Right-click a note and select "Open in Local Soundscape"',
+			text: 'Right-click a note and select "open in Local Soundscape"',
 			cls: 'placeholder-hint'
 		});
 	}
@@ -2095,7 +2095,7 @@ export class LocalSoundscapeView extends ItemView {
 			if (width === 0 || height === 0) {
 				logger.error('render-error', 'Container has no dimensions, cannot render', { width, height });
 				const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
-				errorDiv.createEl('p', { text: 'Error: Container not ready. Please try connecting again.' });
+				errorDiv.createEl('p', { text: 'Error: container not ready. please try connecting again.' });
 				return;
 			}
 
@@ -2183,7 +2183,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Create collapsible section
 		const statsHeader = statsContainer.createDiv({ cls: 'stats-header' });
-		statsHeader.createEl('h4', { text: 'Graph Statistics' });
+		statsHeader.createEl('h4', { text: 'Graph statistics' });
 
 		const toggleButton = statsHeader.createEl('button', {
 			cls: 'stats-toggle',

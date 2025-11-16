@@ -63,7 +63,7 @@ export class TemplateTabsModal extends Modal {
             
             // Create header
             contentEl.createEl('h1', { 
-                text: 'Template Tabs Modal', 
+                text: 'Template tabs modal', 
                 cls: 'template-tabs-header' 
             });
             
@@ -274,7 +274,7 @@ export class TemplateTabsModal extends Modal {
         this.contentContainer.empty();
         
         this.contentContainer.createEl('h2', { 
-            text: 'Dashboard Overview', 
+            text: 'Dashboard overview', 
             cls: 'template-content-header' 
         });
         
@@ -292,7 +292,7 @@ export class TemplateTabsModal extends Modal {
         
         // Quick actions
         const actionsContainer = this.contentContainer.createDiv({ cls: 'template-dashboard-actions' });
-        actionsContainer.createEl('h3', { text: 'Quick Actions' });
+        actionsContainer.createEl('h3', { text: 'Quick actions' });
         
         this.createActionButton(actionsContainer, 'Process Data', 'gear', () => {
             void this.handleProcessData();
@@ -312,7 +312,7 @@ export class TemplateTabsModal extends Modal {
         this.contentContainer.empty();
         
         this.contentContainer.createEl('h2', { 
-            text: 'Data Management', 
+            text: 'Data management', 
             cls: 'template-content-header' 
         });
         
@@ -352,7 +352,7 @@ export class TemplateTabsModal extends Modal {
         
         // Add new item button
         const addButton = this.contentContainer.createEl('button', { 
-            text: 'Add New Item', 
+            text: 'Add new item', 
             cls: 'mod-cta template-add-button' 
         });
         addButton.onclick = () => this.handleAddItem();
@@ -374,7 +374,7 @@ export class TemplateTabsModal extends Modal {
         
         // Feature toggle
         new Setting(this.contentContainer)
-            .setName('Enable Feature A')
+            .setName('Enable feature a')
             .setDesc('Toggle this feature on or off')
             .addToggle(toggle => toggle
                 .setValue(this.settings.enableFeatureA)
@@ -385,7 +385,7 @@ export class TemplateTabsModal extends Modal {
         
         // Dropdown selection
         new Setting(this.contentContainer)
-            .setName('Selected Option')
+            .setName('Selected option')
             .setDesc('Choose from available options')
             .addDropdown(dropdown => dropdown
                 .addOption('option1', 'Option 1')
@@ -399,7 +399,7 @@ export class TemplateTabsModal extends Modal {
         
         // Text input
         new Setting(this.contentContainer)
-            .setName('Custom Text')
+            .setName('Custom text')
             .setDesc('Enter custom text value')
             .addText(text => text
                 .setPlaceholder('Enter text...')
@@ -411,7 +411,7 @@ export class TemplateTabsModal extends Modal {
         
         // Numeric input
         new Setting(this.contentContainer)
-            .setName('Numeric Value')
+            .setName('Numeric value')
             .setDesc('Enter a numeric value')
             .addSlider(slider => slider
                 .setLimits(0, 100, 1)
@@ -428,7 +428,7 @@ export class TemplateTabsModal extends Modal {
         this.contentContainer.empty();
         
         this.contentContainer.createEl('h2', { 
-            text: 'Tools & Utilities', 
+            text: 'Tools & utilities', 
             cls: 'template-content-header' 
         });
         
@@ -442,7 +442,7 @@ export class TemplateTabsModal extends Modal {
         
         // Analysis tools
         const analysisSection = toolsContainer.createDiv({ cls: 'template-tool-section' });
-        analysisSection.createEl('h3', { text: 'Analysis Tools' });
+        analysisSection.createEl('h3', { text: 'Analysis tools' });
         
         this.createToolButton(analysisSection, 'Generate Report', 'file-text', () => {
             new Notice('Generating report...');
@@ -454,7 +454,7 @@ export class TemplateTabsModal extends Modal {
         
         // Maintenance tools
         const maintenanceSection = toolsContainer.createDiv({ cls: 'template-tool-section' });
-        maintenanceSection.createEl('h3', { text: 'Maintenance Tools' });
+        maintenanceSection.createEl('h3', { text: 'Maintenance tools' });
         
         this.createToolButton(maintenanceSection, 'Clean Cache', 'trash-2', () => {
             new Notice('Cache cleaned!');
@@ -466,7 +466,7 @@ export class TemplateTabsModal extends Modal {
         
         // Import/Export tools
         const importExportSection = toolsContainer.createDiv({ cls: 'template-tool-section' });
-        importExportSection.createEl('h3', { text: 'Import/Export' });
+        importExportSection.createEl('h3', { text: 'Import/export' });
         
         this.createToolButton(importExportSection, 'Import Data', 'upload', () => {
             new Notice('Import functionality would go here');
@@ -482,7 +482,7 @@ export class TemplateTabsModal extends Modal {
         this.contentContainer.empty();
         
         this.contentContainer.createEl('h2', { 
-            text: 'Help & Documentation', 
+            text: 'Help & documentation', 
             cls: 'template-content-header' 
         });
         
@@ -588,18 +588,18 @@ The template uses consistent CSS class naming:
         const actionsContainer = this.contentContainer.createDiv({ cls: 'template-item-actions' });
         
         const editButton = actionsContainer.createEl('button', { 
-            text: 'Edit Item', 
+            text: 'Edit item', 
             cls: 'mod-cta' 
         });
         editButton.onclick = () => this.handleEditItem(item);
         
         const duplicateButton = actionsContainer.createEl('button', { 
-            text: 'Duplicate Item' 
+            text: 'Duplicate item' 
         });
         duplicateButton.onclick = () => this.handleDuplicateItem(item);
         
         const deleteButton = actionsContainer.createEl('button', { 
-            text: 'Delete Item', 
+            text: 'Delete item', 
             cls: 'mod-warning' 
         });
         deleteButton.onclick = () => this.handleDeleteItem(item);

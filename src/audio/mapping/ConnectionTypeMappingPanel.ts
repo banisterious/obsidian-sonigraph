@@ -120,7 +120,7 @@ export class ConnectionTypeMappingPanel {
         });
 
         titleContainer.createEl('span', {
-            text: 'CONNECTION TYPE AUDIO DIFFERENTIATION',
+            text: 'Connection type audio differentiation',
             cls: 'sonic-graph-settings-section-title'
         });
 
@@ -177,7 +177,7 @@ export class ConnectionTypeMappingPanel {
 
         // Master enable toggle
         new Setting(section)
-            .setName('Enable Connection Type Audio Differentiation')
+            .setName('Enable connection type audio differentiation')
             .setDesc('Map different connection types (wikilinks, embeds, tags) to distinct audio characteristics')
             .addToggle(toggle => {
                 this.masterToggle = toggle;
@@ -194,7 +194,7 @@ export class ConnectionTypeMappingPanel {
         // Independence from content-aware mapping
         new Setting(section)
             .setName('Independent from Content-Aware Mapping')
-            .setDesc('Operate independently of Phase 4.1 content-aware mapping system')
+            .setDesc('Operate independently of phase 4.1 content-aware mapping system')
             .addToggle(toggle => {
                 this.independentToggle = toggle;
                 return toggle
@@ -216,7 +216,7 @@ export class ConnectionTypeMappingPanel {
 
         // Preset selection dropdown
         new Setting(section)
-            .setName('Active Preset')
+            .setName('Active preset')
             .setDesc('Load pre-configured connection type mappings')
             .addDropdown(dropdown => {
                 this.presetDropdown = dropdown;
@@ -242,13 +242,13 @@ export class ConnectionTypeMappingPanel {
         const presetActions = section.createDiv({ cls: 'connection-type-mapping-preset-actions' });
 
         const savePresetBtn = presetActions.createEl('button', {
-            text: 'Save as Custom Preset',
+            text: 'Save as custom preset',
             cls: 'connection-type-mapping-btn preset-save-btn'
         });
         savePresetBtn.addEventListener('click', () => this.showSavePresetDialog());
 
         const resetBtn = presetActions.createEl('button', {
-            text: 'Reset to Defaults',
+            text: 'Reset to defaults',
             cls: 'connection-type-mapping-btn preset-reset-btn'
         });
         resetBtn.addEventListener('click', () => this.resetToDefaults());
@@ -259,11 +259,11 @@ export class ConnectionTypeMappingPanel {
      */
     private createGlobalSettings(container: HTMLElement): void {
         const section = container.createDiv({ cls: 'connection-type-mapping-global-settings' });
-        section.createEl('h4', { text: 'Global Settings', cls: 'connection-type-mapping-subsection-title' });
+        section.createEl('h4', { text: 'Global settings', cls: 'connection-type-mapping-subsection-title' });
 
         // Connection volume mix
         new Setting(section)
-            .setName('Connection Volume Mix')
+            .setName('Connection volume mix')
             .setDesc('Overall volume level for connection audio (0% - 100%)')
             .addSlider(slider => slider
                 .setLimits(0, 100, 5)
@@ -277,7 +277,7 @@ export class ConnectionTypeMappingPanel {
 
         // Max simultaneous connections
         new Setting(section)
-            .setName('Maximum Simultaneous Connections')
+            .setName('Maximum simultaneous connections')
             .setDesc('Limit concurrent connection sounds for performance (5-50)')
             .addSlider(slider => slider
                 .setLimits(5, 50, 1)
@@ -291,7 +291,7 @@ export class ConnectionTypeMappingPanel {
 
         // Audio fade time
         new Setting(section)
-            .setName('Connection Audio Fade Time')
+            .setName('Connection audio fade time')
             .setDesc('Fade in/out time for connection sounds (0.1-2.0 seconds)')
             .addSlider(slider => slider
                 .setLimits(0.1, 2.0, 0.1)
@@ -308,7 +308,7 @@ export class ConnectionTypeMappingPanel {
         perfSection.createEl('h5', { text: 'Performance', cls: 'connection-type-mapping-minor-title' });
 
         new Setting(perfSection)
-            .setName('Enable Caching')
+            .setName('Enable caching')
             .setDesc('Cache connection analysis results for better performance')
             .addToggle(toggle => toggle
                 .setValue(this.config.globalSettings.enableCaching)
@@ -319,7 +319,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(perfSection)
-            .setName('Selective Processing')
+            .setName('Selective processing')
             .setDesc('Only process visible connections to improve performance')
             .addToggle(toggle => toggle
                 .setValue(this.config.globalSettings.selectiveProcessing)
@@ -335,7 +335,7 @@ export class ConnectionTypeMappingPanel {
      */
     private createConnectionTypeMappings(container: HTMLElement): void {
         const section = container.createDiv({ cls: 'connection-type-mapping-types' });
-        section.createEl('h4', { text: 'Connection Type Mappings', cls: 'connection-type-mapping-subsection-title' });
+        section.createEl('h4', { text: 'Connection type mappings', cls: 'connection-type-mapping-subsection-title' });
 
         // Create tabs for each connection type
         const tabContainer = section.createDiv({ cls: 'connection-type-tabs' });
@@ -403,7 +403,7 @@ export class ConnectionTypeMappingPanel {
 
         // Instrument family selection
         new Setting(container)
-            .setName('Instrument Family')
+            .setName('Instrument family')
             .setDesc('Choose the family of instruments for this connection type')
             .addDropdown(dropdown => {
                 const families: InstrumentFamily[] = [
@@ -427,7 +427,7 @@ export class ConnectionTypeMappingPanel {
 
         // Intensity slider
         new Setting(container)
-            .setName('Intensity/Sensitivity')
+            .setName('Intensity/sensitivity')
             .setDesc('Overall intensity and sensitivity for this connection type (0% - 100%)')
             .addSlider(slider => slider
                 .setLimits(0, 100, 5)
@@ -450,7 +450,7 @@ export class ConnectionTypeMappingPanel {
 
         // Preview button
         const previewBtn = container.createEl('button', {
-            text: 'Preview Audio',
+            text: 'Preview audio',
             cls: 'connection-type-mapping-btn preview-btn'
         });
         previewBtn.addEventListener('click', () => {
@@ -463,13 +463,13 @@ export class ConnectionTypeMappingPanel {
      */
     private createAudioCharacteristicsSection(container: HTMLElement, mapping: ConnectionTypeMapping): void {
         const section = container.createDiv({ cls: 'connection-type-audio-characteristics' });
-        section.createEl('h5', { text: 'Audio Characteristics', cls: 'connection-type-mapping-minor-title' });
+        section.createEl('h5', { text: 'Audio characteristics', cls: 'connection-type-mapping-minor-title' });
 
         const characteristics = mapping.audioCharacteristics;
 
         // Base volume
         new Setting(section)
-            .setName('Base Volume')
+            .setName('Base volume')
             .setDesc('Base volume level for this connection type')
             .addSlider(slider => slider
                 .setLimits(0, 100, 5)
@@ -483,7 +483,7 @@ export class ConnectionTypeMappingPanel {
 
         // Note duration
         new Setting(section)
-            .setName('Note Duration')
+            .setName('Note duration')
             .setDesc('Duration multiplier for notes (0.1x - 3.0x)')
             .addSlider(slider => slider
                 .setLimits(0.1, 3.0, 0.1)
@@ -497,7 +497,7 @@ export class ConnectionTypeMappingPanel {
 
         // Harmonic richness
         new Setting(section)
-            .setName('Harmonic Richness')
+            .setName('Harmonic richness')
             .setDesc('Complexity of harmonic content (0% - 100%)')
             .addSlider(slider => slider
                 .setLimits(0, 100, 5)
@@ -511,10 +511,10 @@ export class ConnectionTypeMappingPanel {
 
         // Spatial settings
         const spatialSection = section.createDiv({ cls: 'connection-type-spatial-settings' });
-        spatialSection.createEl('h6', { text: 'Spatial Audio', cls: 'connection-type-mapping-micro-title' });
+        spatialSection.createEl('h6', { text: 'Spatial audio', cls: 'connection-type-mapping-micro-title' });
 
         new Setting(spatialSection)
-            .setName('Reverb Amount')
+            .setName('Reverb amount')
             .addSlider(slider => slider
                 .setLimits(0, 100, 5)
                 .setValue(characteristics.reverbAmount * 100)
@@ -526,7 +526,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(spatialSection)
-            .setName('Stereo Spread')
+            .setName('Stereo spread')
             .addSlider(slider => slider
                 .setLimits(0, 100, 5)
                 .setValue(characteristics.spatialSpread * 100)
@@ -539,10 +539,10 @@ export class ConnectionTypeMappingPanel {
 
         // Advanced toggles
         const advancedSection = section.createDiv({ cls: 'connection-type-advanced-audio' });
-        advancedSection.createEl('h6', { text: 'Advanced Audio Features', cls: 'connection-type-mapping-micro-title' });
+        advancedSection.createEl('h6', { text: 'Advanced audio features', cls: 'connection-type-mapping-micro-title' });
 
         new Setting(advancedSection)
-            .setName('Enable Chords')
+            .setName('Enable chords')
             .setDesc('Use chord progressions for this connection type')
             .addToggle(toggle => toggle
                 .setValue(characteristics.chordsEnabled)
@@ -553,7 +553,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(advancedSection)
-            .setName('Bidirectional Harmony')
+            .setName('Bidirectional harmony')
             .setDesc('Use enhanced harmony for bidirectional links')
             .addToggle(toggle => toggle
                 .setValue(characteristics.bidirectionalHarmony)
@@ -564,7 +564,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(advancedSection)
-            .setName('Broken Link Dissonance')
+            .setName('Broken link dissonance')
             .setDesc('Add dissonance for unresolved/broken links')
             .addToggle(toggle => toggle
                 .setValue(characteristics.brokenLinkDissonance)
@@ -580,12 +580,12 @@ export class ConnectionTypeMappingPanel {
      */
     private createLinkStrengthAnalysisSection(container: HTMLElement, mapping: ConnectionTypeMapping): void {
         const section = container.createDiv({ cls: 'connection-type-link-strength' });
-        section.createEl('h5', { text: 'Link Strength Analysis', cls: 'connection-type-mapping-minor-title' });
+        section.createEl('h5', { text: 'Link strength analysis', cls: 'connection-type-mapping-minor-title' });
 
         const linkStrength = mapping.linkStrengthAnalysis;
 
         new Setting(section)
-            .setName('Enable Link Strength Analysis')
+            .setName('Enable link strength analysis')
             .setDesc('Analyze link frequency and importance for audio modulation')
             .addToggle(toggle => toggle
                 .setValue(linkStrength.enabled)
@@ -596,7 +596,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(section)
-            .setName('Frequency Threshold')
+            .setName('Frequency threshold')
             .setDesc('Minimum link frequency to consider "strong" (0-10 occurrences)')
             .addSlider(slider => slider
                 .setLimits(0, 10, 1)
@@ -609,7 +609,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(section)
-            .setName('Volume Boost for Strong Links')
+            .setName('Volume boost for strong links')
             .setDesc('Volume multiplier for strong links (100% - 200%)')
             .addSlider(slider => slider
                 .setLimits(100, 200, 5)
@@ -627,12 +627,12 @@ export class ConnectionTypeMappingPanel {
      */
     private createContextualModifiersSection(container: HTMLElement, mapping: ConnectionTypeMapping): void {
         const section = container.createDiv({ cls: 'connection-type-contextual-modifiers' });
-        section.createEl('h5', { text: 'Contextual Modifiers', cls: 'connection-type-mapping-minor-title' });
+        section.createEl('h5', { text: 'Contextual modifiers', cls: 'connection-type-mapping-minor-title' });
 
         const modifiers = mapping.contextualModifiers;
 
         new Setting(section)
-            .setName('Same Folder Boost')
+            .setName('Same folder boost')
             .setDesc('Volume boost for connections within the same folder')
             .addSlider(slider => slider
                 .setLimits(100, 150, 5)
@@ -645,7 +645,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(section)
-            .setName('Recent Connection Boost')
+            .setName('Recent connection boost')
             .setDesc('Volume boost for recently created connections')
             .addSlider(slider => slider
                 .setLimits(100, 130, 2)
@@ -658,7 +658,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(section)
-            .setName('Recency Time Decay')
+            .setName('Recency time decay')
             .setDesc('Days for recency boost to decay (1-365 days)')
             .addSlider(slider => slider
                 .setLimits(1, 365, 7)
@@ -676,12 +676,12 @@ export class ConnectionTypeMappingPanel {
      */
     private createAdvancedFeatures(container: HTMLElement): void {
         const section = container.createDiv({ cls: 'connection-type-mapping-advanced-features' });
-        section.createEl('h4', { text: 'Advanced Features', cls: 'connection-type-mapping-subsection-title' });
+        section.createEl('h4', { text: 'Advanced features', cls: 'connection-type-mapping-subsection-title' });
 
         const features = this.config.advancedFeatures;
 
         new Setting(section)
-            .setName('Connection Chords')
+            .setName('Connection chords')
             .setDesc('Enable chord progressions for connections (CPU intensive)')
             .addToggle(toggle => toggle
                 .setValue(features.connectionChords)
@@ -692,7 +692,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(section)
-            .setName('Contextual Harmony')
+            .setName('Contextual harmony')
             .setDesc('Harmonize based on connected content similarity')
             .addToggle(toggle => toggle
                 .setValue(features.contextualHarmony)
@@ -703,7 +703,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(section)
-            .setName('Dynamic Instrumentation')
+            .setName('Dynamic instrumentation')
             .setDesc('Change instruments based on connection context')
             .addToggle(toggle => toggle
                 .setValue(features.dynamicInstrumentation)
@@ -714,7 +714,7 @@ export class ConnectionTypeMappingPanel {
                 }));
 
         new Setting(section)
-            .setName('Velocity Modulation')
+            .setName('Velocity modulation')
             .setDesc('Modulate velocity based on connection strength')
             .addToggle(toggle => toggle
                 .setValue(features.velocityModulation)
@@ -733,7 +733,7 @@ export class ConnectionTypeMappingPanel {
 
         if (this.state.validationErrors.length > 0) {
             this.validationDisplay.createEl('h5', {
-                text: 'Configuration Issues',
+                text: 'Configuration issues',
                 cls: 'connection-type-mapping-validation-title error'
             });
 
@@ -748,7 +748,7 @@ export class ConnectionTypeMappingPanel {
             const metrics = this.mapper.getMetrics();
             if (metrics.totalConnections > 0) {
                 const metricsSection = this.validationDisplay.createDiv({ cls: 'connection-type-mapping-metrics' });
-                metricsSection.createEl('h5', { text: 'Performance Metrics', cls: 'connection-type-mapping-metrics-title' });
+                metricsSection.createEl('h5', { text: 'Performance metrics', cls: 'connection-type-mapping-metrics-title' });
 
                 const metricsGrid = metricsSection.createDiv({ cls: 'connection-type-mapping-metrics-grid' });
 
@@ -782,7 +782,7 @@ export class ConnectionTypeMappingPanel {
         const actions = container.createDiv({ cls: 'connection-type-mapping-actions' });
 
         const applyBtn = actions.createEl('button', {
-            text: 'Apply Changes',
+            text: 'Apply changes',
             cls: `connection-type-mapping-btn apply-btn ${this.state.isDirty ? 'dirty' : ''}`
         });
         applyBtn.addEventListener('click', () => {
@@ -790,7 +790,7 @@ export class ConnectionTypeMappingPanel {
         });
 
         const revertBtn = actions.createEl('button', {
-            text: 'Revert Changes',
+            text: 'Revert changes',
             cls: 'connection-type-mapping-btn revert-btn'
         });
         revertBtn.addEventListener('click', () => {
@@ -798,7 +798,7 @@ export class ConnectionTypeMappingPanel {
         });
 
         const exportBtn = actions.createEl('button', {
-            text: 'Export Configuration',
+            text: 'Export configuration',
             cls: 'connection-type-mapping-btn export-btn'
         });
         exportBtn.addEventListener('click', () => {
