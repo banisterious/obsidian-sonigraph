@@ -297,7 +297,7 @@ export class MaterialControlPanelModal extends Modal {
 		const sonicGraphIcon = createLucideIcon('chart-network', 16);
 		void sonicGraphBtn.appendChild(sonicGraphIcon);
 		void sonicGraphBtn.appendText('Sonic Graph');
-		sonicGraphBtn.addEventListener('click', () => this.launchSonicGraphView());
+		sonicGraphBtn.addEventListener('click', () => void this.launchSonicGraphView());
 	}
 
 	/**
@@ -2525,7 +2525,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Launch the full Sonic Graph view
 	 */
-	private launchSonicGraphView(): void {
+	private async launchSonicGraphView(): Promise<void> {
 		void logger.debug('ui', 'Launching Sonic Graph view from Control Center');
 
 		// Close Control Center first for smooth transition
@@ -2533,7 +2533,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		try {
 			// Open Sonic Graph view (primary interface)
-			this.plugin.activateSonicGraphView();
+			await this.plugin.activateSonicGraphView();
 			void logger.debug('ui', 'Sonic Graph view activated');
 		} catch (error) {
 			logger.error('ui', 'Failed to launch Sonic Graph view:', (error as Error).message);
@@ -3677,7 +3677,7 @@ export class MaterialControlPanelModal extends Modal {
 					
 					// Update audio engine with new settings
 					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						void this.plugin.audioEngine.updateSettings(this.plugin.settings);
 						logger.debug('ui', 'Audio engine settings updated after bulk enable', { 
 							familyId, 
 							action: 'bulk-enable-audio-update' 
@@ -3751,7 +3751,7 @@ export class MaterialControlPanelModal extends Modal {
 					
 					// Update audio engine with new settings
 					if (this.plugin.audioEngine) {
-						this.plugin.audioEngine.updateSettings(this.plugin.settings);
+						void this.plugin.audioEngine.updateSettings(this.plugin.settings);
 						logger.debug('ui', 'Audio engine settings updated after bulk disable', { 
 							familyId, 
 							action: 'bulk-disable-audio-update' 
@@ -3799,7 +3799,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Update audio engine if available
 		if (this.plugin.audioEngine) {
-			this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			void this.plugin.audioEngine.updateSettings(this.plugin.settings);
 			logger.debug('ui', 'Audio engine settings updated after instrument enable/disable', { 
 				instrument, 
 				enabled 

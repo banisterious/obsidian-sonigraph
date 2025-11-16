@@ -2160,7 +2160,7 @@ export class AudioEngine {
 		
 		// Start the audio context if suspended and optimize for latency
 		if (getContext().state === 'suspended') {
-			getContext().resume();
+			void getContext().resume();
 			void logger.debug('context', 'Resumed suspended audio context for real-time playback');
 		}
 		
