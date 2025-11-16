@@ -32,8 +32,8 @@ export class EffectBusManager {
     private instrumentEffects: Map<string, Map<string, unknown>> = new Map();
     
     constructor() {
-        logger.debug('initialization', 'EffectBusManager created');
-        this.initializeDefaultConfigs();
+        void logger.debug('initialization', 'EffectBusManager created');
+        void this.initializeDefaultConfigs();
     }
 
     /**
@@ -80,16 +80,16 @@ export class EffectBusManager {
     async enableEnhancedRouting(): Promise<void> {
         if (this.enhancedRouting) return;
         
-        logger.info('routing', 'Enabling enhanced effect routing');
+        void logger.info('routing', 'Enabling enhanced effect routing');
         
         // Initialize master effects
         await this.initializeMasterEffects();
         
         // Initialize send/return buses
-        this.initializeSendReturnBuses();
+        void this.initializeSendReturnBuses();
         
         this.enhancedRouting = true;
-        logger.info('routing', 'Enhanced routing enabled');
+        void logger.info('routing', 'Enhanced routing enabled');
     }
 
     /**
@@ -98,13 +98,13 @@ export class EffectBusManager {
     disableEnhancedRouting(): void {
         if (!this.enhancedRouting) return;
         
-        logger.info('routing', 'Disabling enhanced effect routing');
+        void logger.info('routing', 'Disabling enhanced effect routing');
         
         // Dispose of all enhanced routing effects
-        this.disposeAllEffects();
+        void this.disposeAllEffects();
         
         this.enhancedRouting = false;
-        logger.info('routing', 'Enhanced routing disabled');
+        void logger.info('routing', 'Enhanced routing disabled');
     }
 
     /**
@@ -132,7 +132,7 @@ export class EffectBusManager {
         }).connect(this.masterEQ);
         this.masterEffectsNodes.set('master-compressor', this.masterCompressor);
         
-        logger.debug('effects', 'Master effects initialized');
+        void logger.debug('effects', 'Master effects initialized');
     }
 
     /**
@@ -176,7 +176,7 @@ export class EffectBusManager {
             const effectInstance = this.createEffectInstance(effectType, effectNode.parameters);
             if (effectInstance) {
                 this.effectNodeInstances.set(effectId, effectInstance);
-                chain.push(effectNode);
+                void chain.push(effectNode);
             }
         }
         
@@ -245,7 +245,7 @@ export class EffectBusManager {
         const chain = this.effectChains.get(instrumentName);
         if (!chain || chain.length === 0) {
             // No effects - connect directly to master chain
-            this.connectToMasterChain(instrument);
+            void this.connectToMasterChain(instrument);
             return;
         }
         
@@ -262,7 +262,7 @@ export class EffectBusManager {
         }
         
         // Connect final node to master chain
-        this.connectToMasterChain(currentNode);
+        void this.connectToMasterChain(currentNode);
         
         logger.debug('routing', `Connected ${instrumentName} through effect chain`);
     }
@@ -306,9 +306,9 @@ export class EffectBusManager {
             this.effectNodeInstances.set(effectId, effectInstance);
             
             if (position !== undefined && position < chain.length) {
-                chain.splice(position, 0, effectNode);
+                void chain.splice(position, 0, effectNode);
             } else {
-                chain.push(effectNode);
+                void chain.push(effectNode);
             }
             
             this.effectChains.set(instrumentName, chain);
@@ -331,12 +331,12 @@ export class EffectBusManager {
         // Dispose of effect instance
         const effectInstance = this.effectNodeInstances.get(effectId);
         if (effectInstance && effectInstance.dispose) {
-            effectInstance.dispose();
+            void effectInstance.dispose();
         }
         this.effectNodeInstances.delete(effectId);
         
         // Remove from chain
-        chain.splice(index, 1);
+        void chain.splice(index, 1);
         this.effectChains.set(instrumentName, chain);
         
         logger.debug('effects', `Removed effect ${effectId} from ${instrumentName} chain`);
@@ -396,7 +396,7 @@ export class EffectBusManager {
         // Update actual effect instance
         const effectInstance = this.effectNodeInstances.get(effectId);
         if (effectInstance) {
-            this.applyParametersToInstance(effectInstance, effectNode.type, parameters);
+            void this.applyParametersToInstance(effectInstance, effectNode.type, parameters);
         }
         
         logger.debug('effects', `Updated parameters for ${effectId}`);
@@ -511,7 +511,7 @@ export class EffectBusManager {
         // Dispose effect instances
         for (const effectInstance of this.effectNodeInstances.values()) {
             if (effectInstance && effectInstance.dispose) {
-                effectInstance.dispose();
+                void effectInstance.dispose();
             }
         }
         this.effectNodeInstances.clear();
@@ -534,18 +534,18 @@ export class EffectBusManager {
         this.effectChains.clear();
         this.masterEffectsNodes.clear();
         
-        logger.debug('effects', 'All effects disposed');
+        void logger.debug('effects', 'All effects disposed');
     }
 
     /**
      * Dispose of the EffectBusManager
      */
     dispose(): void {
-        this.disposeAllEffects();
+        void this.disposeAllEffects();
         this.sendBuses.clear();
         this.returnBuses.clear();
         this.instrumentEffects.clear();
         
-        logger.debug('effects', 'EffectBusManager disposed');
+        void logger.debug('effects', 'EffectBusManager disposed');
     }
 }

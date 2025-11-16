@@ -39,7 +39,7 @@ export class OfflineRenderer {
      */
     cancel(): void {
         this.isCancelled = true;
-        logger.info('offline-renderer', 'Cancellation requested');
+        void logger.info('offline-renderer', 'Cancellation requested');
     }
 
     /**
@@ -72,7 +72,7 @@ export class OfflineRenderer {
 
             return audioBuffer;
         } catch (error) {
-            logger.error('offline-renderer', 'Render failed:', error);
+            void logger.error('offline-renderer', 'Render failed:', error);
             throw error;
         }
     }
@@ -81,7 +81,7 @@ export class OfflineRenderer {
      * Record animation in real-time using MediaRecorder
      */
     private async recordRealtime(duration: number, targetSampleRate: number): Promise<AudioBuffer> {
-        logger.info('offline-renderer', 'Setting up real-time recording');
+        void logger.info('offline-renderer', 'Setting up real-time recording');
 
         // Get the Tone.js audio context (as BaseAudioContext/AudioContext)
         const audioContext = getContext().rawContext as BaseAudioContext;
@@ -108,7 +108,7 @@ export class OfflineRenderer {
         // Connect master volume to our recording destination
         // Tone.js Volume extends ToneAudioNode which has _nativeNode
         const volumeNode = masterVolume.output;
-        volumeNode.connect(destination);
+        void volumeNode.connect(destination);
 
         // Create MediaRecorder to record the stream
         const mediaRecorder = new MediaRecorder(destination.stream, {
@@ -118,7 +118,7 @@ export class OfflineRenderer {
         const chunks: Blob[] = [];
         mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
-                chunks.push(event.data);
+                void chunks.push(event.data);
             }
         };
 
@@ -137,7 +137,7 @@ export class OfflineRenderer {
 
         // Start recording
         mediaRecorder.start(100); // Collect data every 100ms
-        logger.info('offline-renderer', 'Recording started');
+        void logger.info('offline-renderer', 'Recording started');
 
         // Reset animator to beginning (use stop then play)
         this.animator.stop();
@@ -154,7 +154,7 @@ export class OfflineRenderer {
 
         // Start the animation
         this.animator.play();
-        logger.info('offline-renderer', 'Animation started');
+        void logger.info('offline-renderer', 'Animation started');
 
         // Wait for animation to complete or cancellation
         await new Promise<void>((resolve, reject) => {
@@ -162,7 +162,7 @@ export class OfflineRenderer {
                 // Check for cancellation
                 if (this.isCancelled) {
                     clearInterval(checkInterval);
-                    logger.info('offline-renderer', 'Render cancelled by user');
+                    void logger.info('offline-renderer', 'Render cancelled by user');
                     reject(new Error('Export cancelled by user'));
                     return;
                 }
@@ -177,7 +177,7 @@ export class OfflineRenderer {
 
                 if (!isStillPlaying) {
                     clearInterval(checkInterval);
-                    logger.info('offline-renderer', 'Animation playback complete');
+                    void logger.info('offline-renderer', 'Animation playback complete');
                     resolve();
                 }
             }, 100);
@@ -185,7 +185,7 @@ export class OfflineRenderer {
             // Fallback timeout in case animation doesn't auto-pause
             setTimeout(() => {
                 if (!this.isCancelled) {
-                    logger.info('offline-renderer', 'Animation timeout reached');
+                    void logger.info('offline-renderer', 'Animation timeout reached');
                     resolve();
                 }
             }, (duration + 2) * 1000); // Add 2s buffer
@@ -195,26 +195,26 @@ export class OfflineRenderer {
         clearInterval(progressInterval);
         this.animator.pause();
 
-        logger.info('offline-renderer', 'Stopping recording...');
-        mediaRecorder.stop();
+        void logger.info('offline-renderer', 'Stopping recording...');
+        void mediaRecorder.stop();
 
         // Wait for recording to finish processing
         const blob = await recordingPromise;
 
         // Disconnect from destination
-        volumeNode.disconnect(destination);
+        void volumeNode.disconnect(destination);
 
         // Update progress
         if (this.progressCallback) {
-            this.progressCallback(70);
+            void this.progressCallback(70);
         }
 
         // Convert blob to ArrayBuffer
-        logger.info('offline-renderer', 'Converting recorded audio to AudioBuffer');
+        void logger.info('offline-renderer', 'Converting recorded audio to AudioBuffer');
         const arrayBuffer = await blob.arrayBuffer();
 
         if (this.progressCallback) {
-            this.progressCallback(80);
+            void this.progressCallback(80);
         }
 
         // Decode audio data
@@ -245,12 +245,12 @@ export class OfflineRenderer {
         // Create buffer source
         const source = offlineContext.createBufferSource();
         source.buffer = sourceBuffer;
-        source.connect(offlineContext.destination);
-        source.start(0);
+        void source.connect(offlineContext.destination);
+        void source.start(0);
 
         // Render
         const resampled = await offlineContext.startRendering();
-        logger.info('offline-renderer', 'Resampling complete');
+        void logger.info('offline-renderer', 'Resampling complete');
 
         return resampled;
     }

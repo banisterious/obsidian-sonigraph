@@ -27,22 +27,22 @@ export class LocalSoundscapeSettings {
 	 * Render all Local Soundscape audio settings sections
 	 */
 	public render(container: HTMLElement): void {
-		logger.debug('ls-settings', 'Rendering Local Soundscape settings');
+		void logger.debug('ls-settings', 'Rendering Local Soundscape settings');
 
 		// Clear container to prevent duplicates on re-render
-		container.empty();
+		void container.empty();
 
 		// Section 1: Auto-play Settings
-		this.renderAutoPlaySettings(container);
+		void this.renderAutoPlaySettings(container);
 
 		// Section 2: Musical Key Selection
-		this.renderMusicalKeySettings(container);
+		void this.renderMusicalKeySettings(container);
 
 		// Section 3: Context-Aware Modifiers
-		this.renderContextAwareSettings(container);
+		void this.renderContextAwareSettings(container);
 
 		// Section 4: Musical Theory & Enhancements (Phase 2/3)
-		this.renderMusicalEnhancementsSettings(container);
+		void this.renderMusicalEnhancementsSettings(container);
 	}
 
 	/**
@@ -88,8 +88,8 @@ export class LocalSoundscapeSettings {
 		});
 		modeDesc.createEl('strong', { text: 'Note-Centric' });
 		modeDesc.appendText(' (recommended): Generates rich musical phrases from the center note\'s prose structure. Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.');
-		modeDesc.createEl('br');
-		modeDesc.createEl('br');
+		void modeDesc.createEl('br');
+		void modeDesc.createEl('br');
 		modeDesc.createEl('strong', { text: 'Graph-Centric' });
 		modeDesc.appendText(' (traditional): Maps each connected node to individual notes. Requires multiple connections for interesting audio. Best for dense, well-connected graphs.');
 
@@ -176,7 +176,7 @@ export class LocalSoundscapeSettings {
 					logger.info('key-selection', `Key mode: ${value}`);
 
 					// Re-render to show/hide conditional settings
-					this.render(container);
+					void this.render(container);
 				})
 			);
 
@@ -274,7 +274,7 @@ export class LocalSoundscapeSettings {
 					logger.info('context-aware', `Enabled: ${value}`);
 
 					// Re-render to show/hide sub-settings
-					this.render(container);
+					void this.render(container);
 				})
 			);
 
@@ -405,7 +405,7 @@ export class LocalSoundscapeSettings {
 						logger.info('context-aware', `Prose structure: ${value}`);
 
 						// Re-render to show/hide sub-settings
-						this.render(container);
+						void this.render(container);
 					})
 				);
 
@@ -565,7 +565,7 @@ export class LocalSoundscapeSettings {
 					logger.info('musical-enhancements', `Scale quantization: ${value}`);
 
 					// Re-render to show/hide sub-settings
-					this.render(container);
+					void this.render(container);
 				})
 			);
 
@@ -667,7 +667,7 @@ export class LocalSoundscapeSettings {
 					logger.info('musical-enhancements', `Chord voicing: ${value}`);
 
 					// Re-render to show/hide voicing density
-					this.render(container);
+					void this.render(container);
 				})
 			);
 
@@ -703,7 +703,7 @@ export class LocalSoundscapeSettings {
 					logger.info('musical-enhancements', `Rhythmic patterns: ${value}`);
 
 					// Re-render to show/hide tempo
-					this.render(container);
+					void this.render(container);
 				})
 			);
 
@@ -742,7 +742,7 @@ export class LocalSoundscapeSettings {
 					logger.info('musical-enhancements', `Tension tracking: ${value}`);
 
 					// Re-render to show/hide sub-settings
-					this.render(container);
+					void this.render(container);
 				})
 			);
 
@@ -810,7 +810,7 @@ export class LocalSoundscapeSettings {
 					logger.info('musical-enhancements', `Dynamic panning: ${value}`);
 
 					// Re-render to show/hide sub-settings
-					this.render(container);
+					void this.render(container);
 				})
 			);
 
@@ -868,7 +868,7 @@ export class LocalSoundscapeSettings {
 					logger.info('musical-enhancements', `Turn-taking: ${value}`);
 
 					// Re-render to show/hide sub-settings
-					this.render(container);
+					void this.render(container);
 				})
 			);
 

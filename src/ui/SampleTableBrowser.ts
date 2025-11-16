@@ -58,13 +58,13 @@ export class SampleTableBrowser {
 		this.container.empty();
 
 		// Header with title and actions
-		this.renderHeader();
+		void this.renderHeader();
 
 		// Filter controls
-		this.renderFilters();
+		void this.renderFilters();
 
 		// Sample table
-		this.renderTable();
+		void this.renderTable();
 	}
 
 	/**
@@ -98,25 +98,25 @@ export class SampleTableBrowser {
 		searchInput.value = this.filters.search;
 		searchInput.addEventListener('input', (e) => {
 			this.filters.search = (e.target as HTMLInputElement).value;
-			this.renderTable();
+			void this.renderTable();
 		});
 
 		// Tag filter
 		const tagFilter = filterRow.createEl('select', { cls: 'sonigraph-sample-table-filter-tag' });
-		this.populateTagFilter(tagFilter);
+		void this.populateTagFilter(tagFilter);
 		tagFilter.value = this.filters.tag;
 		tagFilter.addEventListener('change', (e) => {
 			this.filters.tag = (e.target as HTMLSelectElement).value;
-			this.renderTable();
+			void this.renderTable();
 		});
 
 		// License filter
 		const licenseFilter = filterRow.createEl('select', { cls: 'sonigraph-sample-table-filter-license' });
-		this.populateLicenseFilter(licenseFilter);
+		void this.populateLicenseFilter(licenseFilter);
 		licenseFilter.value = this.filters.license;
 		licenseFilter.addEventListener('change', (e) => {
 			this.filters.license = (e.target as HTMLSelectElement).value;
-			this.renderTable();
+			void this.renderTable();
 		});
 
 		// Show disabled toggle
@@ -125,9 +125,9 @@ export class SampleTableBrowser {
 		toggleCheck.checked = this.filters.showDisabled;
 		toggleCheck.addEventListener('change', (e) => {
 			this.filters.showDisabled = (e.target as HTMLInputElement).checked;
-			this.renderTable();
+			void this.renderTable();
 		});
-		toggleLabel.appendText(' Show disabled');
+		void toggleLabel.appendText(' Show disabled');
 	}
 
 	/**
@@ -194,9 +194,9 @@ export class SampleTableBrowser {
 		const thead = table.createEl('thead');
 		const headerRow = thead.createEl('tr');
 
-		this.renderColumnHeader(headerRow, 'name', 'Sample');
-		this.renderColumnHeader(headerRow, 'author', 'Author / License');
-		this.renderColumnHeader(headerRow, 'tags', 'Tags');
+		void this.renderColumnHeader(headerRow, 'name', 'Sample');
+		void this.renderColumnHeader(headerRow, 'author', 'Author / License');
+		void this.renderColumnHeader(headerRow, 'tags', 'Tags');
 		headerRow.createEl('th', { text: 'Actions' });
 
 		// Table body
@@ -211,7 +211,7 @@ export class SampleTableBrowser {
 	 */
 	private renderColumnHeader(row: HTMLElement, column: string, title: string): void {
 		const th = row.createEl('th', { cls: 'sortable' });
-		th.setText(title);
+		void th.setText(title);
 
 		if (this.sortState.column === column) {
 			const arrow = th.createSpan({ cls: 'sort-arrow' });
@@ -225,7 +225,7 @@ export class SampleTableBrowser {
 				this.sortState.column = column;
 				this.sortState.direction = 'asc';
 			}
-			this.renderTable();
+			void this.renderTable();
 		});
 	}
 
@@ -240,7 +240,7 @@ export class SampleTableBrowser {
 		// Sample Name with duration
 		const nameCell = row.createEl('td', { cls: 'sonigraph-sample-name' });
 		const nameDiv = nameCell.createDiv({ cls: 'sonigraph-sample-name-text' });
-		nameDiv.setText(sample.title || sample.name || 'Untitled');
+		void nameDiv.setText(sample.title || sample.name || 'Untitled');
 		const durationDiv = nameCell.createDiv({ cls: 'sonigraph-sample-duration' });
 		const duration = Math.round(sample.duration || 0);
 		durationDiv.setText(`${duration}s`);
@@ -248,7 +248,7 @@ export class SampleTableBrowser {
 		// Author / License combined
 		const authorCell = row.createEl('td', { cls: 'sonigraph-sample-author-license' });
 		const authorDiv = authorCell.createDiv({ cls: 'sonigraph-author-text' });
-		authorDiv.setText(sample.attribution || 'Unknown');
+		void authorDiv.setText(sample.attribution || 'Unknown');
 		const licenseDiv = authorCell.createDiv({ cls: 'sonigraph-license-text' });
 		licenseDiv.setText(this.formatLicense(sample.license));
 
@@ -282,7 +282,7 @@ export class SampleTableBrowser {
 		const editTagsBtn = actionsCell.createEl('button', { cls: 'sonigraph-edit-tags-btn', attr: { 'aria-label': 'Edit tags' } });
 		setIcon(editTagsBtn, 'tag');
 		editTagsBtn.addEventListener('click', () => {
-			this.openTagEditor(sample);
+			void this.openTagEditor(sample);
 		});
 
 		// Enable/Disable toggle
@@ -406,17 +406,17 @@ export class SampleTableBrowser {
 	private async previewSample(sample: ExtendedFreesoundSample, button: HTMLButtonElement): Promise<void> {
 		// Stop if already playing (check if button has stop icon)
 		if (this.currentPreviewButton === button && this.currentPreviewAudio) {
-			this.stopPreview();
+			void this.stopPreview();
 			return;
 		}
 
 		// Stop any currently playing preview
 		if (this.currentPreviewAudio) {
-			this.stopPreview();
+			void this.stopPreview();
 		}
 
 		try {
-			button.empty();
+			void button.empty();
 			button.createSpan({ text: '...' });
 			button.disabled = true;
 
@@ -446,7 +446,7 @@ export class SampleTableBrowser {
 			await new Promise<void>((resolve, reject) => {
 				audio.addEventListener('canplay', () => resolve(), { once: true });
 				audio.addEventListener('error', reject, { once: true });
-				audio.load();
+				void audio.load();
 			});
 
 			await audio.play();
@@ -454,13 +454,13 @@ export class SampleTableBrowser {
 			this.currentPreviewAudio = audio;
 			this.currentPreviewButton = button;
 
-			button.empty();
+			void button.empty();
 			setIcon(button, 'square');
 			button.disabled = false;
 
 			// Auto-stop when done
 			audio.addEventListener('ended', () => {
-				URL.revokeObjectURL(blobUrl);
+				void URL.revokeObjectURL(blobUrl);
 				if (this.currentPreviewButton) {
 					this.currentPreviewButton.empty();
 					setIcon(this.currentPreviewButton, 'play');
@@ -470,12 +470,12 @@ export class SampleTableBrowser {
 			});
 
 		} catch (error) {
-			logger.error('preview', 'Failed to preview sample', error);
-			button.empty();
+			void logger.error('preview', 'Failed to preview sample', error);
+			void button.empty();
 			button.createSpan({ text: 'Error' });
 			button.disabled = false;
 			setTimeout(() => {
-				button.empty();
+				void button.empty();
 				setIcon(button, 'play');
 			}, 2000);
 		}
@@ -488,7 +488,7 @@ export class SampleTableBrowser {
 		if (this.currentPreviewAudio && this.currentPreviewButton) {
 			this.currentPreviewAudio.pause();
 			if (this.currentPreviewAudio.src.startsWith('blob:')) {
-				URL.revokeObjectURL(this.currentPreviewAudio.src);
+				void URL.revokeObjectURL(this.currentPreviewAudio.src);
 			}
 			this.currentPreviewButton.empty();
 			setIcon(this.currentPreviewButton, 'play');
@@ -517,7 +517,7 @@ export class SampleTableBrowser {
 			sample.enabled = !sample.enabled;
 		}
 		await this.plugin.saveSettings();
-		this.renderTable();
+		void this.renderTable();
 
 		new Notice(`Sample ${sample.enabled ? 'enabled' : 'disabled'}`);
 	}
@@ -533,9 +533,9 @@ export class SampleTableBrowser {
 		if (index === -1) return;
 
 		const sample = samples[index];
-		samples.splice(index, 1);
+		void samples.splice(index, 1);
 		await this.plugin.saveSettings();
-		this.renderTable();
+		void this.renderTable();
 
 		new Notice(`Removed "${sample.title || sample.name}"`);
 	}
@@ -576,7 +576,7 @@ export class SampleTableBrowser {
 			}
 		);
 
-		modal.open();
+		void modal.open();
 	}
 
 	/**
@@ -600,7 +600,7 @@ export class SampleTableBrowser {
 				}
 			}
 		);
-		modal.open();
+		void modal.open();
 	}
 }
 
@@ -642,7 +642,7 @@ class TagEditorModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.empty();
+		void contentEl.empty();
 
 		contentEl.createEl('h3', { text: 'Edit Tags' });
 		contentEl.createEl('p', {
@@ -665,7 +665,7 @@ class TagEditorModal extends Modal {
 		this.tagInput.addEventListener('input', () => {
 			if (!this.tagInput) return;
 			const value = this.tagInput.value.toLowerCase().trim();
-			suggestionsEl.empty();
+			void suggestionsEl.empty();
 
 			if (value.length > 0) {
 				const matches = Array.from(this.availableTags)
@@ -678,9 +678,9 @@ class TagEditorModal extends Modal {
 						cls: 'sonigraph-tag-suggestion'
 					});
 					suggestion.addEventListener('click', () => {
-						this.addTag(tag);
+						void this.addTag(tag);
 						if (this.tagInput) this.tagInput.value = '';
-						suggestionsEl.empty();
+						void suggestionsEl.empty();
 					});
 				});
 			}
@@ -689,12 +689,12 @@ class TagEditorModal extends Modal {
 		// Add tag on Enter
 		this.tagInput.addEventListener('keydown', (e) => {
 			if (e.key === 'Enter' && this.tagInput) {
-				e.preventDefault();
+				void e.preventDefault();
 				const value = this.tagInput.value.trim().toLowerCase();
 				if (value) {
-					this.addTag(value);
+					void this.addTag(value);
 					this.tagInput.value = '';
-					suggestionsEl.empty();
+					void suggestionsEl.empty();
 				}
 			}
 		});
@@ -702,7 +702,7 @@ class TagEditorModal extends Modal {
 		// Current tags display
 		contentEl.createEl('h4', { text: 'Current Tags' });
 		this.tagListEl = contentEl.createDiv({ cls: 'sonigraph-tag-editor-list' });
-		this.renderTags();
+		void this.renderTags();
 
 		// Common tags section
 		const commonSection = contentEl.createDiv({ cls: 'sonigraph-tag-common-section' });
@@ -719,7 +719,7 @@ class TagEditorModal extends Modal {
 			});
 			tagBtn.addEventListener('click', () => {
 				if (!this.currentTags.includes(tag)) {
-					this.addTag(tag);
+					void this.addTag(tag);
 				}
 			});
 		});
@@ -734,14 +734,14 @@ class TagEditorModal extends Modal {
 		saveBtn.addEventListener('click', async () => {
 			await this.onSave(this.currentTags);
 			new Notice('Tags updated');
-			this.close();
+			void this.close();
 		});
 
 		const cancelBtn = btnContainer.createEl('button', {
 			text: 'Cancel'
 		});
 		cancelBtn.addEventListener('click', () => {
-			this.close();
+			void this.close();
 		});
 	}
 
@@ -749,7 +749,7 @@ class TagEditorModal extends Modal {
 		const normalized = tag.toLowerCase().trim();
 		if (normalized && !this.currentTags.includes(normalized)) {
 			this.currentTags.push(normalized);
-			this.renderTags();
+			void this.renderTags();
 			this.availableTags.add(normalized);
 		}
 	}
@@ -758,7 +758,7 @@ class TagEditorModal extends Modal {
 		const index = this.currentTags.indexOf(tag);
 		if (index > -1) {
 			this.currentTags.splice(index, 1);
-			this.renderTags();
+			void this.renderTags();
 		}
 	}
 
@@ -784,13 +784,13 @@ class TagEditorModal extends Modal {
 				cls: 'sonigraph-tag-editor-item-remove'
 			});
 			removeBtn.addEventListener('click', () => {
-				this.removeTag(tag);
+				void this.removeTag(tag);
 			});
 		});
 	}
 
 	onClose() {
 		const { contentEl } = this;
-		contentEl.empty();
+		void contentEl.empty();
 	}
 }

@@ -31,7 +31,7 @@ export class CommunityThemeGenerator {
   public initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    logger.debug('initialization', 'Initializing community theme generator');
+    void logger.debug('initialization', 'Initializing community theme generator');
 
     // Generate themes for each community type
     this.themes.set('large-stable', this.createLargeStableTheme());
@@ -512,7 +512,7 @@ export class CommunityThemeGenerator {
    * Dispose of resources
    */
   public dispose(): void {
-    logger.debug('shutdown', 'Disposing community theme generator');
+    void logger.debug('shutdown', 'Disposing community theme generator');
     this.themes.clear();
     this.isInitialized = false;
   }

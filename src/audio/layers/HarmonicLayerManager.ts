@@ -136,9 +136,9 @@ export class HarmonicLayerManager {
     this.chorus = new Chorus(2, 2.5, 0.3);
     this.modLFO = new LFO(0.1, 0.5, 1.5);
     
-    this.initializeHarmonyMappings();
+    void this.initializeHarmonyMappings();
     
-    logger.debug('initialization', 'HarmonicLayerManager created');
+    void logger.debug('initialization', 'HarmonicLayerManager created');
   }
   
   /**
@@ -150,21 +150,21 @@ export class HarmonicLayerManager {
     }
     
     try {
-      logger.info('initialization', 'Initializing HarmonicLayerManager');
+      void logger.info('initialization', 'Initializing HarmonicLayerManager');
       
       await start();
       
       // Connect audio chain
-      this.connectAudioChain();
+      void this.connectAudioChain();
       
       // Start modulation LFO
       this.modLFO.start();
       
       this.isInitialized = true;
       
-      logger.info('initialization', 'HarmonicLayerManager initialized');
+      void logger.info('initialization', 'HarmonicLayerManager initialized');
     } catch (error) {
-      logger.error('initialization', 'Failed to initialize HarmonicLayerManager', error);
+      void logger.error('initialization', 'Failed to initialize HarmonicLayerManager', error);
       throw new ContinuousLayerError('Harmonic layer initialization failed', 'harmonic');
     }
   }
@@ -174,7 +174,7 @@ export class HarmonicLayerManager {
    */
   async start(): Promise<void> {
     if (!this.config.enabled) {
-      logger.debug('playback', 'Harmonic layer disabled, skipping start');
+      void logger.debug('playback', 'Harmonic layer disabled, skipping start');
       return;
     }
     
@@ -187,22 +187,22 @@ export class HarmonicLayerManager {
     }
     
     try {
-      logger.info('playback', 'Starting harmonic layer playback');
+      void logger.info('playback', 'Starting harmonic layer playback');
       
       // Start with a basic tonic chord
       const initialChord = this.generateTonicChord();
       await this.transitionToChord(initialChord);
       
       // Start progression timer
-      this.startProgression();
+      void this.startProgression();
       
       this.isPlaying = true;
       
-      this.notifyStateChange();
+      void this.notifyStateChange();
       
-      logger.info('playback', 'Harmonic layer playback started');
+      void logger.info('playback', 'Harmonic layer playback started');
     } catch (error) {
-      logger.error('playback', 'Failed to start harmonic layer', error);
+      void logger.error('playback', 'Failed to start harmonic layer', error);
       throw new ContinuousLayerError('Harmonic layer start failed', 'harmonic');
     }
   }
@@ -216,10 +216,10 @@ export class HarmonicLayerManager {
     }
     
     try {
-      logger.info('playback', 'Stopping harmonic layer playback');
+      void logger.info('playback', 'Stopping harmonic layer playback');
       
       // Stop progression
-      this.stopProgression();
+      void this.stopProgression();
       
       // Release all notes
       this.chordSynth.releaseAll();
@@ -236,11 +236,11 @@ export class HarmonicLayerManager {
       this.harmonicState.currentChord = null;
       this.harmonicState.targetChord = null;
       
-      this.notifyStateChange();
+      void this.notifyStateChange();
       
-      logger.info('playback', 'Harmonic layer playback stopped');
+      void logger.info('playback', 'Harmonic layer playback stopped');
     } catch (error) {
-      logger.error('playback', 'Error stopping harmonic layer', error);
+      void logger.error('playback', 'Error stopping harmonic layer', error);
     }
   }
   
@@ -255,7 +255,7 @@ export class HarmonicLayerManager {
     try {
       // Analyze clusters for harmonic content
       if (vaultState.clusters) {
-        this.analyzeClusterHarmony(vaultState.clusters);
+        void this.analyzeClusterHarmony(vaultState.clusters);
       }
       
       // Update filter based on animation progress
@@ -274,7 +274,7 @@ export class HarmonicLayerManager {
       });
       
     } catch (error) {
-      logger.error('vault-state', 'Error updating vault state', error);
+      void logger.error('vault-state', 'Error updating vault state', error);
     }
   }
   
@@ -285,27 +285,27 @@ export class HarmonicLayerManager {
     const oldEnabled = this.config.enabled;
     this.config = { ...this.config, ...newConfig };
     
-    logger.debug('configuration', 'Updated harmonic layer config', newConfig);
+    void logger.debug('configuration', 'Updated harmonic layer config', newConfig);
     
     // Handle enable/disable
     if (newConfig.enabled !== undefined && newConfig.enabled !== oldEnabled) {
       if (newConfig.enabled && !this.isPlaying) {
         this.start().catch(error => {
-          logger.error('configuration', 'Failed to start after enabling', error);
+          void logger.error('configuration', 'Failed to start after enabling', error);
         });
       } else if (!newConfig.enabled && this.isPlaying) {
         this.stop().catch(error => {
-          logger.error('configuration', 'Failed to stop after disabling', error);
+          void logger.error('configuration', 'Failed to stop after disabling', error);
         });
       }
     }
     
     // Update progression speed
     if (newConfig.progressionSpeed !== undefined && this.isPlaying) {
-      this.restartProgression();
+      void this.restartProgression();
     }
     
-    this.notifyStateChange();
+    void this.notifyStateChange();
   }
   
   /**
@@ -317,12 +317,12 @@ export class HarmonicLayerManager {
     logger.info('scale', `Changed scale to ${scale.key} ${scale.name}`, scale);
     
     // Regenerate harmony mappings for new scale
-    this.initializeHarmonyMappings();
+    void this.initializeHarmonyMappings();
     
     // If playing, transition to scale-appropriate chord
     if (this.isPlaying) {
       const newChord = this.generateChordFromScale();
-      this.transitionToChord(newChord);
+      void this.transitionToChord(newChord);
     }
   }
   
@@ -359,7 +359,7 @@ export class HarmonicLayerManager {
    * Clean up resources
    */
   async dispose(): Promise<void> {
-    logger.info('cleanup', 'Disposing HarmonicLayerManager');
+    void logger.info('cleanup', 'Disposing HarmonicLayerManager');
     
     try {
       await this.stop();
@@ -375,9 +375,9 @@ export class HarmonicLayerManager {
       
       this.isInitialized = false;
       
-      logger.info('cleanup', 'HarmonicLayerManager disposed');
+      void logger.info('cleanup', 'HarmonicLayerManager disposed');
     } catch (error) {
-      logger.error('cleanup', 'Error disposing harmonic layer', error);
+      void logger.error('cleanup', 'Error disposing harmonic layer', error);
     }
   }
   
@@ -516,7 +516,7 @@ export class HarmonicLayerManager {
     const targetChord = this.harmonyMap.get(targetChordType);
     if (targetChord && this.shouldTransition(targetChord)) {
       logger.debug('cluster-harmony', `Transitioning to ${targetChordType} based on ${dominantCluster.type} cluster`);
-      this.transitionToChord(targetChord);
+      void this.transitionToChord(targetChord);
     }
   }
   
@@ -568,7 +568,7 @@ export class HarmonicLayerManager {
       });
       
     } catch (error) {
-      logger.error('chord-transition', 'Error transitioning to chord', error);
+      void logger.error('chord-transition', 'Error transitioning to chord', error);
     }
   }
   
@@ -578,7 +578,7 @@ export class HarmonicLayerManager {
     }
     
     this.progressionTimer = window.setInterval(() => {
-      this.evolveProgression();
+      void this.evolveProgression();
     }, this.config.progressionSpeed * 1000);
   }
   
@@ -590,9 +590,9 @@ export class HarmonicLayerManager {
   }
   
   private restartProgression(): void {
-    this.stopProgression();
+    void this.stopProgression();
     if (this.isPlaying) {
-      this.startProgression();
+      void this.startProgression();
     }
   }
   
@@ -608,7 +608,7 @@ export class HarmonicLayerManager {
     
     const nextChord = this.harmonyMap.get(randomChoice);
     if (nextChord) {
-      this.transitionToChord(nextChord);
+      void this.transitionToChord(nextChord);
     }
   }
   

@@ -181,11 +181,11 @@ export class TemporalInfluence {
 
     // Time of day instrument preferences
     const timeInstruments = this.getTimeOfDayInstruments(timeOfDay);
-    instruments.push(...timeInstruments);
+    void instruments.push(...timeInstruments);
 
     // Seasonal instrument preferences
     const seasonInstruments = this.getSeasonalInstruments(season);
-    instruments.push(...seasonInstruments);
+    void instruments.push(...seasonInstruments);
 
     // Remove duplicates
     return [...new Set(instruments)];

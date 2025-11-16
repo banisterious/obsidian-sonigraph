@@ -185,7 +185,7 @@ export class MemoryMonitor {
             pressure: metrics.pressure
         };
         
-        logger.info('memory-stats', 'Current memory usage', stats);
+        void logger.info('memory-stats', 'Current memory usage', stats);
     }
     
     /**
@@ -197,8 +197,8 @@ export class MemoryMonitor {
         }
         const globalWithGC = global as unknown as GlobalWithGC;
         if (typeof globalWithGC.gc === 'function') {
-            globalWithGC.gc();
-            logger.debug('garbage-collection', 'Manual GC triggered');
+            void globalWithGC.gc();
+            void logger.debug('garbage-collection', 'Manual GC triggered');
             return true;
         }
         return false;

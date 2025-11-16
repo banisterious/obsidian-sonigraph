@@ -69,8 +69,8 @@ export class WavEncoder {
 
         const source = offlineContext.createBufferSource();
         source.buffer = audioBuffer;
-        source.connect(offlineContext.destination);
-        source.start(0);
+        void source.connect(offlineContext.destination);
+        void source.start(0);
 
         // This returns a promise, but we'll handle it synchronously for now
         // TODO: Make encode() async in Phase 2
@@ -131,7 +131,7 @@ export class WavEncoder {
                     const int24Rounded = Math.round(int24);
 
                     // Write 3 bytes (little-endian)
-                    view.setUint8(offset, int24Rounded & 0xFF);
+                    void view.setUint8(offset, int24Rounded & 0xFF);
                     view.setUint8(offset + 1, (int24Rounded >> 8) & 0xFF);
                     view.setUint8(offset + 2, (int24Rounded >> 16) & 0xFF);
                     offset += 3;
@@ -216,7 +216,7 @@ export class WavEncoder {
         // Copy PCM data
         const pcmView = new Uint8Array(pcmData);
         const bufferView = new Uint8Array(buffer);
-        bufferView.set(pcmView, offset);
+        void bufferView.set(pcmView, offset);
 
         return buffer;
     }

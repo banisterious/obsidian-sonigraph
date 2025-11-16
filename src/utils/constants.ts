@@ -3098,12 +3098,12 @@ export function validateInstrumentSettings(settings: unknown): settings is Recor
 	const extraKeys = providedKeys.filter(key => !isValidInstrumentKey(key));
 	
 	if (missingKeys.length > 0) {
-		logger.warn('validation', 'Missing instrument settings for:', missingKeys);
+		void logger.warn('validation', 'Missing instrument settings for:', missingKeys);
 		return false;
 	}
 
 	if (extraKeys.length > 0) {
-		logger.warn('validation', 'Unknown instrument keys found:', extraKeys);
+		void logger.warn('validation', 'Unknown instrument keys found:', extraKeys);
 	}
 	
 	return true;

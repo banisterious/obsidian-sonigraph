@@ -58,9 +58,9 @@ export class FreesoundSampleManager {
         this.cacheStrategy = new CacheStrategy();
         this.genreCollections = new Map();
 
-        this.initializeGenreCollections();
-        this.setupDownloadCallbacks();
-        this.setupNetworkMonitoring();
+        void this.initializeGenreCollections();
+        void this.setupDownloadCallbacks();
+        void this.setupNetworkMonitoring();
     }
 
     /**
@@ -129,14 +129,14 @@ export class FreesoundSampleManager {
         for (const soundId of collection.soundIds) {
             const cached = await this.cache.has(soundId);
             if (!cached) {
-                uncachedSoundIds.push(soundId);
+                void uncachedSoundIds.push(soundId);
             }
         }
 
         if (uncachedSoundIds.length === 0) {
             this.logger.info('sample-manager', 'All genre samples already cached - ' + JSON.stringify({ genre }));
             if (this.onPreloadComplete) {
-                this.onPreloadComplete(genre);
+                void this.onPreloadComplete(genre);
             }
             return;
         }
@@ -155,7 +155,7 @@ export class FreesoundSampleManager {
                 clearInterval(progressInterval);
                 this.logger.info('sample-manager', 'Genre preload completed - ' + JSON.stringify({ genre }));
                 if (this.onPreloadComplete) {
-                    this.onPreloadComplete(genre);
+                    void this.onPreloadComplete(genre);
                 }
             }
         }, 500);
@@ -510,7 +510,7 @@ export class FreesoundSampleManager {
         // Try cache first
         const cached = await this.getCachedSample(soundId);
         if (cached) {
-            this.recordCacheAccess(soundId);
+            void this.recordCacheAccess(soundId);
             return cached;
         }
 

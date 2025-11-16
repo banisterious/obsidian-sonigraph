@@ -133,31 +133,31 @@ export class PathAnalyzer {
             // Personal indicators
             if (/journal|diary|daily|personal|private/.test(component)) {
                 scores.personal += 2;
-                keywords.push(component);
+                void keywords.push(component);
             }
             
             // Work indicators
             if (/project|work|task|meeting|report|presentation/.test(component)) {
                 scores.work += 2;
-                keywords.push(component);
+                void keywords.push(component);
             }
             
             // Creative indicators
             if (/idea|creative|art|design|music|story|poem/.test(component)) {
                 scores.creative += 2;
-                keywords.push(component);
+                void keywords.push(component);
             }
             
             // Technical indicators
             if (/code|dev|tech|research|study|analysis|data/.test(component)) {
                 scores.technical += 2;
-                keywords.push(component);
+                void keywords.push(component);
             }
             
             // Archival indicators
             if (/archive|old|backup|history|past|legacy/.test(component)) {
                 scores.archival += 2;
-                keywords.push(component);
+                void keywords.push(component);
             }
         }
 

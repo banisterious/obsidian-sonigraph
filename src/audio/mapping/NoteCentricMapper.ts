@@ -168,7 +168,7 @@ export class NoteCentricMapper {
 		// Step 1: Analyze center note's prose
 		const proseAnalysis = await this.analyzeCenterNote(data.centerNode);
 		if (!proseAnalysis) {
-			logger.warn('mapping-failed', 'Could not analyze center note');
+			void logger.warn('mapping-failed', 'Could not analyze center note');
 			return null;
 		}
 
@@ -243,7 +243,7 @@ export class NoteCentricMapper {
 
 			return analysis;
 		} catch (error) {
-			logger.error('prose-analysis-error', 'Failed to analyze prose', error as Error);
+			void logger.error('prose-analysis-error', 'Failed to analyze prose', error as Error);
 			return null;
 		}
 	}
@@ -613,7 +613,7 @@ export class NoteCentricMapper {
 							const voiceLeadingStyle = this.getVoiceLeadingStyle();
 							const chromaticThreshold = voiceLeadingStyle === 'chromatic' ? this.getHarmonicThreshold(0.2) :
 														voiceLeadingStyle === 'balanced' ? this.getHarmonicThreshold(0.35) :
-														this.getHarmonicThreshold(0.5);
+														void this.getHarmonicThreshold(0.5);
 							if ((harmonicSeed + j) % 2 === 0 && prose.musicalExpressiveness > chromaticThreshold) {
 								// Chromatic approach from below or above
 								if (prevChord < chord) {
@@ -629,20 +629,20 @@ export class NoteCentricMapper {
 									passingChord = prevChord - Math.floor(interval / 2);
 								}
 							}
-							fullProgression.push(passingChord);
+							void fullProgression.push(passingChord);
 						}
 
 						// Tritone substitutions based on adventurousness
 						if ((harmonicSeed + j * 23) % 5 === 0 && prose.musicalExpressiveness > this.getHarmonicThreshold(0.3)) {
 							// Add tritone substitute (diminished 5th away)
 							const tritoneSubstitute = chord + 6;
-							fullProgression.push(tritoneSubstitute);
+							void fullProgression.push(tritoneSubstitute);
 						}
 
 						// Augmented sixth chords based on adventurousness
 						if ((harmonicSeed + j * 19) % 6 === 0 && prose.musicalExpressiveness > this.getHarmonicThreshold(0.4)) {
 							const augSixth = chord - 1; // German sixth flavor
-							fullProgression.push(augSixth);
+							void fullProgression.push(augSixth);
 						}
 					}
 				}
@@ -675,7 +675,7 @@ export class NoteCentricMapper {
 					});
 					fullProgression.push(0); // Fallback to tonic
 				} else {
-					fullProgression.push(chord);
+					void fullProgression.push(chord);
 				}
 			}
 		}
@@ -683,7 +683,7 @@ export class NoteCentricMapper {
 		// Fill harmony array with varied note durations per chord
 		// Ensure we have at least one chord in progression
 		if (fullProgression.length === 0) {
-			logger.error('empty-progression', 'fullProgression is empty, using tonic fallback');
+			void logger.error('empty-progression', 'fullProgression is empty, using tonic fallback');
 			fullProgression.push(0); // Add tonic as fallback
 		}
 
@@ -706,7 +706,7 @@ export class NoteCentricMapper {
 				});
 				harmony.push(0); // Fallback to tonic
 			} else {
-				harmony.push(chordValue);
+				void harmony.push(chordValue);
 			}
 		}
 
@@ -806,7 +806,7 @@ export class NoteCentricMapper {
 			// Scale to reasonable range (0.5 - 4.5 beats)
 			duration = Math.max(0.5, Math.min(4.5, duration));
 
-			rhythm.push(duration);
+			void rhythm.push(duration);
 
 			// Move to next position in motif
 			motifIndex++;
@@ -895,7 +895,7 @@ export class NoteCentricMapper {
 			// WIDER playable range (0.08 - 0.99 for even more extremes)
 			velocity = Math.max(0.08, Math.min(0.99, velocity));
 
-			velocities.push(velocity);
+			void velocities.push(velocity);
 
 			// Update seed
 			seed = (seed + i * 7) % 1000;
@@ -1049,7 +1049,7 @@ export class NoteCentricMapper {
 				});
 				harmony.push(0); // Fallback to tonic
 			} else {
-				harmony.push(harmonyValue);
+				void harmony.push(harmonyValue);
 			}
 		}
 
@@ -1142,7 +1142,7 @@ export class NoteCentricMapper {
 					approach = chordRoot < nextChord ? chordRoot + 2 : chordRoot - 2;
 				}
 
-				melody.push(approach - 12);
+				void melody.push(approach - 12);
 			}
 
 			seed = (seed * 1.05 + i * 11) % 1000;
@@ -1166,7 +1166,7 @@ export class NoteCentricMapper {
 			const variation = ((seed + i * 13) % 20 - 10) / 100; // ±10%
 			duration *= (1 + variation);
 
-			rhythm.push(duration);
+			void rhythm.push(duration);
 		}
 
 		// Ensure harmony array matches melody length
@@ -1185,7 +1185,7 @@ export class NoteCentricMapper {
 				});
 				harmony.push(0); // Fallback to tonic
 			} else {
-				harmony.push(harmonyValue);
+				void harmony.push(harmonyValue);
 			}
 		}
 
@@ -1237,11 +1237,11 @@ export class NoteCentricMapper {
 			const chordTone = i % 3 === 0 ? chord : (i % 3 === 1 ? chord + 4 : chord + 7);
 			melody.push(chordTone + 19); // High register
 
-			harmony.push(chord);
+			void harmony.push(chord);
 
 			// Very long sustained notes that overlap
 			const duration = centerPhrase.totalBeats / (length * 0.6); // Overlapping sustains
-			rhythm.push(duration);
+			void rhythm.push(duration);
 		}
 
 		// Very soft, creating atmospheric layer

@@ -104,8 +104,8 @@ export class PlayButtonManager {
 	 */
 	initialize(button: HTMLElement): void {
 		this.button = button;
-		this.setState('idle');
-		logger.debug('manager', 'Play button manager initialized');
+		void this.setState('idle');
+		void logger.debug('manager', 'Play button manager initialized');
 	}
 
 	/**
@@ -132,8 +132,8 @@ export class PlayButtonManager {
 			substate: this.currentSubstate
 		});
 
-		this.updateButton();
-		this.notifyStateChange(newState);
+		void this.updateButton();
+		void this.notifyStateChange(newState);
 	}
 
 	/**
@@ -142,7 +142,7 @@ export class PlayButtonManager {
 	setLoadingSubstate(substate: LoadingSubstate): void {
 		if (this.currentState === 'loading') {
 			this.currentSubstate = substate;
-			this.updateButton();
+			void this.updateButton();
 			logger.debug('manager', `Loading substate: ${substate}`);
 		}
 	}
@@ -193,14 +193,14 @@ export class PlayButtonManager {
 		if (config.animation) {
 			icon.setCssProps({ animation: config.animation });
 		}
-		button.appendChild(icon);
+		void button.appendChild(icon);
 
 		// Add text - use substate message if available
 		const text = this.getDisplayText();
-		button.appendText(text);
+		void button.appendText(text);
 
 		// Apply accessibility attributes
-		this.updateAccessibility(button, text);
+		void this.updateAccessibility(button, text);
 	}
 
 	/**
@@ -217,13 +217,13 @@ export class PlayButtonManager {
 	 * Update accessibility attributes
 	 */
 	private updateAccessibility(button: HTMLButtonElement, text: string): void {
-		button.setAttribute('aria-label', text);
-		button.setAttribute('data-state', this.currentState);
+		void button.setAttribute('aria-label', text);
+		void button.setAttribute('data-state', this.currentState);
 		
 		if (this.currentState === 'loading' || this.currentState === 'stopping') {
-			button.setAttribute('aria-busy', 'true');
+			void button.setAttribute('aria-busy', 'true');
 		} else {
-			button.removeAttribute('aria-busy');
+			void button.removeAttribute('aria-busy');
 		}
 	}
 
@@ -235,7 +235,7 @@ export class PlayButtonManager {
 			try {
 				listener(state);
 			} catch (error) {
-				logger.error('manager', 'Error in state change listener', error);
+				void logger.error('manager', 'Error in state change listener', error);
 			}
 		});
 	}
@@ -269,10 +269,10 @@ export class PlayButtonManager {
 	 * Force state reset (for error recovery)
 	 */
 	forceReset(): void {
-		logger.info('manager', 'Force resetting play button state');
+		void logger.info('manager', 'Force resetting play button state');
 		this.currentState = 'idle';
 		this.currentSubstate = null;
-		this.updateButton();
+		void this.updateButton();
 	}
 
 	/**
@@ -288,6 +288,6 @@ export class PlayButtonManager {
 	dispose(): void {
 		this.stateChangeListeners = [];
 		this.button = null;
-		logger.debug('manager', 'Play button manager disposed');
+		void logger.debug('manager', 'Play button manager disposed');
 	}
 }

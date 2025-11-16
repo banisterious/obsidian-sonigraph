@@ -116,10 +116,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
     constructor(leaf: WorkspaceLeaf, plugin: SonigraphPlugin) {
         super(leaf);
-        logger.debug('ui', 'SonicGraphView constructor started');
+        void logger.debug('ui', 'SonicGraphView constructor started');
         
         this.plugin = plugin;
-        logger.debug('ui', 'Plugin assigned');
+        void logger.debug('ui', 'Plugin assigned');
         
         try {
             const excludeFolders = plugin.settings.sonicGraphExcludeFolders || [];
@@ -132,14 +132,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 excludeFiles,
                 filterSettings
             });
-            logger.debug('ui', 'GraphDataExtractor created successfully');
+            void logger.debug('ui', 'GraphDataExtractor created successfully');
         } catch (error) {
             logger.error('ui', 'Failed to create GraphDataExtractor:', (error as Error).message);
             logger.error('ui', 'GraphDataExtractor error stack:', (error as Error).stack);
             throw error;
         }
         
-        logger.debug('ui', 'SonicGraphView constructor completed');
+        void logger.debug('ui', 'SonicGraphView constructor completed');
     }
 
     getViewType(): string {
@@ -156,14 +156,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
     async setState(state: any, result: any): Promise<void> {
-        logger.debug('state', 'Restoring view state', state);
+        void logger.debug('state', 'Restoring view state', state);
 
         // Call parent implementation first
         await super.setState(state, result);
 
         // Type guard to ensure we have valid state
         if (!state || typeof state !== 'object') {
-            logger.debug('state', 'No valid state to restore');
+            void logger.debug('state', 'No valid state to restore');
             return;
         }
 
@@ -173,45 +173,45 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // These will be applied when UI elements are created in onOpen()
         if (viewState.isTimelineView !== undefined) {
             this.isTimelineView = viewState.isTimelineView;
-            logger.debug('state', 'Restored isTimelineView', this.isTimelineView);
+            void logger.debug('state', 'Restored isTimelineView', this.isTimelineView);
         }
 
         if (viewState.isAnimating !== undefined) {
             // Note: We don't auto-start animation on restore, just preserve the flag
             // The user can manually restart if desired
-            logger.debug('state', 'Animation state was', viewState.isAnimating);
+            void logger.debug('state', 'Animation state was', viewState.isAnimating);
         }
 
         if (viewState.detectedSpacing !== undefined) {
             this.detectedSpacing = viewState.detectedSpacing;
-            logger.debug('state', 'Restored detectedSpacing', this.detectedSpacing);
+            void logger.debug('state', 'Restored detectedSpacing', this.detectedSpacing);
         }
 
         if (viewState.isSettingsVisible !== undefined) {
             this.isSettingsVisible = viewState.isSettingsVisible;
-            logger.debug('state', 'Restored isSettingsVisible', this.isSettingsVisible);
+            void logger.debug('state', 'Restored isSettingsVisible', this.isSettingsVisible);
         }
 
         if (viewState.isVisualDisplayVisible !== undefined) {
             this.isVisualDisplayVisible = viewState.isVisualDisplayVisible;
-            logger.debug('state', 'Restored isVisualDisplayVisible', this.isVisualDisplayVisible);
+            void logger.debug('state', 'Restored isVisualDisplayVisible', this.isVisualDisplayVisible);
         } else {
             // Initialize from plugin settings if no saved state
             this.isVisualDisplayVisible = this.plugin.settings.sonicGraphSettings?.visualDisplay?.enabled ?? true;
-            logger.debug('state', 'Initialized isVisualDisplayVisible from settings', this.isVisualDisplayVisible);
+            void logger.debug('state', 'Initialized isVisualDisplayVisible from settings', this.isVisualDisplayVisible);
         }
 
         if (viewState.visualDisplayHeight !== undefined) {
             this.visualDisplayHeight = viewState.visualDisplayHeight;
-            logger.debug('state', 'Restored visualDisplayHeight', this.visualDisplayHeight);
+            void logger.debug('state', 'Restored visualDisplayHeight', this.visualDisplayHeight);
         } else {
             // Initialize from plugin settings if no saved state
             this.visualDisplayHeight = this.plugin.settings.sonicGraphSettings?.visualDisplay?.height ?? 250;
-            logger.debug('state', 'Initialized visualDisplayHeight from settings', this.visualDisplayHeight);
+            void logger.debug('state', 'Initialized visualDisplayHeight from settings', this.visualDisplayHeight);
         }
 
         // Update visual display section if it's already been created (setState called after onOpen)
-        this.updateVisualDisplayState();
+        void this.updateVisualDisplayState();
 
         // Store timeline position and speed for restoration after graph initialization
         if (viewState.currentTimelinePosition !== undefined || viewState.animationSpeed !== undefined) {
@@ -221,10 +221,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 timelinePosition: viewState.currentTimelinePosition,
                 animationSpeed: viewState.animationSpeed
             };
-            logger.debug('state', 'Stored pending timeline state for post-initialization');
+            void logger.debug('state', 'Stored pending timeline state for post-initialization');
         }
 
-        logger.info('state', 'View state restoration complete');
+        void logger.info('state', 'View state restoration complete');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
@@ -244,7 +244,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             currentTimelinePosition = parseFloat(this.timelineScrubber.value) || 0;
             logger.info('state', 'Captured timeline position from scrubber', { currentTimelinePosition });
         } else if (this.isTimelineView) {
-            logger.warn('state', 'isTimelineView is true but scrubber does not exist - cannot capture position');
+            void logger.warn('state', 'isTimelineView is true but scrubber does not exist - cannot capture position');
         }
 
         // Get animation speed from select if available
@@ -282,44 +282,44 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Initialize visual display settings from plugin settings if not already set by setState
             if (!this.isVisualDisplayVisible && this.plugin.settings.sonicGraphSettings?.visualDisplay?.enabled) {
                 this.isVisualDisplayVisible = true;
-                logger.debug('sonic-graph-init', 'Initialized visual display from settings in onOpen');
+                void logger.debug('sonic-graph-init', 'Initialized visual display from settings in onOpen');
             }
 
             const { contentEl } = this;
-            logger.info('sonic-graph-init', 'ContentEl acquired, emptying');
-            contentEl.empty();
-            logger.info('sonic-graph-init', 'ContentEl emptied successfully');
+            void logger.info('sonic-graph-init', 'ContentEl acquired, emptying');
+            void contentEl.empty();
+            void logger.info('sonic-graph-init', 'ContentEl emptied successfully');
 
             // Add view-specific classes
-            logger.info('sonic-graph-init', 'Adding view CSS classes');
-            contentEl.addClass('sonic-graph-view');
+            void logger.info('sonic-graph-init', 'Adding view CSS classes');
+            void contentEl.addClass('sonic-graph-view');
 
             // Create main view container
-            logger.info('sonic-graph-init', 'Creating view container');
+            void logger.info('sonic-graph-init', 'Creating view container');
             const viewContainer = contentEl.createDiv({ cls: 'sonic-graph-view-container' });
             
             // Create view structure inside container
-            logger.info('sonic-graph-init', 'Creating header');
-            this.createHeader(viewContainer);
-            logger.info('sonic-graph-init', 'Header created successfully');
+            void logger.info('sonic-graph-init', 'Creating header');
+            void this.createHeader(viewContainer);
+            void logger.info('sonic-graph-init', 'Header created successfully');
             
             logger.info('sonic-graph-init', 'Creating main content (includes timeline)');
-            this.createMainContent(viewContainer);
-            logger.info('sonic-graph-init', 'Main content created successfully');
+            void this.createMainContent(viewContainer);
+            void logger.info('sonic-graph-init', 'Main content created successfully');
 
-            logger.info('sonic-graph-init', 'Creating controls area');
-            this.createControlsArea(viewContainer);
-            logger.info('sonic-graph-init', 'Controls area created successfully');
+            void logger.info('sonic-graph-init', 'Creating controls area');
+            void this.createControlsArea(viewContainer);
+            void logger.info('sonic-graph-init', 'Controls area created successfully');
             
             // Initialize graph
-            logger.info('sonic-graph-init', 'Starting graph initialization - THIS IS THE CRITICAL STEP');
+            void logger.info('sonic-graph-init', 'Starting graph initialization - THIS IS THE CRITICAL STEP');
             this.initializeGraph().catch(error => {
-                logger.error('sonic-graph-init', 'Graph initialization failed:', error);
+                void logger.error('sonic-graph-init', 'Graph initialization failed:', error);
                 new Notice('Failed to initialize Sonic Graph: ' + error.message);
             });
 
             // Register workspace event listener for background state handling
-            this.registerWorkspaceListener();
+            void this.registerWorkspaceListener();
 
         } catch (error) {
             logger.error('ui', 'Error opening Sonic Graph view:', (error as Error).message);
@@ -336,14 +336,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.app.workspace.on('active-leaf-change', (leaf) => {
                 if (leaf?.view === this) {
                     // This view just became active
-                    this.handleViewActivated();
+                    void this.handleViewActivated();
                 } else if (this.isViewActive) {
                     // This view just became inactive
-                    this.handleViewDeactivated();
+                    void this.handleViewDeactivated();
                 }
             })
         );
-        logger.debug('background-state', 'Workspace listener registered for background state handling');
+        void logger.debug('background-state', 'Workspace listener registered for background state handling');
     }
 
     /**
@@ -354,19 +354,19 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             return; // Already active
         }
 
-        logger.info('background-state', 'View activated - resuming operations');
+        void logger.info('background-state', 'View activated - resuming operations');
         this.isViewActive = true;
 
         // Resume animation if it was running before backgrounding
         if (this.wasAnimatingBeforeBackground && this.temporalAnimator) {
-            logger.debug('background-state', 'Resuming animation');
+            void logger.debug('background-state', 'Resuming animation');
             this.temporalAnimator.play();
             this.isAnimating = true;
             this.wasAnimatingBeforeBackground = false;
         }
 
         // Audio automatically continues when view is active
-        logger.debug('background-state', 'View activation complete');
+        void logger.debug('background-state', 'View activation complete');
     }
 
     /**
@@ -377,12 +377,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             return; // Already inactive
         }
 
-        logger.info('background-state', 'View deactivated - pausing operations for performance');
+        void logger.info('background-state', 'View deactivated - pausing operations for performance');
         this.isViewActive = false;
 
         // Pause animation if it's running
         if (this.isAnimating && this.temporalAnimator) {
-            logger.debug('background-state', 'Pausing animation');
+            void logger.debug('background-state', 'Pausing animation');
             this.temporalAnimator.pause();
             this.wasAnimatingBeforeBackground = true;
         }
@@ -398,17 +398,17 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     private async applyPendingState(): Promise<void> {
         const pendingState = this._pendingState;
         if (!pendingState) {
-            logger.debug('state', 'No pending state to apply');
+            void logger.debug('state', 'No pending state to apply');
             return;
         }
 
-        logger.debug('state', 'Applying pending state', pendingState);
+        void logger.debug('state', 'Applying pending state', pendingState);
 
         try {
             // First, ensure temporal animator exists if we're in timeline view
             // This is needed because the animator initializes asynchronously
             if (this.isTimelineView && !this.temporalAnimator) {
-                logger.debug('state', 'Timeline view is active but animator not initialized yet - waiting');
+                void logger.debug('state', 'Timeline view is active but animator not initialized yet - waiting');
                 await this.waitForTemporalAnimator();
             }
 
@@ -434,7 +434,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 if (this.temporalAnimator) {
                     this.temporalAnimator.setSpeed(pendingState.animationSpeed);
                 }
-                logger.debug('state', 'Restored animation speed', pendingState.animationSpeed);
+                void logger.debug('state', 'Restored animation speed', pendingState.animationSpeed);
             }
 
             // Restore settings panel visibility
@@ -443,12 +443,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 if (this.settingsButton) {
                     this.settingsButton.addClass('active');
                 }
-                logger.debug('state', 'Restored settings panel visibility');
+                void logger.debug('state', 'Restored settings panel visibility');
             }
 
-            logger.info('state', 'Pending state applied successfully');
+            void logger.info('state', 'Pending state applied successfully');
         } catch (error) {
-            logger.error('state', 'Failed to apply pending state', error);
+            void logger.error('state', 'Failed to apply pending state', error);
         } finally {
             // Clear pending state
             delete this._pendingState;
@@ -466,14 +466,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         while (!this.temporalAnimator) {
             if (Date.now() - startTime > maxWaitTime) {
-                logger.error('state', 'Timeout waiting for temporal animator initialization');
+                void logger.error('state', 'Timeout waiting for temporal animator initialization');
                 throw new Error('Temporal animator initialization timeout');
             }
             // Wait 100ms before checking again
             await new Promise(resolve => setTimeout(resolve, checkInterval));
         }
 
-        logger.debug('state', 'Temporal animator is ready');
+        void logger.debug('state', 'Temporal animator is ready');
     }
 
     /**
@@ -481,12 +481,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private async initializeContinuousLayers(): Promise<void> {
         try {
-            logger.info('continuous-layers', 'Initializing continuous layers');
+            void logger.info('continuous-layers', 'Initializing continuous layers');
 
             // Check if continuous layers are actually enabled before creating the manager
             const layerConfig = this.plugin.settings.audioEnhancement?.continuousLayers;
             if (!layerConfig?.enabled) {
-                logger.info('continuous-layers', 'Continuous layers disabled, skipping initialization');
+                void logger.info('continuous-layers', 'Continuous layers disabled, skipping initialization');
                 return;
             }
 
@@ -517,9 +517,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 vaultActivityLevel: 0
             });
             
-            logger.info('continuous-layers', 'Continuous layers initialized successfully');
+            void logger.info('continuous-layers', 'Continuous layers initialized successfully');
         } catch (error) {
-            logger.error('continuous-layers', 'Failed to initialize continuous layers', error);
+            void logger.error('continuous-layers', 'Failed to initialize continuous layers', error);
             new Notice('Failed to initialize continuous audio layers');
         }
     }
@@ -529,20 +529,20 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private setupDividerDrag(): void {
         if (!this.visualDivider) {
-            logger.warn('visual-display', 'Cannot setup divider drag - visualDivider is null');
+            void logger.warn('visual-display', 'Cannot setup divider drag - visualDivider is null');
             return;
         }
 
-        logger.info('visual-display', 'Setting up divider drag handlers');
+        void logger.info('visual-display', 'Setting up divider drag handlers');
 
         const onMouseDown = (e: MouseEvent) => {
-            logger.debug('visual-display', 'Divider mousedown event triggered');
+            void logger.debug('visual-display', 'Divider mousedown event triggered');
             this.isDraggingDivider = true;
             document.body.setCssProps({
                 cursor: 'ns-resize',
                 userSelect: 'none'
             });
-            e.preventDefault();
+            void e.preventDefault();
         };
 
         const onMouseMove = (e: MouseEvent) => {
@@ -580,15 +580,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 document.body.style.userSelect = '';
 
                 // Save height preference
-                logger.info('visual-display', 'Saved visual display height', this.visualDisplayHeight);
+                void logger.info('visual-display', 'Saved visual display height', this.visualDisplayHeight);
             }
         };
 
-        this.registerDomEvent(this.visualDivider, 'mousedown', onMouseDown);
-        this.registerDomEvent(document, 'mousemove', onMouseMove);
-        this.registerDomEvent(document, 'mouseup', onMouseUp);
+        void this.registerDomEvent(this.visualDivider, 'mousedown', onMouseDown);
+        void this.registerDomEvent(document, 'mousemove', onMouseMove);
+        void this.registerDomEvent(document, 'mouseup', onMouseUp);
 
-        logger.info('visual-display', 'Divider drag handlers registered successfully');
+        void logger.info('visual-display', 'Divider drag handlers registered successfully');
     }
 
     /**
@@ -601,21 +601,21 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         if (this.isVisualDisplayVisible) {
             this.visualDisplaySection.removeClass('collapsed');
-            collapseBtn.setText('▼');
-            logger.debug('visual-display', 'Visual display expanded');
+            void collapseBtn.setText('▼');
+            void logger.debug('visual-display', 'Visual display expanded');
 
             // Force resize of visualization after expanding (fixes sizing issues when toggling modes while collapsed)
             if (this.visualizationManager) {
                 // Use requestAnimationFrame to ensure DOM has updated before resizing
                 requestAnimationFrame(() => {
                     this.visualizationManager?.forceResize();
-                    logger.debug('visual-display', 'Forced visualization resize after expand');
+                    void logger.debug('visual-display', 'Forced visualization resize after expand');
                 });
             }
         } else {
             this.visualDisplaySection.addClass('collapsed');
-            collapseBtn.setText('▲');
-            logger.debug('visual-display', 'Visual display collapsed');
+            void collapseBtn.setText('▲');
+            void logger.debug('visual-display', 'Visual display collapsed');
         }
     }
 
@@ -642,7 +642,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
             if (audioContext && masterVolume) {
                 this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
-                logger.info('visual-display', 'Connected spectrum analyzer to audio after mode switch');
+                void logger.info('visual-display', 'Connected spectrum analyzer to audio after mode switch');
             }
         }
     }
@@ -652,7 +652,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private updateVisualDisplayState(): void {
         if (!this.visualDisplaySection) {
-            logger.debug('visual-display', 'Visual display section not yet created, skipping state update');
+            void logger.debug('visual-display', 'Visual display section not yet created, skipping state update');
             return;
         }
 
@@ -664,10 +664,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Update collapsed state
         if (this.isVisualDisplayVisible) {
             this.visualDisplaySection.removeClass('collapsed');
-            logger.debug('visual-display', 'Removed collapsed class after setState');
+            void logger.debug('visual-display', 'Removed collapsed class after setState');
         } else {
             this.visualDisplaySection.addClass('collapsed');
-            logger.debug('visual-display', 'Added collapsed class after setState');
+            void logger.debug('visual-display', 'Added collapsed class after setState');
         }
 
         // Update height via CSS custom property using DOM API
@@ -675,14 +675,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Update visualization manager config if it exists
         if (this.visualizationManager) {
-            logger.debug('visual-display', 'Updating visualization manager enabled state', this.isVisualDisplayVisible);
+            void logger.debug('visual-display', 'Updating visualization manager enabled state', this.isVisualDisplayVisible);
             this.visualizationManager.updateConfig({
                 enabled: this.isVisualDisplayVisible
             });
 
             // If now visible, start it (start() will check if already running)
             if (this.isVisualDisplayVisible) {
-                logger.debug('visual-display', 'Starting visualization after setState');
+                void logger.debug('visual-display', 'Starting visualization after setState');
                 this.visualizationManager.start(0);
             }
         }
@@ -693,12 +693,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private initializeVisualizationManager(): void {
         if (!this.visualDisplayContent) {
-            logger.warn('visual-display', 'Cannot initialize visualization manager without content container');
+            void logger.warn('visual-display', 'Cannot initialize visualization manager without content container');
             return;
         }
 
         try {
-            logger.info('visual-display', 'Initializing visualization manager');
+            void logger.info('visual-display', 'Initializing visualization manager');
 
             // Get settings for visual display
             const visualSettings = this.plugin.settings.sonicGraphSettings?.visualDisplay;
@@ -725,22 +725,22 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
                 if (audioContext && masterVolume) {
                     this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
-                    logger.info('visual-display', 'Connected spectrum analyzer to audio');
+                    void logger.info('visual-display', 'Connected spectrum analyzer to audio');
                 }
             }
 
             // Connect to audio engine note events
-            this.setupAudioEngineIntegration();
+            void this.setupAudioEngineIntegration();
 
             // Trigger initial render to show empty piano roll
             if (this.isVisualDisplayVisible) {
                 this.visualizationManager.start(0);
-                logger.debug('visual-display', 'Started visualization for initial render');
+                void logger.debug('visual-display', 'Started visualization for initial render');
             }
 
-            logger.info('visual-display', 'Visualization manager initialized successfully');
+            void logger.info('visual-display', 'Visualization manager initialized successfully');
         } catch (error) {
-            logger.error('visual-display', 'Failed to initialize visualization manager', error);
+            void logger.error('visual-display', 'Failed to initialize visualization manager', error);
             new Notice('Failed to initialize visual note display');
         }
     }
@@ -751,7 +751,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private setupAudioEngineIntegration(): void {
         if (!this.visualizationManager) {
-            logger.warn('visual-display', 'Cannot setup audio integration - no visualization manager');
+            void logger.warn('visual-display', 'Cannot setup audio integration - no visualization manager');
             return;
         }
 
@@ -759,7 +759,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
         this.plugin.audioEngine.on('note-triggered', (data: any) => {
             if (!this.visualizationManager) {
-                logger.warn('visual-display', 'Received note event but no visualization manager');
+                void logger.warn('visual-display', 'Received note event but no visualization manager');
                 return;
             }
 
@@ -792,28 +792,28 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Listen for playback-started to reset visualization
         this.plugin.audioEngine.on('playback-started', () => {
             if (!this.visualizationManager) return;
-            logger.debug('visual-display', 'Playback started - resetting visualization');
+            void logger.debug('visual-display', 'Playback started - resetting visualization');
             this.visualizationManager.clearNotes();
             this.visualizationManager.updatePlaybackTime(0); // Reset playback time to 0
         });
 
-        logger.info('visual-display', 'Audio engine integration setup complete');
+        void logger.info('visual-display', 'Audio engine integration setup complete');
     }
 
     async onClose() {
-        logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
+        void logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
 
         try {
             // Performance optimization: Cleanup all event listeners
-            logger.debug('ui', 'Removing event listeners');
-            this.removeAllEventListeners();
+            void logger.debug('ui', 'Removing event listeners');
+            void this.removeAllEventListeners();
         } catch (error) {
-            logger.error('ui', 'Error removing event listeners:', error);
+            void logger.error('ui', 'Error removing event listeners:', error);
         }
 
         try {
             // Performance optimization: Clear any pending settings updates
-            logger.debug('ui', 'Clearing timeouts');
+            void logger.debug('ui', 'Clearing timeouts');
             if (this.settingsUpdateTimeout) {
                 clearTimeout(this.settingsUpdateTimeout);
                 this.settingsUpdateTimeout = null;
@@ -824,84 +824,84 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             }
             this.pendingSettingsUpdates.clear();
         } catch (error) {
-            logger.error('ui', 'Error clearing timeouts:', error);
+            void logger.error('ui', 'Error clearing timeouts:', error);
         }
 
         try {
             // Cleanup continuous layers
-            logger.debug('ui', 'Stopping continuous layers');
+            void logger.debug('ui', 'Stopping continuous layers');
             if (this.continuousLayerManager) {
                 void this.continuousLayerManager.stop();
                 this.continuousLayerManager = null;
             }
         } catch (error) {
-            logger.error('ui', 'Error stopping continuous layers:', error);
+            void logger.error('ui', 'Error stopping continuous layers:', error);
         }
 
         try {
             // Cleanup temporal animator
-            logger.debug('ui', 'Destroying temporal animator');
+            void logger.debug('ui', 'Destroying temporal animator');
             if (this.temporalAnimator) {
                 this.temporalAnimator.destroy();
                 this.temporalAnimator = null;
             }
         } catch (error) {
-            logger.error('ui', 'Error destroying temporal animator:', error);
+            void logger.error('ui', 'Error destroying temporal animator:', error);
         }
 
         try {
             // Cleanup musical mapper
-            logger.debug('ui', 'Disposing musical mapper');
+            void logger.debug('ui', 'Disposing musical mapper');
             if (this.musicalMapper) {
                 this.musicalMapper.dispose();
                 this.musicalMapper = null;
             }
         } catch (error) {
-            logger.error('ui', 'Error disposing musical mapper:', error);
+            void logger.error('ui', 'Error disposing musical mapper:', error);
         }
 
         try {
             // Cleanup graph renderer
-            logger.debug('ui', 'Destroying graph renderer');
+            void logger.debug('ui', 'Destroying graph renderer');
             if (this.graphRenderer) {
                 this.graphRenderer.destroy();
                 this.graphRenderer = null;
             }
         } catch (error) {
-            logger.error('ui', 'Error destroying graph renderer:', error);
+            void logger.error('ui', 'Error destroying graph renderer:', error);
         }
 
         try {
             // Cleanup adaptive detail manager
-            logger.debug('ui', 'Destroying adaptive detail manager');
+            void logger.debug('ui', 'Destroying adaptive detail manager');
             if (this.adaptiveDetailManager) {
                 this.adaptiveDetailManager.destroy();
                 this.adaptiveDetailManager = null;
             }
         } catch (error) {
-            logger.error('ui', 'Error destroying adaptive detail manager:', error);
+            void logger.error('ui', 'Error destroying adaptive detail manager:', error);
         }
 
         try {
             // Cleanup visualization manager
-            logger.debug('ui', 'Destroying visualization manager');
+            void logger.debug('ui', 'Destroying visualization manager');
             if (this.visualizationManager) {
                 this.visualizationManager.destroy();
                 this.visualizationManager = null;
             }
         } catch (error) {
-            logger.error('ui', 'Error destroying visualization manager:', error);
+            void logger.error('ui', 'Error destroying visualization manager:', error);
         }
 
         try {
             // Cleanup resize observer
-            logger.debug('ui', 'Disconnecting resize observer');
+            void logger.debug('ui', 'Disconnecting resize observer');
             if (this.resizeObserver) {
                 this.resizeObserver.disconnect();
                 this.resizeObserver = null;
             }
         } catch (error) {
-            logger.error('ui', 'Error disconnecting resize observer:', error);
+            void logger.error('ui', 'Error disconnecting resize observer:', error);
         }
 
         try {
@@ -909,16 +909,16 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.isAnimating = false;
 
             // Hide progress indicator
-            this.hideProgressIndicator();
+            void this.hideProgressIndicator();
 
             // Clear content
             const { contentEl } = this;
-            contentEl.empty();
+            void contentEl.empty();
         } catch (error) {
-            logger.error('ui', 'Error clearing content:', error);
+            void logger.error('ui', 'Error clearing content:', error);
         }
 
-        logger.info('ui', 'Sonic Graph view closed successfully');
+        void logger.info('ui', 'Sonic Graph view closed successfully');
     }
 
     /**
@@ -930,7 +930,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Title on the left with icon
         const titleContainer = this.headerContainer.createDiv({ cls: 'sonic-graph-title-container' });
         const titleIcon = createLucideIcon('chart-network', 20);
-        titleContainer.appendChild(titleIcon);
+        void titleContainer.appendChild(titleIcon);
         titleContainer.createEl('h1', { text: 'Sonic Graph', cls: 'sonic-graph-title' });
 
         // Middle section - Play controls
@@ -973,7 +973,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             text: 'Plugin Settings'
         });
         const pluginSettingsIcon = createLucideIcon('cog', 16);
-        pluginSettingsBtn.insertBefore(pluginSettingsIcon, pluginSettingsBtn.firstChild);
+        void pluginSettingsBtn.insertBefore(pluginSettingsIcon, pluginSettingsBtn.firstChild);
         pluginSettingsBtn.addEventListener('click', () => this.openPluginSettings());
 
         // Control Center button
@@ -982,7 +982,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             text: 'Control Center'
         });
         const controlCenterIcon = createLucideIcon('keyboard-music', 16);
-        controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
+        void controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
         controlCenterBtn.addEventListener('click', () => this.openControlCenter());
 
         // Export button (secondary)
@@ -991,7 +991,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             text: 'Export'
         });
         const exportIcon = createLucideIcon('download', 16);
-        exportBtn.insertBefore(exportIcon, exportBtn.firstChild);
+        void exportBtn.insertBefore(exportIcon, exportBtn.firstChild);
         exportBtn.addEventListener('click', () => this.openExportModal());
     }
 
@@ -1015,33 +1015,33 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Loading indicator
         const loadingIndicator = this.graphContainer.createDiv({ cls: 'sonic-graph-loading' });
         const loadingIcon = createLucideIcon('loader-2', 24);
-        loadingIcon.addClass('sonic-graph-loading-icon');
-        loadingIndicator.appendChild(loadingIcon);
+        void loadingIcon.addClass('sonic-graph-loading-icon');
+        void loadingIndicator.appendChild(loadingIcon);
         loadingIndicator.createSpan({ text: 'Loading graph...', cls: 'sonic-graph-loading-text' });
 
         // Settings panel (right side, initially hidden)
         this.settingsPanel = graphSection.createDiv({ cls: 'sonic-graph-settings-panel hidden' });
-        this.createSettingsContent();
+        void this.createSettingsContent();
 
         // Timeline area (between graph and visual display)
-        this.createTimelineArea(splitContainer);
+        void this.createTimelineArea(splitContainer);
 
         // Resizable divider
         this.visualDivider = splitContainer.createDiv({ cls: 'sonic-graph-visual-divider' });
         const dividerHandle = this.visualDivider.createDiv({ cls: 'sonic-graph-visual-divider-handle' });
 
         // Setup divider drag handlers
-        this.setupDividerDrag();
+        void this.setupDividerDrag();
 
         // Bottom section: Visual display panel
         this.visualDisplaySection = splitContainer.createDiv({ cls: 'sonic-graph-visual-display-section' });
         // Explicitly set collapsed state based on visibility
         if (!this.isVisualDisplayVisible) {
             this.visualDisplaySection.addClass('collapsed');
-            logger.debug('visual-display', 'Visual display section created as collapsed');
+            void logger.debug('visual-display', 'Visual display section created as collapsed');
         } else {
             this.visualDisplaySection.removeClass('collapsed');
-            logger.debug('visual-display', 'Visual display section created as expanded');
+            void logger.debug('visual-display', 'Visual display section created as expanded');
         }
         // Set height via CSS custom property using DOM API
         (this.visualDisplaySection).style.setProperty('--visual-display-height', `${this.visualDisplayHeight}px`);
@@ -1102,7 +1102,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         placeholder.createSpan({ text: 'Visual note display will appear here during playback' });
 
         // Initialize visualization manager
-        this.initializeVisualizationManager();
+        void this.initializeVisualizationManager();
     }
 
     /**
@@ -1144,7 +1144,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         currentLabel.createSpan({ text: '0s', cls: 'sonic-graph-timeline-current-time' });
         
         // Hide current indicator by default - only show during animation
-        currentIndicator.addClass('sonigraph-current-indicator');
+        void currentIndicator.addClass('sonigraph-current-indicator');
     }
 
     /**
@@ -1155,7 +1155,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Single centered stats line
         this.statsContainer = this.controlsContainer.createDiv({ cls: 'sonic-graph-stats' });
-        this.updateStats();
+        void this.updateStats();
     }
 
     /**
@@ -1163,13 +1163,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private async initializeGraph(): Promise<void> {
         try {
-            logger.info('sonic-graph-data', 'Starting graph initialization');
+            void logger.info('sonic-graph-data', 'Starting graph initialization');
             
             // Performance optimization: Show progress and use non-blocking operations
-            this.showProgressIndicator('Extracting graph data...');
+            void this.showProgressIndicator('Extracting graph data...');
             
             // Extract graph data using idle time
-            logger.info('sonic-graph-data', 'Beginning graph data extraction');
+            void logger.info('sonic-graph-data', 'Beginning graph data extraction');
             logger.debug('ui', 'GraphDataExtractor configuration:', {
                 excludeFolders: this.graphDataExtractor['excludeFolders'],
                 excludeFiles: this.graphDataExtractor['excludeFiles']
@@ -1181,12 +1181,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             logger.info('sonic-graph-data', `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
             
             if (graphData.nodes.length === 0) {
-                logger.warn('ui', 'No nodes found in graph data - possibly all files excluded');
+                void logger.warn('ui', 'No nodes found in graph data - possibly all files excluded');
                 throw new Error('No graph data found. Check your exclusion settings.');
             }
             
             // Initialize adaptive detail manager
-            logger.info('sonic-graph-adaptive', 'Initializing adaptive detail manager');
+            void logger.info('sonic-graph-adaptive', 'Initializing adaptive detail manager');
             const adaptiveSettings = this.getSonicGraphSettings().adaptiveDetail;
             this.adaptiveDetailManager = new AdaptiveDetailManager(adaptiveSettings);
             this.adaptiveDetailManager.setGraphData(graphData.nodes, graphData.links);
@@ -1198,7 +1198,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             });
             
             // Detect temporal clustering for spacing configuration
-            logger.info('sonic-graph-clustering', 'Starting temporal clustering detection');
+            void logger.info('sonic-graph-clustering', 'Starting temporal clustering detection');
             const detection = this.detectTemporalClustering(graphData.nodes);
             this.detectedSpacing = detection.type;
             logger.info('sonic-graph-clustering', 'Temporal clustering detected', {
@@ -1208,10 +1208,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             });
             
             // Create graph renderer
-            logger.info('sonic-graph-renderer', 'Looking for canvas element');
+            void logger.info('sonic-graph-renderer', 'Looking for canvas element');
             const canvasElement = document.getElementById('sonic-graph-canvas');
             if (!canvasElement) {
-                logger.error('sonic-graph-renderer', 'Graph canvas element not found');
+                void logger.error('sonic-graph-renderer', 'Graph canvas element not found');
                 throw new Error('Graph canvas element not found');
             }
             logger.info('sonic-graph-renderer', 'Canvas element found', {
@@ -1222,9 +1222,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             });
             
             // Performance optimization: Show progress for renderer initialization
-            this.showProgressIndicator('Initializing renderer...');
+            void this.showProgressIndicator('Initializing renderer...');
             
-            logger.info('sonic-graph-renderer', 'Creating GraphRenderer instance');
+            void logger.info('sonic-graph-renderer', 'Creating GraphRenderer instance');
             this.graphRenderer = await this.executeWhenIdle(() => {
                 // Use container dimensions instead of fixed 800x600
                 const width = canvasElement.clientWidth || canvasElement.offsetWidth || 800;
@@ -1243,14 +1243,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                     showLabels: false
                 });
             });
-            logger.info('sonic-graph-renderer', 'GraphRenderer created successfully');
+            void logger.info('sonic-graph-renderer', 'GraphRenderer created successfully');
             
             // Set up adaptive detail zoom change callback
-            logger.info('sonic-graph-adaptive', 'Setting up zoom change callback for adaptive detail');
+            void logger.info('sonic-graph-adaptive', 'Setting up zoom change callback for adaptive detail');
             
             // Set up callback for debounced detail level changes
             this.adaptiveDetailManager.setDetailLevelChangedCallback((filteredData) => {
-                this.applyFilteredData(filteredData);
+                void this.applyFilteredData(filteredData);
                 logger.debug('sonic-graph-adaptive', 'Detail level changed via callback', {
                     level: filteredData.level,
                     visibleNodes: filteredData.nodes.length,
@@ -1261,7 +1261,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.graphRenderer.setOnZoomChangeCallback((zoomLevel: number) => {
                 if (this.adaptiveDetailManager) {
                     const filteredData = this.adaptiveDetailManager.handleZoomChange(zoomLevel);
-                    this.applyFilteredData(filteredData);
+                    void this.applyFilteredData(filteredData);
                     logger.debug('sonic-graph-adaptive', 'Zoom change processed', {
                         zoomLevel,
                         level: filteredData.level,
@@ -1272,14 +1272,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             });
             
             // Set up responsive resizing
-            this.setupResizeObserver(canvasElement);
+            void this.setupResizeObserver(canvasElement);
             
             // Phase 3.8: Apply layout settings to renderer
-            this.showProgressIndicator('Applying layout settings...');
+            void this.showProgressIndicator('Applying layout settings...');
             try {
-                logger.info('sonic-graph-layout', 'Getting layout settings');
+                void logger.info('sonic-graph-layout', 'Getting layout settings');
                 const layoutSettings = this.getSonicGraphSettings().layout;
-                logger.info('sonic-graph-layout', 'Applying layout settings to renderer', layoutSettings);
+                void logger.info('sonic-graph-layout', 'Applying layout settings to renderer', layoutSettings);
                 await this.executeWhenIdle(() => {
                     if (this.graphRenderer) {
                         this.graphRenderer.updateLayoutSettings(layoutSettings);
@@ -1287,7 +1287,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                         this.graphRenderer.updateSmartClusteringSettings(this.getSonicGraphSettings().smartClustering);
                     }
                 });
-                logger.info('sonic-graph-layout', 'Layout settings applied successfully');
+                void logger.info('sonic-graph-layout', 'Layout settings applied successfully');
             } catch (layoutError) {
                 logger.error('sonic-graph-layout', 'Failed to apply layout settings:', (layoutError as Error).message);
                 logger.error('sonic-graph-layout', 'Layout error stack:', (layoutError as Error).stack);
@@ -1295,7 +1295,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             }
             
             // Apply initial adaptive detail filtering based on initial zoom level
-            logger.info('sonic-graph-adaptive', 'Applying initial adaptive detail filtering');
+            void logger.info('sonic-graph-adaptive', 'Applying initial adaptive detail filtering');
             const initialZoom = 0.3; // This matches the zoom level set below
             const filteredData = this.adaptiveDetailManager.handleZoomChange(initialZoom);
             logger.info('sonic-graph-adaptive', 'Initial filtering applied', {
@@ -1309,7 +1309,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             
             // Render the graph with filtered data
             try {
-                logger.info('sonic-graph-render', 'Starting graph render process');
+                void logger.info('sonic-graph-render', 'Starting graph render process');
                 logger.info('sonic-graph-render', 'Render data summary', {
                     nodeCount: filteredData.nodes.length,
                     linkCount: filteredData.links.length,
@@ -1319,13 +1319,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 });
                 
                 this.graphRenderer.render(filteredData.nodes, filteredData.links);
-                logger.info('sonic-graph-render', 'Graph render completed successfully');
+                void logger.info('sonic-graph-render', 'Graph render completed successfully');
                 
                 // Apply better spacing with delay to avoid blocking UI
                 setTimeout(() => {
-                    logger.info('sonic-graph-spacing', 'Applying improved node spacing');
+                    void logger.info('sonic-graph-spacing', 'Applying improved node spacing');
                     this.graphRenderer.applyBetterSpacing();
-                    logger.info('sonic-graph-spacing', 'Improved node spacing applied');
+                    void logger.info('sonic-graph-spacing', 'Improved node spacing applied');
                 }, 100); // Small delay to allow initial render to complete
             } catch (renderError) {
                 logger.error('sonic-graph-render', 'Graph rendering failed:', (renderError as Error).message);
@@ -1348,25 +1348,25 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             loadingIndicators.forEach(indicator => indicator.remove());
             
             // Performance optimization: Hide progress indicator
-            this.hideProgressIndicator();
+            void this.hideProgressIndicator();
             
             // Update stats
-            this.updateStats();
+            void this.updateStats();
             
             // Initialize view mode (starts in Static View)
-            this.updateViewMode();
+            void this.updateViewMode();
 
-            logger.debug('ui', 'Sonic Graph initialized successfully');
+            void logger.debug('ui', 'Sonic Graph initialized successfully');
 
             // Apply pending state if available (from setState restoration)
-            this.applyPendingState();
+            void this.applyPendingState();
             
         } catch (error) {
             logger.error('ui', 'Failed to initialize Sonic Graph:', (error as Error).message);
             logger.error('ui', 'Initialization error stack:', (error as Error).stack);
             
             // Performance optimization: Hide progress indicator on error
-            this.hideProgressIndicator();
+            void this.hideProgressIndicator();
             
             // Clear loading indicator - remove all instances to be safe
             const loadingIndicators = this.graphContainer.querySelectorAll('.sonic-graph-loading');
@@ -1391,7 +1391,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Switch to Timeline View if not already there
         if (!this.isTimelineView) {
             this.isTimelineView = true;
-            this.updateViewMode();
+            void this.updateViewMode();
         }
         
         this.isAnimating = !this.isAnimating;
@@ -1402,12 +1402,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 const status = this.plugin.audioEngine.getStatus();
                 
                 if (!status.isInitialized) {
-                    logger.info('audio', 'Audio engine not initialized - initializing for animation');
+                    void logger.info('audio', 'Audio engine not initialized - initializing for animation');
                     await this.plugin.audioEngine.initialize();
                     new Notice('Audio engine initialized');
                 } else {
                     // Always reinitialize audio engine to ensure fresh state for animation
-                    logger.info('audio', 'Reinitializing audio engine for animation to ensure fresh state');
+                    void logger.info('audio', 'Reinitializing audio engine for animation to ensure fresh state');
                     await this.plugin.audioEngine.initialize();
                     
                     const enabledInstruments = this.getEnabledInstruments();
@@ -1420,7 +1420,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                     new Notice('Audio engine ready for animation');
                 }
                 
-                logger.info('audio', 'Audio engine ready for Sonic Graph animation');
+                void logger.info('audio', 'Audio engine ready for Sonic Graph animation');
             } catch (audioError) {
                 logger.warn('Failed to check audio engine for animation', (audioError as Error).message);
                 new Notice('Audio check failed - animation may be silent');
@@ -1449,7 +1449,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Show current position indicator during animation
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
             if (currentIndicator) {
-                currentIndicator.addClass('sonigraph-current-indicator--visible');
+                void currentIndicator.addClass('sonigraph-current-indicator--visible');
             }
             
             // Initialize and start continuous layers if enabled
@@ -1468,10 +1468,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Start visual note display if enabled
             if (this.visualizationManager && this.isVisualDisplayVisible) {
                 this.visualizationManager.start(0);
-                logger.debug('visual-display', 'Visualization started');
+                void logger.debug('visual-display', 'Visualization started');
             }
 
-            logger.info('ui', 'Starting Sonic Graph temporal animation');
+            void logger.info('ui', 'Starting Sonic Graph temporal animation');
             new Notice('Sonic Graph animation started');
 
         } else {
@@ -1481,7 +1481,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Hide current position indicator when animation stops
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
             if (currentIndicator) {
-                currentIndicator.removeClass('sonigraph-current-indicator--visible');
+                void currentIndicator.removeClass('sonigraph-current-indicator--visible');
             }
 
             if (this.temporalAnimator) {
@@ -1491,7 +1491,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Stop visual note display
             if (this.visualizationManager) {
                 this.visualizationManager.stop();
-                logger.debug('visual-display', 'Visualization stopped');
+                void logger.debug('visual-display', 'Visualization stopped');
             }
             
             // Stop continuous layers if running
@@ -1499,7 +1499,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 void this.continuousLayerManager.stop();
             }
             
-            logger.info('ui', 'Pausing Sonic Graph animation');
+            void logger.info('ui', 'Pausing Sonic Graph animation');
             new Notice('Animation paused');
         }
     }
@@ -1510,11 +1510,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     private async openExportModal(): Promise<void> {
         // Ensure temporal animator is initialized
         if (!this.temporalAnimator) {
-            logger.debug('ui', 'Initializing temporal animator for export');
+            void logger.debug('ui', 'Initializing temporal animator for export');
             try {
                 await this.initializeTemporalAnimator();
             } catch (error) {
-                logger.error('Failed to initialize temporal animator for export', error);
+                void logger.error('Failed to initialize temporal animator for export', error);
                 new Notice('Failed to initialize timeline for export. Please try switching to Timeline View first.');
                 return;
             }
@@ -1532,8 +1532,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.plugin.audioEngine,
             this.temporalAnimator
         );
-        modal.open();
-        logger.info('ui', 'Opened export modal');
+        void modal.open();
+        void logger.info('ui', 'Opened export modal');
     }
 
     /**
@@ -1541,11 +1541,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private toggleViewMode(): void {
         this.isTimelineView = !this.isTimelineView;
-        this.updateViewMode();
+        void this.updateViewMode();
         logger.debug('ui', `View mode toggled: ${this.isTimelineView ? 'Timeline' : 'Static'}`);
 
         // Request workspace save to persist the view mode change
-        this.requestSave();
+        void this.requestSave();
     }
 
     /**
@@ -1555,7 +1555,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     private requestSave(): void {
         // Obsidian will call getState() to capture current state
         this.app.workspace.requestSaveLayout();
-        logger.debug('state', 'Requested workspace save');
+        void logger.debug('state', 'Requested workspace save');
     }
 
     /**
@@ -1572,10 +1572,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Initialize temporal animator if needed
             if (!this.temporalAnimator) {
                 this.initializeTemporalAnimator().catch(error => {
-                    logger.error('Failed to initialize temporal animator for timeline view', error);
+                    void logger.error('Failed to initialize temporal animator for timeline view', error);
                     // Fall back to static view
                     this.isTimelineView = false;
-                    this.updateViewMode();
+                    void this.updateViewMode();
                 });
             } else {
                 // Reset to beginning and hide all nodes
@@ -1602,7 +1602,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Hide current position indicator in Static View
             const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
             if (currentIndicator) {
-                currentIndicator.removeClass('sonigraph-current-indicator--visible');
+                void currentIndicator.removeClass('sonigraph-current-indicator--visible');
             }
             
             // Show all nodes
@@ -1636,7 +1636,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 // Fallback if canvas not found
                 this.graphRenderer.setZoomTransform(d3.zoomIdentity.scale(0.4));
             }
-            logger.debug('ui', 'Graph view reset');
+            void logger.debug('ui', 'Graph view reset');
         }
     }
 
@@ -1649,7 +1649,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Open Control Center
         import('./control-panel').then(({ MaterialControlPanelModal }) => {
             const controlCenter = new MaterialControlPanelModal(this.app, this.plugin);
-            controlCenter.open();
+            void controlCenter.open();
         });
     }
 
@@ -1688,13 +1688,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // All advanced settings moved to Control Center > Sonic Graph tab
 
         // Essential visualization controls only
-        this.createFiltersSettings(settingsContent);
-        this.createVisualSettings(settingsContent);
-        this.createLayoutSettings(settingsContent);
-        this.createTimelineSettings(settingsContent);
+        void this.createFiltersSettings(settingsContent);
+        void this.createVisualSettings(settingsContent);
+        void this.createLayoutSettings(settingsContent);
+        void this.createTimelineSettings(settingsContent);
 
         // Control Center quick link (at bottom)
-        this.createControlCenterLink(settingsContent);
+        void this.createControlCenterLink(settingsContent);
     }
 
 
@@ -1716,11 +1716,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-control-center-button'
         });
         setIcon(button, 'layout-panel-left');
-        button.appendText('Control Center');
+        void button.appendText('Control Center');
 
         button.addEventListener('click', () => {
             // Close the settings panel
-            this.toggleSettings();
+            void this.toggleSettings();
             // Open Control Center
             this.plugin.openControlPanel();
         });
@@ -1757,7 +1757,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 if (this.graphRenderer) {
                     const currentZoom = this.graphRenderer.getCurrentZoom();
                     const filteredData = this.adaptiveDetailManager.handleZoomChange(currentZoom);
-                    this.applyFilteredData(filteredData);
+                    void this.applyFilteredData(filteredData);
                 }
             }
             
@@ -1789,7 +1789,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private applyFilteredData(filteredData: FilteredGraphData): void {
         if (!this.graphRenderer) {
-            logger.warn('adaptive-detail', 'Cannot apply filtered data: GraphRenderer not initialized');
+            void logger.warn('adaptive-detail', 'Cannot apply filtered data: GraphRenderer not initialized');
             return;
         }
 
@@ -1798,7 +1798,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.graphRenderer.render(filteredData.nodes, filteredData.links);
             
             // Update stats to reflect the filtering
-            this.updateStatsWithFilteredData(filteredData);
+            void this.updateStatsWithFilteredData(filteredData);
             
             logger.debug('adaptive-detail', 'Filtered data applied successfully', {
                 level: filteredData.level,
@@ -1833,7 +1833,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const nodeReduction = ((stats.totalNodes - stats.visibleNodes) / stats.totalNodes * 100).toFixed(0);
         const linkReduction = ((stats.totalLinks - stats.visibleLinks) / stats.totalLinks * 100).toFixed(0);
 
-        adaptiveStatsEl.empty();
+        void adaptiveStatsEl.empty();
         adaptiveStatsEl.createDiv({
             cls: 'adaptive-detail-level sonic-graph-small-text',
             text: `Detail: ${filteredData.level}`
@@ -1898,10 +1898,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             tagWeightValueDisplay.textContent = Math.round(weight * 100) + '%';
             
             // Real-time preview: Apply immediately to graph
-            this.applyContentAwareWeightPreview('tagInfluence', weight);
+            void this.applyContentAwareWeightPreview('tagInfluence', weight);
             
             // Save settings with debounce
-            this.updateTagInfluenceWeight(weight);
+            void this.updateTagInfluenceWeight(weight);
         });
         
         const tagWeightLabels = tagWeightContainer.createDiv({ cls: 'sonic-graph-weight-labels' });
@@ -1943,10 +1943,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 temporalWeightValueDisplay.textContent = Math.round(weight * 100) + '%';
                 
                 // Real-time preview: Apply immediately to graph
-                this.applyContentAwareWeightPreview('temporalPositioning', weight);
+                void this.applyContentAwareWeightPreview('temporalPositioning', weight);
                 
                 // Save settings with debounce
-                this.updateTemporalPositioningWeight(weight);
+                void this.updateTemporalPositioningWeight(weight);
             });
             
             const temporalWeightLabels = temporalWeightContainer.createDiv({ cls: 'sonic-graph-weight-labels' });
@@ -1989,10 +1989,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 hubWeightValueDisplay.textContent = Math.round(weight * 100) + '%';
                 
                 // Real-time preview: Apply immediately to graph
-                this.applyContentAwareWeightPreview('hubCentrality', weight);
+                void this.applyContentAwareWeightPreview('hubCentrality', weight);
                 
                 // Save settings with debounce
-                this.updateHubCentralityWeight(weight);
+                void this.updateHubCentralityWeight(weight);
             });
             
             const hubWeightLabels = hubWeightContainer.createDiv({ cls: 'sonic-graph-weight-labels' });
@@ -2011,7 +2011,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const debugToggle = debugItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const debugSwitch = debugToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
         if (settings.debugVisualization) {
-            debugSwitch.addClass('active');
+            void debugSwitch.addClass('active');
         }
         const debugHandle = debugSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
 
@@ -2022,13 +2022,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         debugSwitch.addEventListener('click', () => {
             const isActive = debugSwitch.hasClass('active');
-            debugSwitch.toggleClass('active', !isActive);
+            void debugSwitch.toggleClass('active', !isActive);
             
             // Real-time preview: Apply immediately to graph
-            this.applyContentAwareDebugPreview(!isActive);
+            void this.applyContentAwareDebugPreview(!isActive);
             
             // Save settings with debounce
-            this.updateDebugVisualization(!isActive);
+            void this.updateDebugVisualization(!isActive);
         });
     }
 
@@ -2077,7 +2077,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         algorithmSelect.addEventListener('change', (e) => {
             const target = e.target as HTMLSelectElement;
             const algorithm = target.value as 'louvain' | 'modularity' | 'hybrid';
-            this.updateClusteringAlgorithm(algorithm);
+            void this.updateClusteringAlgorithm(algorithm);
         });
         
         // Multi-Factor Weights Section
@@ -2140,7 +2140,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         minSizeInput.addEventListener('change', (e) => {
             const target = e.target as HTMLInputElement;
             const minSize = parseInt(target.value);
-            this.updateClusteringParameter('minClusterSize', minSize);
+            void this.updateClusteringParameter('minClusterSize', minSize);
         });
 
         // Add tooltip to minimum cluster size input
@@ -2169,7 +2169,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         maxClustersInput.addEventListener('change', (e) => {
             const target = e.target as HTMLInputElement;
             const maxClusters = parseInt(target.value);
-            this.updateClusteringParameter('maxClusters', maxClusters);
+            void this.updateClusteringParameter('maxClusters', maxClusters);
         });
 
         // Add tooltip to maximum clusters input
@@ -2189,7 +2189,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             .addToggle(toggle => toggle
                 .setValue(settings.visualization.showClusterLabels)
                 .onChange((value) => {
-                    this.updateClusteringVisualization('showClusterLabels', value);
+                    void this.updateClusteringVisualization('showClusterLabels', value);
                 })
             );
         
@@ -2217,7 +2217,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         boundariesSelect.addEventListener('change', (e) => {
             const target = e.target as HTMLSelectElement;
             const style = target.value as 'none' | 'subtle' | 'visible' | 'prominent';
-            this.updateClusteringVisualization('clusterBoundaries', style);
+            void this.updateClusteringVisualization('clusterBoundaries', style);
         });
         
         // Debug Mode Toggle (if debugging is enabled)
@@ -2238,7 +2238,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 const isActive = debugToggle.classList.contains('active');
                 debugToggle.classList.toggle('active');
                 debugToggle.textContent = isActive ? 'OFF' : 'ON';
-                this.updateClusteringDebugging('showStatistics', !isActive);
+                void this.updateClusteringDebugging('showStatistics', !isActive);
             });
         }
     }
@@ -2271,12 +2271,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         header.addEventListener('click', () => {
             const isExpanded = content.hasClass('is-expanded');
             if (isExpanded) {
-                content.removeClass('is-expanded');
-                content.addClass('is-collapsed');
+                void content.removeClass('is-expanded');
+                void content.addClass('is-collapsed');
                 toggleIcon.textContent = '▶';
             } else {
-                content.removeClass('is-collapsed');
-                content.addClass('is-expanded');
+                void content.removeClass('is-collapsed');
+                void content.addClass('is-expanded');
                 toggleIcon.textContent = '▼';
             }
         });
@@ -2309,7 +2309,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                             enabled: value
                         });
                     } catch (error) {
-                        logger.error('connection-type-mapping', 'Failed to toggle connection type mapping', error);
+                        void logger.error('connection-type-mapping', 'Failed to toggle connection type mapping', error);
                     }
                 })
             );
@@ -2575,7 +2575,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             const target = e.target as HTMLInputElement;
             const density = parseInt(target.value);
             densityValueDisplay.textContent = density + '%';
-            this.updateAudioDensity(density);
+            void this.updateAudioDensity(density);
         });
 
         // Add tooltip to audio density slider
@@ -2616,7 +2616,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             const target = e.target as HTMLInputElement;
             const duration = parseInt(target.value);
             durationValueDisplay.textContent = duration + ' seconds';
-            this.updateAnimationDuration(duration);
+            void this.updateAnimationDuration(duration);
         });
 
         // Add tooltip to animation duration slider
@@ -2639,14 +2639,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const loopToggle = loopItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const toggleSwitch = loopToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
         if (this.getSonicGraphSettings().timeline.loop) {
-            toggleSwitch.addClass('active');
+            void toggleSwitch.addClass('active');
         }
         const toggleHandle = toggleSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         toggleSwitch.addEventListener('click', () => {
             const isActive = toggleSwitch.hasClass('active');
-            toggleSwitch.toggleClass('active', !isActive);
-            this.updateLoopAnimation(!isActive);
+            void toggleSwitch.toggleClass('active', !isActive);
+            void this.updateLoopAnimation(!isActive);
         });
 
         // Add tooltip to loop animation toggle
@@ -2686,7 +2686,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         
         timeWindowSelect.addEventListener('change', () => {
-            this.updateTimeWindow(timeWindowSelect.value as 'all-time' | 'past-year' | 'past-month' | 'past-week' | 'past-day' | 'past-hour');
+            void this.updateTimeWindow(timeWindowSelect.value as 'all-time' | 'past-year' | 'past-month' | 'past-week' | 'past-day' | 'past-hour');
         });
 
         // Add tooltip to time window select
@@ -2726,7 +2726,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
 
         granularitySelect.addEventListener('change', () => {
-            this.updateTimelineGranularity(granularitySelect.value as 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom');
+            void this.updateTimelineGranularity(granularitySelect.value as 'year' | 'month' | 'week' | 'day' | 'hour' | 'custom');
         });
 
         // Add tooltip to granularity select
@@ -2826,7 +2826,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
 
         spreadingSelect.addEventListener('change', () => {
-            this.updateEventSpreadingMode(spreadingSelect.value as 'none' | 'gentle' | 'aggressive');
+            void this.updateEventSpreadingMode(spreadingSelect.value as 'none' | 'gentle' | 'aggressive');
         });
 
         // Add tooltip to event spreading dropdown (moved to left as requested)
@@ -2888,32 +2888,32 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         durationSlider.addEventListener('input', () => {
             const value = parseInt(durationSlider.value) / 10;
             durationValue.textContent = `${value.toFixed(1)}s`;
-            this.updateNoteDuration(value);
+            void this.updateNoteDuration(value);
         });
 
         // Phase 1.3: Audio Enhancement Settings
-        this.createAudioEnhancementSettings(section);
+        void this.createAudioEnhancementSettings(section);
 
         // Phase 5.1: Cluster Audio Settings
-        this.createClusterAudioSettings(section);
+        void this.createClusterAudioSettings(section);
 
         // Phase 5.2: Hub Orchestration Settings
-        this.createHubOrchestrationSettings(section);
+        void this.createHubOrchestrationSettings(section);
 
         // Phase 5.3: Community Detection Audio Settings
-        this.createCommunityDetectionSettings(section);
+        void this.createCommunityDetectionSettings(section);
 
         // Phase 5.3: Community Evolution Audio Settings
-        this.createCommunityEvolutionSettings(section);
+        void this.createCommunityEvolutionSettings(section);
 
         // Phase 6.1: Musical Theory Settings
-        this.createMusicalTheorySettings(section);
+        void this.createMusicalTheorySettings(section);
 
         // Phase 6.2: Dynamic Orchestration Settings
-        this.createDynamicOrchestrationSettings(section);
+        void this.createDynamicOrchestrationSettings(section);
 
         // Phase 6.3: Spatial Audio and Panning Settings
-        this.createSpatialAudioSettings(section);
+        void this.createSpatialAudioSettings(section);
     }
 
     /**
@@ -3016,7 +3016,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         // Phase 3: Continuous Layers Settings
-        this.createContinuousLayersSettings(container);
+        void this.createContinuousLayersSettings(container);
     }
 
     /**
@@ -3054,13 +3054,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                     logger.info('continuous-layers', 'Continuous layers toggled', { enabled: value });
                     
                     // Refresh the settings panel to show/hide dependent controls
-                    this.refreshContinuousLayerSettings();
+                    void this.refreshContinuousLayerSettings();
                 })
             );
 
         // Only show additional controls if continuous layers are enabled
         if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
-            this.createContinuousLayerControls(container);
+            void this.createContinuousLayerControls(container);
         }
     }
 
@@ -3288,13 +3288,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                     }
                     this.plugin.settings.clusterAudio.enabled = value;
                     await this.plugin.saveSettings();
-                    this.refreshClusterAudioSettings();
+                    void this.refreshClusterAudioSettings();
                 })
             );
 
         // Show additional settings only when cluster audio is enabled
         if (this.plugin.settings.clusterAudio?.enabled) {
-            this.createClusterAudioDetailSettings(container);
+            void this.createClusterAudioDetailSettings(container);
         }
     }
 
@@ -3558,12 +3558,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 this.plugin.settings.hubOrchestration.enabled = enabledToggle.checked;
             }
             await this.plugin.saveSettings();
-            this.refreshHubOrchestrationSettings();
+            void this.refreshHubOrchestrationSettings();
         });
 
         // Show detailed settings if enabled
         if (this.plugin.settings.hubOrchestration?.enabled) {
-            this.createHubOrchestrationDetailSettings(container);
+            void this.createHubOrchestrationDetailSettings(container);
         }
     }
 
@@ -3765,7 +3765,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 removeNext = true;
             }
             if (removeNext) {
-                section.remove();
+                void section.remove();
                 if (section.textContent?.includes('Phase 5.3: Community Detection')) {
                     break;
                 }
@@ -3773,7 +3773,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         // Recreate hub orchestration section
-        this.createHubOrchestrationSettings(settingsContent as HTMLElement);
+        void this.createHubOrchestrationSettings(settingsContent as HTMLElement);
     }
 
     /**
@@ -3828,13 +3828,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                     }
                     this.plugin.settings.communityDetection.enabled = value;
                     await this.plugin.saveSettings();
-                    this.refreshCommunityDetectionSettings();
+                    void this.refreshCommunityDetectionSettings();
                 })
             );
 
         // Show additional settings only when community detection is enabled
         if (this.plugin.settings.communityDetection?.enabled) {
-            this.createCommunityDetectionDetailSettings(container);
+            void this.createCommunityDetectionDetailSettings(container);
         }
     }
 
@@ -4039,13 +4039,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                     }
                     this.plugin.settings.communityEvolution.enabled = value;
                     await this.plugin.saveSettings();
-                    this.refreshCommunityEvolutionSettings();
+                    void this.refreshCommunityEvolutionSettings();
                 })
             );
 
         // Show additional settings only when evolution audio is enabled
         if (this.plugin.settings.communityEvolution?.enabled) {
-            this.createCommunityEvolutionDetailSettings(container);
+            void this.createCommunityEvolutionDetailSettings(container);
         }
     }
 
@@ -4213,12 +4213,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 this.plugin.settings.musicalTheory.enabled = enabledToggle.checked;
             }
             await this.plugin.saveSettings();
-            this.refreshMusicalTheorySettings();
+            void this.refreshMusicalTheorySettings();
         });
 
         // Show detailed settings if enabled
         if (this.plugin.settings.musicalTheory?.enabled) {
-            this.createMusicalTheoryDetailSettings(container);
+            void this.createMusicalTheoryDetailSettings(container);
         }
     }
 
@@ -4454,12 +4454,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 removeNext = true;
             }
             if (removeNext) {
-                section.remove();
+                void section.remove();
             }
         }
 
         // Recreate musical theory section
-        this.createMusicalTheorySettings(settingsContent as HTMLElement);
+        void this.createMusicalTheorySettings(settingsContent as HTMLElement);
     }
 
     /**
@@ -4511,12 +4511,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 this.plugin.settings.dynamicOrchestration.enabled = enabledToggle.checked;
             }
             await this.plugin.saveSettings();
-            this.refreshDynamicOrchestrationSettings();
+            void this.refreshDynamicOrchestrationSettings();
         });
 
         // Show detailed settings if enabled
         if (this.plugin.settings.dynamicOrchestration?.enabled) {
-            this.createDynamicOrchestrationDetailSettings(container);
+            void this.createDynamicOrchestrationDetailSettings(container);
         }
     }
 
@@ -4676,12 +4676,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 removeNext = true;
             }
             if (removeNext) {
-                section.remove();
+                void section.remove();
             }
         }
 
         // Recreate dynamic orchestration section
-        this.createDynamicOrchestrationSettings(settingsContent as HTMLElement);
+        void this.createDynamicOrchestrationSettings(settingsContent as HTMLElement);
     }
 
     /**
@@ -4758,12 +4758,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 this.plugin.settings.spatialAudio.enabled = enabledToggle.checked;
             }
             await this.plugin.saveSettings();
-            this.refreshSpatialAudioSettings();
+            void this.refreshSpatialAudioSettings();
         });
 
         // Show detailed settings if enabled
         if (this.plugin.settings.spatialAudio?.enabled) {
-            this.createSpatialAudioDetailSettings(container);
+            void this.createSpatialAudioDetailSettings(container);
         }
     }
 
@@ -4906,19 +4906,19 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         let removeNext = false;
         for (const section of Array.from(settingsContent.children)) {
             if (removeNext) {
-                section.remove();
+                void section.remove();
                 break;
             }
             if (section.textContent?.includes('Phase 6.3: Spatial Audio')) {
                 removeNext = true;
             }
             if (removeNext) {
-                section.remove();
+                void section.remove();
             }
         }
 
         // Recreate spatial audio section
-        this.createSpatialAudioSettings(settingsContent as HTMLElement);
+        void this.createSpatialAudioSettings(settingsContent as HTMLElement);
     }
 
     /**
@@ -5021,8 +5021,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Clear and recreate the audio section content
             const existingContent = audioSection.querySelector('.sonic-graph-settings-section-content');
             if (existingContent) {
-                existingContent.empty();
-                this.createAudioSettings(existingContent as HTMLElement);
+                void existingContent.empty();
+                void this.createAudioSettings(existingContent as HTMLElement);
             }
         }
     }
@@ -5043,8 +5043,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Clear and recreate the audio section content
             const existingContent = audioSection.querySelector('.sonic-graph-settings-section-content');
             if (existingContent) {
-                existingContent.empty();
-                this.createAudioSettings(existingContent as HTMLElement);
+                void existingContent.empty();
+                void this.createAudioSettings(existingContent as HTMLElement);
             }
         }
     }
@@ -5107,8 +5107,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Clear and recreate the audio section content
             const existingContent = audioSection.querySelector('.sonic-graph-settings-section-content');
             if (existingContent) {
-                existingContent.empty();
-                this.createAudioSettings(existingContent as HTMLElement);
+                void existingContent.empty();
+                void this.createAudioSettings(existingContent as HTMLElement);
             }
         }
     }
@@ -5127,8 +5127,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const audioSection = settingsContent.querySelector('.sonic-graph-settings-section:has(.sonic-graph-settings-section-title:contains("AUDIO"))');
         if (audioSection) {
             // Clear and recreate the audio section
-            audioSection.empty();
-            this.createAudioSettings(audioSection as HTMLElement);
+            void audioSection.empty();
+            void this.createAudioSettings(audioSection as HTMLElement);
         }
     }
 
@@ -5190,14 +5190,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const markersToggle = markersItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const markersSwitch = markersToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
         if (this.getSonicGraphSettings().visual.timelineMarkersEnabled) {
-            markersSwitch.addClass('active');
+            void markersSwitch.addClass('active');
         }
         const _markersHandle = markersSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         markersSwitch.addEventListener('click', () => {
             const isActive = markersSwitch.hasClass('active');
-            markersSwitch.toggleClass('active', !isActive);
-            this.updateTimelineMarkersVisibility(!isActive);
+            void markersSwitch.toggleClass('active', !isActive);
+            void this.updateTimelineMarkersVisibility(!isActive);
         });
 
         // Add tooltip to timeline markers toggle
@@ -5237,7 +5237,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         styleSelect.addEventListener('change', (e) => {
             const target = e.target as HTMLSelectElement;
             const style = target.value as 'fade' | 'scale' | 'slide' | 'pop';
-            this.updateAnimationStyle(style);
+            void this.updateAnimationStyle(style);
         });
         
         // Loop Animation Toggle
@@ -5247,14 +5247,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const loopToggle = loopItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const loopSwitch = loopToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
         if (this.getSonicGraphSettings().visual.loopAnimation) {
-            loopSwitch.addClass('active');
+            void loopSwitch.addClass('active');
         }
         const _loopHandle = loopSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         loopSwitch.addEventListener('click', () => {
             const isActive = loopSwitch.hasClass('active');
-            loopSwitch.toggleClass('active', !isActive);
-            this.updateLoopAnimation(!isActive);
+            void loopSwitch.toggleClass('active', !isActive);
+            void this.updateLoopAnimation(!isActive);
         });
         
         // Add tooltip to loop animation toggle
@@ -5269,7 +5269,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const fileNamesToggle = fileNamesItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const fileNamesSwitch = fileNamesToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
         if (this.getSonicGraphSettings().visual.showFileNames) {
-            fileNamesSwitch.addClass('active');
+            void fileNamesSwitch.addClass('active');
         }
         const _fileNamesHandle = fileNamesSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
@@ -5280,8 +5280,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         fileNamesSwitch.addEventListener('click', () => {
             const isActive = fileNamesSwitch.hasClass('active');
-            fileNamesSwitch.toggleClass('active', !isActive);
-            this.updateShowFileNames(!isActive);
+            void fileNamesSwitch.toggleClass('active', !isActive);
+            void this.updateShowFileNames(!isActive);
         });
     }
 
@@ -5338,7 +5338,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         loggingSelect.addEventListener('change', (e) => {
             const target = e.target as HTMLSelectElement;
             const value = target.value as 'off' | 'error' | 'warn' | 'info' | 'debug';
-            LoggerFactory.setLogLevel(value);
+            void LoggerFactory.setLogLevel(value);
             logger.info('settings-change', 'Log level changed', { level: value });
         });
 
@@ -5366,9 +5366,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             a.href = url;
             a.download = filename;
             document.body.appendChild(a);
-            a.click();
+            void a.click();
             document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            void URL.revokeObjectURL(url);
             logger.info('export', 'Logs exported', { filename });
         });
     }
@@ -5458,7 +5458,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         clusteringSlider.addEventListener('input', () => {
             const value = parseInt(clusteringSlider.value) / 100;
             clusteringValue.textContent = `${Math.round(value * 100)}%`;
-            this.updateLayoutSetting('clusteringStrength', value);
+            void this.updateLayoutSetting('clusteringStrength', value);
         });
         
         // Add tooltip to clustering strength slider
@@ -5492,7 +5492,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         separationSlider.addEventListener('input', () => {
             const value = parseInt(separationSlider.value) / 100;
             separationValue.textContent = `${Math.round(value * 100)}%`;
-            this.updateLayoutSetting('groupSeparation', value);
+            void this.updateLayoutSetting('groupSeparation', value);
         });
         
         // Add tooltip to group separation slider
@@ -5515,14 +5515,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const tagsToggle = tagsItem.createDiv({ cls: 'sonic-graph-setting-toggle' });
         const tagsSwitch = tagsToggle.createDiv({ cls: 'sonic-graph-toggle-switch' });
         if (this.getSonicGraphSettings().layout.filters.showTags) {
-            tagsSwitch.addClass('active');
+            void tagsSwitch.addClass('active');
         }
         tagsSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         tagsSwitch.addEventListener('click', () => {
             const isActive = tagsSwitch.hasClass('active');
-            tagsSwitch.toggleClass('active', !isActive);
-            this.updateFilterSetting('showTags', !isActive);
+            void tagsSwitch.toggleClass('active', !isActive);
+            void this.updateFilterSetting('showTags', !isActive);
         });
 
         // Add tooltip to show tags toggle
@@ -5542,14 +5542,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             placement: 'left'
         });
         if (this.getSonicGraphSettings().layout.filters.showOrphans) {
-            orphansSwitch.addClass('active');
+            void orphansSwitch.addClass('active');
         }
         orphansSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         orphansSwitch.addEventListener('click', () => {
             const isActive = orphansSwitch.hasClass('active');
-            orphansSwitch.toggleClass('active', !isActive);
-            this.updateFilterSetting('showOrphans', !isActive);
+            void orphansSwitch.toggleClass('active', !isActive);
+            void this.updateFilterSetting('showOrphans', !isActive);
         });
     }
 
@@ -5593,7 +5593,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const section = container.createDiv({ cls: 'sonic-graph-settings-section' });
         section.createEl('div', { text: 'GROUPS', cls: 'sonic-graph-settings-section-title' });
         
-        this.createPathGroupsSettings(section);
+        void this.createPathGroupsSettings(section);
     }
 
     /**
@@ -5619,7 +5619,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 text: this.formatGroupLabel(group),
                 cls: 'sonic-graph-group-label'
             });
-            groupLabel.addClass('sonigraph-group-label');
+            void groupLabel.addClass('sonigraph-group-label');
             groupLabel.setCssProps({
                 flex: '1',
                 fontSize: '12px'
@@ -5639,12 +5639,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             
             // Event listeners
             colorDot.addEventListener('click', () => {
-                this.showColorPicker(index, colorDot);
+                void this.showColorPicker(index, colorDot);
             });
             
             removeButton.addEventListener('click', () => {
-                this.removeGroup(index);
-                this.refreshPathGroupsSettings();
+                void this.removeGroup(index);
+                void this.refreshPathGroupsSettings();
             });
         });
         
@@ -5654,8 +5654,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             placeholder: 'Enter query...',
             cls: 'sonic-graph-group-search-input'
         });
-        searchInput.addClass('sonigraph-group-search-input');
-        searchInput.addClass('sonigraph-group-search-input--highlighted');
+        void searchInput.addClass('sonigraph-group-search-input');
+        void searchInput.addClass('sonigraph-group-search-input--highlighted');
         searchInput.setCssProps({
             border: '1px solid #fbbf24', // Yellow border
             borderRadius: '4px',
@@ -5669,14 +5669,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Show search options overlay on focus
         searchInput.addEventListener('focus', () => {
-            this.showSearchOptionsOverlay(searchInput);
+            void this.showSearchOptionsOverlay(searchInput);
         });
         
         searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                this.addGroupFromSearch(searchInput.value);
+                void this.addGroupFromSearch(searchInput.value);
                 searchInput.value = '';
-                this.refreshPathGroupsSettings();
+                void this.refreshPathGroupsSettings();
             }
         });
     }
@@ -5710,7 +5710,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const dotRect = colorDot.getBoundingClientRect();
         const modalRect = this.contentEl.getBoundingClientRect();
 
-        colorInput.addClass('sonigraph-color-picker');
+        void colorInput.addClass('sonigraph-color-picker');
         colorInput.style.left = `${dotRect.left - modalRect.left}px`;
         colorInput.style.top = `${dotRect.bottom - modalRect.top + 4}px`; // 4px gap below the dot
         // Enable pointer events for interaction while keeping it visually hidden
@@ -5718,16 +5718,16 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Find the view container to append to
         const viewContainerEl = this.contentEl;
-        viewContainerEl.appendChild(colorInput);
+        void viewContainerEl.appendChild(colorInput);
 
         // Use requestAnimationFrame to ensure positioning is applied before clicking
         requestAnimationFrame(() => {
-            colorInput.click();
+            void colorInput.click();
         });
 
         colorInput.addEventListener('input', () => {
             const newColor = colorInput.value;
-            this.updateGroupProperty(groupIndex, 'color', newColor);
+            void this.updateGroupProperty(groupIndex, 'color', newColor);
             colorDot.style.backgroundColor = newColor;
         });
 
@@ -5740,36 +5740,36 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
             // Remove the color picker
             if (viewContainerEl.contains(colorInput)) {
-                viewContainerEl.removeChild(colorInput);
+                void viewContainerEl.removeChild(colorInput);
             }
 
             // Remove the event listener
-            document.removeEventListener('click', handleClickOutside);
+            void document.removeEventListener('click', handleClickOutside);
         };
 
         colorInput.addEventListener('change', () => {
             if (viewContainerEl.contains(colorInput)) {
-                viewContainerEl.removeChild(colorInput);
+                void viewContainerEl.removeChild(colorInput);
             }
             // Also remove the click outside handler when change event fires
-            document.removeEventListener('click', handleClickOutside);
+            void document.removeEventListener('click', handleClickOutside);
         });
 
         // Prevent the color picker from being dismissed by other click handlers
         colorInput.addEventListener('click', (e) => {
-            e.stopPropagation();
+            void e.stopPropagation();
         });
 
         // Add the click outside handler after a brief delay to avoid immediate dismissal
         setTimeout(() => {
-            document.addEventListener('click', handleClickOutside);
+            void document.addEventListener('click', handleClickOutside);
         }, 100);
 
         // Fallback cleanup in case click outside handler fails
         setTimeout(() => {
             if (viewContainerEl.contains(colorInput)) {
-                viewContainerEl.removeChild(colorInput);
-                document.removeEventListener('click', handleClickOutside);
+                void viewContainerEl.removeChild(colorInput);
+                void document.removeEventListener('click', handleClickOutside);
             }
         }, 120000); // 2 minute fallback
     }
@@ -5781,12 +5781,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Remove existing overlay
         const existingOverlay = document.querySelector('.sonic-graph-search-overlay');
         if (existingOverlay) {
-            existingOverlay.remove();
+            void existingOverlay.remove();
         }
         
         const overlay = document.createElement('div');
         overlay.className = 'sonic-graph-search-overlay';
-        overlay.addClass('sonigraph-autocomplete-overlay');
+        void overlay.addClass('sonigraph-autocomplete-overlay');
         overlay.setCssProps({
             top: (searchInput.offsetTop + searchInput.offsetHeight + 4) + 'px',
             left: searchInput.offsetLeft + 'px',
@@ -5809,7 +5809,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         options.forEach(option => {
             const optionEl = document.createElement('div');
-            optionEl.addClass('sonigraph-autocomplete-option');
+            void optionEl.addClass('sonigraph-autocomplete-option');
             optionEl.textContent = option;
             optionEl.style.cursor = 'pointer';
             optionEl.style.borderRadius = '2px';
@@ -5818,10 +5818,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 const prefix = option.split(':')[0];
                 (searchInput as HTMLInputElement).value = prefix + ':';
                 (searchInput as HTMLInputElement).focus();
-                overlay.remove();
+                void overlay.remove();
             });
             
-            overlay.appendChild(optionEl);
+            void overlay.appendChild(optionEl);
         });
 
         if (searchInput.parentElement) {
@@ -5832,8 +5832,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         setTimeout(() => {
             document.addEventListener('click', function handleClickOutside(e) {
                 if (!overlay.contains(e.target as Node) && e.target !== searchInput) {
-                    overlay.remove();
-                    document.removeEventListener('click', handleClickOutside);
+                    void overlay.remove();
+                    void document.removeEventListener('click', handleClickOutside);
                 }
             });
         }, 100);
@@ -5873,7 +5873,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
         }
         
-        logger.debug('path-grouping', 'Added new group from search:', newGroup);
+        void logger.debug('path-grouping', 'Added new group from search:', newGroup);
     }
     
     /**
@@ -5932,8 +5932,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     private refreshPathGroupsSettings(): void {
         const groupsContainer = document.querySelector('.sonic-graph-groups-list');
         if (groupsContainer) {
-            groupsContainer.empty();
-            this.createPathGroupsSettings(groupsContainer.parentElement);
+            void groupsContainer.empty();
+            void this.createPathGroupsSettings(groupsContainer.parentElement);
         }
     }
 
@@ -6021,12 +6021,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Clear any existing error states
         const existingError = this.graphContainer.querySelector('.sonic-graph-error');
         if (existingError) {
-            existingError.remove();
+            void existingError.remove();
         }
         
         const errorContainer = this.graphContainer.createDiv({ cls: 'sonic-graph-error' });
         const errorIcon = createLucideIcon('alert-circle', 48);
-        errorContainer.appendChild(errorIcon);
+        void errorContainer.appendChild(errorIcon);
         
         errorContainer.createEl('h3', { 
             text: 'Failed to load graph data',
@@ -6046,7 +6046,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         
         retryBtn.addEventListener('click', async () => {
-            logger.debug('ui', 'Retry button clicked - attempting to reinitialize graph');
+            void logger.debug('ui', 'Retry button clicked - attempting to reinitialize graph');
             
             try {
                 // Show loading state
@@ -6054,13 +6054,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 retryBtn.disabled = true;
                 
                 // Clear current error
-                errorContainer.remove();
+                void errorContainer.remove();
                 
                 // Add loading indicator back
                 const loadingIndicator = this.graphContainer.createDiv({ cls: 'sonic-graph-loading' });
                 const loadingIcon = createLucideIcon('loader-2', 24);
-                loadingIcon.addClass('sonic-graph-loading-icon');
-                loadingIndicator.appendChild(loadingIcon);
+                void loadingIcon.addClass('sonic-graph-loading-icon');
+                void loadingIndicator.appendChild(loadingIcon);
                 loadingIndicator.createSpan({ text: 'Retrying...', cls: 'sonic-graph-loading-text' });
                 
                 // Attempt to reinitialize
@@ -6099,7 +6099,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private async initializeTemporalAnimator(): Promise<void> {
         try {
-            logger.debug('ui', 'Initializing temporal animator');
+            void logger.debug('ui', 'Initializing temporal animator');
             
             // Extract graph data if not already done
             const graphData = await this.graphDataExtractor.extractGraphData();
@@ -6120,7 +6120,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             );
             
             // Set logging context for comprehensive timelapse analytics
-            this.setAnimatorLoggingContext();
+            void this.setAnimatorLoggingContext();
             
             // Set up callbacks
             this.temporalAnimator.onVisibilityChanged((visibleNodeIds) => {
@@ -6130,11 +6130,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             });
             
             this.temporalAnimator.onTimeChanged((currentTime, progress) => {
-                this.updateTimelineUI(currentTime, progress);
+                void this.updateTimelineUI(currentTime, progress);
             });
             
             this.temporalAnimator.onAnimationEnded(() => {
-                this.handleAnimationEnd();
+                void this.handleAnimationEnd();
             });
             
             this.temporalAnimator.onNodeAppeared((node) => {
@@ -6144,13 +6144,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                     nodeType: node.type,
                     callbackRegistered: true
                 });
-                this.handleNodeAppearance(node);
+                void this.handleNodeAppearance(node);
             });
             
-            logger.info('ui', 'Temporal animator callbacks registered');
+            void logger.info('ui', 'Temporal animator callbacks registered');
             
             // Initialize timeline markers
-            this.updateTimelineMarkers();
+            void this.updateTimelineMarkers();
             this.updateCurrentPosition(0, 0); // Initialize at start position
             
             // Log timeline info for debugging
@@ -6165,7 +6165,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Initialize musical mapper for audio with app instance for Phase 2
             this.musicalMapper = new MusicalMapper(this.plugin.settings, this.plugin.app);
             
-            logger.info('ui', 'Temporal animator initialized successfully');
+            void logger.info('ui', 'Temporal animator initialized successfully');
             
         } catch (error) {
             logger.error('Failed to initialize temporal animator', (error as Error).message);
@@ -6211,7 +6211,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             clearTimeout(this.scrubSaveTimeout);
         }
         this.scrubSaveTimeout = setTimeout(() => {
-            this.requestSave();
+            void this.requestSave();
             this.scrubSaveTimeout = null;
         }, 500); // Save 500ms after user stops scrubbing
     }
@@ -6227,8 +6227,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Update timeline info
         if (this.timelineInfo && this.temporalAnimator) {
-            this.updateTimelineMarkers();
-            this.updateCurrentPosition(currentTime, progress);
+            void this.updateTimelineMarkers();
+            void this.updateCurrentPosition(currentTime, progress);
         }
 
         // Update visualization playback time
@@ -6246,7 +6246,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const timelineInfo = this.temporalAnimator.getTimelineInfo();
         
         // Only update time markers - years shown on current position indicator
-        this.updateTimeMarkers(timelineInfo);
+        void this.updateTimeMarkers(timelineInfo);
     }
 
 
@@ -6260,7 +6260,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (!markersContainer) return;
 
         // Clear all existing markers (both time and year markers)
-        markersContainer.empty();
+        void markersContainer.empty();
         
         // Check if markers should be shown
         const showMarkers = this.getSonicGraphSettings().visual.timelineMarkersEnabled;
@@ -6278,17 +6278,17 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (duration <= 30) {
             // For short durations, show every 5 seconds
             for (let t = 0; t <= duration; t += 5) {
-                timeIntervals.push(t);
+                void timeIntervals.push(t);
             }
         } else if (duration <= 120) {
             // For medium durations, show every 10 seconds
             for (let t = 0; t <= duration; t += 10) {
-                timeIntervals.push(t);
+                void timeIntervals.push(t);
             }
         } else {
             // For long durations, show every 30 seconds
             for (let t = 0; t <= duration; t += 30) {
-                timeIntervals.push(t);
+                void timeIntervals.push(t);
             }
         }
         
@@ -6352,7 +6352,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             currentIndicator.style.display = 'none';
         }
         
-        logger.info('ui', 'Sonic Graph animation completed');
+        void logger.info('ui', 'Sonic Graph animation completed');
         new Notice('Animation completed');
     }
 
@@ -6369,7 +6369,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         
         if (!this.plugin.audioEngine) {
-            logger.warn('audio', 'No audio engine available for node appearance');
+            void logger.warn('audio', 'No audio engine available for node appearance');
             return;
         }
         
@@ -6377,7 +6377,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Ensure audio engine is initialized
             const status = this.plugin.audioEngine.getStatus();
             if (!status.isInitialized) {
-                logger.debug('audio', 'Initializing audio engine for node appearance');
+                void logger.debug('audio', 'Initializing audio engine for node appearance');
                 await this.plugin.audioEngine.initialize();
             }
             
@@ -6475,7 +6475,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         } catch (error) {
             logger.error('Failed to play audio for node appearance', (error as Error).message);
             // Show user feedback about audio issues
-            logger.warn('audio-playback', 'Audio playback failed:', error);
+            void logger.warn('audio-playback', 'Audio playback failed:', error);
         }
     }
 
@@ -6533,7 +6533,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const enabledInstruments = this.getEnabledInstruments();
         
         if (enabledInstruments.length === 0) {
-            logger.warn('audio', 'No instruments enabled for temporal animation');
+            void logger.warn('audio', 'No instruments enabled for temporal animation');
             // Fallback to piano if nothing is enabled
             return this.createFallbackMapping(node, 'piano');
         }
@@ -7311,9 +7311,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const markersContainer = this.timelineInfo?.querySelector('.sonic-graph-timeline-markers');
         if (markersContainer) {
             if (show) {
-                markersContainer.addClass('sonigraph-timeline-markers--visible');
+                void markersContainer.addClass('sonigraph-timeline-markers--visible');
             } else {
-                markersContainer.removeClass('sonigraph-timeline-markers--visible');
+                void markersContainer.removeClass('sonigraph-timeline-markers--visible');
             }
         }
     }
@@ -7386,7 +7386,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Update temporal animator with new time window
         if (this.temporalAnimator) {
-            this.applyTimeWindowChange(timeWindow);
+            void this.applyTimeWindowChange(timeWindow);
         }
     }
 
@@ -7407,15 +7407,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const customRangeElement = this.settingsPanel?.querySelector('.sonic-graph-custom-range');
         if (customRangeElement) {
             if (granularity === 'custom') {
-                customRangeElement.addClass('sonigraph-custom-range--visible');
+                void customRangeElement.addClass('sonigraph-custom-range--visible');
             } else {
-                customRangeElement.removeClass('sonigraph-custom-range--visible');
+                void customRangeElement.removeClass('sonigraph-custom-range--visible');
             }
         }
         
         // Update temporal animator if available
         if (this.temporalAnimator) {
-            this.applyTimelineGranularityChange(granularity);
+            void this.applyTimelineGranularityChange(granularity);
         }
     }
 
@@ -7434,7 +7434,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Update temporal animator if using custom granularity
         if (this.temporalAnimator && this.plugin.settings.sonicGraphSettings.timeline.granularity === 'custom') {
-            this.applyTimelineGranularityChange('custom');
+            void this.applyTimelineGranularityChange('custom');
         }
     }
 
@@ -7453,7 +7453,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Update temporal animator with new spreading mode
         if (this.temporalAnimator) {
-            this.applyEventSpreadingChange(mode);
+            void this.applyEventSpreadingChange(mode);
         }
     }
 
@@ -7470,7 +7470,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.temporalAnimator.updateTimelineSettings(settings.timeline);
         
         // Update logging context with new settings
-        this.setAnimatorLoggingContext();
+        void this.setAnimatorLoggingContext();
 
         // Log the setting change during playback
         if (this.isAnimating) {
@@ -7516,7 +7516,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.temporalAnimator.updateTimelineSettings(settings.timeline);
         
         // Update logging context with new settings
-        this.setAnimatorLoggingContext();
+        void this.setAnimatorLoggingContext();
 
         // Log the setting change during playback
         if (this.isAnimating) {
@@ -7579,7 +7579,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                     .map(([name, _]) => name);
             }
         } catch (error) {
-            logger.debug('ui', 'Could not get active instruments', error);
+            void logger.debug('ui', 'Could not get active instruments', error);
         }
         return ['unknown'];
     }
@@ -7598,7 +7598,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 settings: settings 
             });
             if (settings?.enabled) {
-                enabled.push(instrumentName);
+                void enabled.push(instrumentName);
             }
         });
         
@@ -7863,7 +7863,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
     // Performance optimization: Event listener management
     private addEventListener(element: Element | Document | Window, event: string, handler: EventListener): void {
-        element.addEventListener(event, handler);
+        void element.addEventListener(event, handler);
         this.eventListeners.push({ element, event, handler });
     }
 
@@ -7906,7 +7906,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Start observing the canvas container
         this.resizeObserver.observe(canvasElement);
         
-        logger.debug('responsive-setup', 'Resize observer set up for responsive graph sizing');
+        void logger.debug('responsive-setup', 'Resize observer set up for responsive graph sizing');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
@@ -7918,7 +7918,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.settingsUpdateTimeout = setTimeout(() => {
-            this.flushSettingsUpdates();
+            void this.flushSettingsUpdates();
         }, 300);
     }
 
@@ -8007,7 +8007,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private updateTagInfluenceWeight(weight: number): void {
         // Performance optimization: Use debounced settings updates
-        this.scheduleSettingsUpdate('contentAwarePositioning.tagInfluence.weight', weight);
+        void this.scheduleSettingsUpdate('contentAwarePositioning.tagInfluence.weight', weight);
         
         logger.debug('content-aware-positioning', 'Tag influence weight updated', { weight });
     }
@@ -8017,7 +8017,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private updateTemporalPositioningWeight(weight: number): void {
         // Performance optimization: Use debounced settings updates
-        this.scheduleSettingsUpdate('contentAwarePositioning.temporalPositioning.weight', weight);
+        void this.scheduleSettingsUpdate('contentAwarePositioning.temporalPositioning.weight', weight);
         
         logger.debug('content-aware-positioning', 'Temporal positioning weight updated', { weight });
     }
@@ -8027,7 +8027,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private updateHubCentralityWeight(weight: number): void {
         // Performance optimization: Use debounced settings updates
-        this.scheduleSettingsUpdate('contentAwarePositioning.hubCentrality.weight', weight);
+        void this.scheduleSettingsUpdate('contentAwarePositioning.hubCentrality.weight', weight);
         
         logger.debug('content-aware-positioning', 'Hub centrality weight updated', { weight });
     }
@@ -8037,7 +8037,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private updateDebugVisualization(enabled: boolean): void {
         // Performance optimization: Use debounced settings updates
-        this.scheduleSettingsUpdate('contentAwarePositioning.debugVisualization', enabled);
+        void this.scheduleSettingsUpdate('contentAwarePositioning.debugVisualization', enabled);
         
         logger.debug('content-aware-positioning', 'Debug visualization updated', { enabled });
     }
@@ -8099,7 +8099,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Update clustering algorithm and save to plugin settings
      */
     private updateClusteringAlgorithm(algorithm: 'louvain' | 'modularity' | 'hybrid'): void {
-        this.scheduleSettingsUpdate('smartClustering.algorithm', algorithm);
+        void this.scheduleSettingsUpdate('smartClustering.algorithm', algorithm);
         logger.debug('smart-clustering', 'Clustering algorithm updated', { algorithm });
     }
 

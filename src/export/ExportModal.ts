@@ -76,31 +76,31 @@ export class ExportModal extends Modal {
         }
 
         // Initialize config with defaults
-        this.initializeConfig();
+        void this.initializeConfig();
     }
 
     onOpen() {
         const { contentEl } = this;
-        contentEl.empty();
-        contentEl.addClass('sonigraph-export-modal');
+        void contentEl.empty();
+        void contentEl.addClass('sonigraph-export-modal');
 
         // Header
         contentEl.createEl('h2', { text: 'Export Sonic Graph' });
 
         // Create form sections
-        this.createPresetsSection(contentEl);
-        this.createScopeSection(contentEl);
-        this.createFormatSection(contentEl);
-        this.createLocationSection(contentEl);
-        this.createFilenameSection(contentEl);
-        this.createMetadataSection(contentEl);
-        this.createEstimateDisplay(contentEl);
-        this.createActionButtons(contentEl);
+        void this.createPresetsSection(contentEl);
+        void this.createScopeSection(contentEl);
+        void this.createFormatSection(contentEl);
+        void this.createLocationSection(contentEl);
+        void this.createFilenameSection(contentEl);
+        void this.createMetadataSection(contentEl);
+        void this.createEstimateDisplay(contentEl);
+        void this.createActionButtons(contentEl);
     }
 
     onClose() {
         const { contentEl } = this;
-        contentEl.empty();
+        void contentEl.empty();
     }
 
     /**
@@ -162,7 +162,7 @@ export class ExportModal extends Modal {
         });
 
         btn.addEventListener('click', () => {
-            this.loadPreset(preset);
+            void this.loadPreset(preset);
         });
     }
 
@@ -183,8 +183,8 @@ export class ExportModal extends Modal {
             this.formatDropdown.setValue(preset.format);
         }
 
-        this.updateQualityOptions();
-        this.updateEstimate();
+        void this.updateQualityOptions();
+        void this.updateEstimate();
 
         // Update metadata inputs if present
         if (preset.metadata && this.metadataInputs) {
@@ -231,7 +231,7 @@ export class ExportModal extends Modal {
         new Notice(`Saved preset: ${name}`);
 
         // Refresh presets section
-        this.close();
+        void this.close();
         // Would need to reopen or refresh, but for now just notify
     }
 
@@ -251,13 +251,13 @@ export class ExportModal extends Modal {
                 .setName('Preset name')
                 .addText(text => {
                     nameInput = text;
-                    text.setPlaceholder('My Preset');
+                    void text.setPlaceholder('My Preset');
                 });
 
             const buttonContainer = content.createDiv('modal-button-container');
             buttonContainer.createEl('button', { text: 'Cancel' })
                 .addEventListener('click', () => {
-                    modal.close();
+                    void modal.close();
                     resolve(null);
                 });
 
@@ -265,14 +265,14 @@ export class ExportModal extends Modal {
                 .addEventListener('click', () => {
                     const name = nameInput.getValue().trim();
                     if (name) {
-                        modal.close();
+                        void modal.close();
                         resolve(name);
                     } else {
                         new Notice('Please enter a preset name');
                     }
                 });
 
-            modal.open();
+            void modal.open();
         });
     }
 
@@ -325,14 +325,14 @@ export class ExportModal extends Modal {
                 }
 
                 // Always show static graph option
-                dropdown.addOption('static-graph', 'Current Static Graph');
+                void dropdown.addOption('static-graph', 'Current Static Graph');
 
                 dropdown
                     .setValue(this.config.scope || 'static-graph')
                     .onChange(value => {
                         this.config.scope = value as ExportScope;
-                        this.updateCustomRangeVisibility();
-                        this.updateEstimate();
+                        void this.updateCustomRangeVisibility();
+                        void this.updateEstimate();
                     });
             });
 
@@ -388,8 +388,8 @@ export class ExportModal extends Modal {
                     .setValue(this.config.format || 'wav')
                     .onChange(value => {
                         this.config.format = value as AudioFormat;
-                        this.updateQualityOptions();
-                        this.updateEstimate();
+                        void this.updateQualityOptions();
+                        void this.updateEstimate();
                     });
             });
 
@@ -407,7 +407,7 @@ export class ExportModal extends Modal {
                     .setValue('high')
                     .onChange(value => {
                         this.config.quality = this.getQualityFromPreset(value as QualityPreset);
-                        this.updateEstimate();
+                        void this.updateEstimate();
                     });
             });
     }
@@ -432,7 +432,7 @@ export class ExportModal extends Modal {
                     .setValue(this.config.locationType || 'vault')
                     .onChange(value => {
                         this.config.locationType = value as ExportLocationType;
-                        this.updateLocationInput();
+                        void this.updateLocationInput();
                     });
             });
 
@@ -471,7 +471,7 @@ export class ExportModal extends Modal {
                     .setValue(this.config.filename || this.generateFilename())
                     .onChange(value => {
                         this.config.filename = value;
-                        this.updateEstimate();
+                        void this.updateEstimate();
                     });
             });
 
@@ -521,7 +521,7 @@ export class ExportModal extends Modal {
      */
     private createEstimateDisplay(container: HTMLElement): void {
         this.estimateDisplay = container.createDiv('export-estimate');
-        this.updateEstimate();
+        void this.updateEstimate();
     }
 
     /**
@@ -532,7 +532,7 @@ export class ExportModal extends Modal {
 
         const header = section.createDiv('sonigraph-export-metadata-header');
         header.createEl('span', { text: 'Metadata (Optional) ▼' });
-        header.addClass('clickable');
+        void header.addClass('clickable');
 
         this.metadataContainer = section.createDiv('sonigraph-export-metadata-content');
 
@@ -651,7 +651,7 @@ export class ExportModal extends Modal {
             text: 'Cancel',
             cls: 'mod-cancel'
         }).addEventListener('click', () => {
-            this.close();
+            void this.close();
         });
 
         // Export button (CTA)
@@ -659,7 +659,7 @@ export class ExportModal extends Modal {
             text: 'Export',
             cls: 'mod-cta'
         }).addEventListener('click', () => {
-            this.startExport();
+            void this.startExport();
         });
     }
 
@@ -734,7 +734,7 @@ export class ExportModal extends Modal {
 
             if (fileExists) {
                 // Show collision modal
-                logger.info('export-modal', 'File collision detected, showing resolution modal');
+                void logger.info('export-modal', 'File collision detected, showing resolution modal');
 
                 const { FileCollisionModal } = require('./FileCollisionModal');
                 const collisionModal = new FileCollisionModal(
@@ -763,18 +763,18 @@ export class ExportModal extends Modal {
                         logger.info('export-modal', 'File collision resolved', { resolution, newFilename: exportConfig.filename });
 
                         // Start export with resolved config
-                        this.proceedWithExport(exportConfig);
+                        void this.proceedWithExport(exportConfig);
                     }
                 );
-                collisionModal.open();
+                void collisionModal.open();
                 return; // Don't close this modal yet
             }
 
             // No collision, proceed directly
-            this.proceedWithExport(exportConfig);
+            void this.proceedWithExport(exportConfig);
 
         } catch (error) {
-            logger.error('export-modal', 'Export start failed:', error);
+            void logger.error('export-modal', 'Export start failed:', error);
             new Notice(`Export failed: ${error.message}`);
         }
     }
@@ -783,14 +783,14 @@ export class ExportModal extends Modal {
      * Proceed with export after collision resolution (if any)
      */
     private proceedWithExport(exportConfig: ExportConfig): void {
-        logger.info('export-modal', 'Starting export with config:', exportConfig);
+        void logger.info('export-modal', 'Starting export with config:', exportConfig);
 
         // Close this modal
-        this.close();
+        void this.close();
 
         // Open progress modal
         const progressModal = new ExportProgressModal(this.app, this.exporter, exportConfig);
-        progressModal.open();
+        void progressModal.open();
     }
 
     /**
@@ -820,7 +820,7 @@ export class ExportModal extends Modal {
             this.config.quality = this.getQualityFromPreset('high');
         }
 
-        this.updateEstimate();
+        void this.updateEstimate();
     }
 
     /**
@@ -983,7 +983,7 @@ export class ExportModal extends Modal {
             if (effectConfig?.enabled) {
                 // Capitalize first letter of effect name
                 const displayName = effectName.charAt(0).toUpperCase() + effectName.slice(1);
-                effects.push(displayName);
+                void effects.push(displayName);
             }
         }
 
@@ -1002,7 +1002,7 @@ export class ExportModal extends Modal {
             if (instrumentConfig?.enabled) {
                 // Get display name from config or format the key
                 const displayName = this.formatInstrumentName(instrumentKey);
-                instruments.push(displayName);
+                void instruments.push(displayName);
             }
         }
 
@@ -1081,7 +1081,7 @@ export class ExportModal extends Modal {
         };
 
         // Update estimate
-        this.updateEstimate();
+        void this.updateEstimate();
     }
 
     /**

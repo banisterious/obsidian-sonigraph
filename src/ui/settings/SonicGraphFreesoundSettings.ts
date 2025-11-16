@@ -25,16 +25,16 @@ export class SonicGraphFreesoundSettings {
 	 * Render all Freesound & Presets settings sections
 	 */
 	public render(container: HTMLElement): void {
-		logger.debug('freesound-settings', 'Rendering Freesound & Presets settings');
+		void logger.debug('freesound-settings', 'Rendering Freesound & Presets settings');
 
 		// Section 1: Freesound API Integration
-		this.renderFreesoundApiSection(container);
+		void this.renderFreesoundApiSection(container);
 
 		// Section 2: Caching & Preloading
-		this.renderCachingSection(container);
+		void this.renderCachingSection(container);
 
 		// Section 3: Preset Management
-		this.renderPresetManagementSection(container);
+		void this.renderPresetManagementSection(container);
 	}
 
 	/**
@@ -70,7 +70,7 @@ export class SonicGraphFreesoundSettings {
 			lineHeight: '1.5',
 			marginBottom: '1rem'
 		});
-		infoP2.appendText('Get your free API key at: ');
+		void infoP2.appendText('Get your free API key at: ');
 		const apiLink = infoP2.createEl('a', {
 			text: 'https://freesound.org/apiv2/apply/',
 			href: 'https://freesound.org/apiv2/apply/'
@@ -96,13 +96,13 @@ export class SonicGraphFreesoundSettings {
 				.onClick(async () => {
 					const apiKey = this.plugin.settings.freesoundApiKey;
 					if (!apiKey || apiKey.trim().length === 0) {
-						button.setButtonText('No key');
+						void button.setButtonText('No key');
 						setTimeout(() => button.setButtonText('Test'), 2000);
 						return;
 					}
 
-					button.setButtonText('Testing...');
-					button.setDisabled(true);
+					void button.setButtonText('Testing...');
+					void button.setDisabled(true);
 
 					try {
 						// Use FreesoundAuthManager to test connection (same as original working implementation)
@@ -111,18 +111,18 @@ export class SonicGraphFreesoundSettings {
 						const result = await authManager.testConnection();
 
 						if (result.success) {
-							button.setButtonText('✓ Valid');
+							void button.setButtonText('✓ Valid');
 							const username = result.username ? ` (${result.username})` : '';
 							logger.info('freesound-settings', `API key valid${username}`);
 						} else {
-							button.setButtonText('✗ Invalid');
+							void button.setButtonText('✗ Invalid');
 							logger.warn('freesound-settings', `API test failed: ${result.message}`);
 						}
 					} catch (error) {
-						button.setButtonText('✗ Failed');
+						void button.setButtonText('✗ Failed');
 						logger.error('freesound-settings', `API test error: ${error.message}`);
 					} finally {
-						button.setDisabled(false);
+						void button.setDisabled(false);
 						setTimeout(() => button.setButtonText('Test'), 3000);
 					}
 				})

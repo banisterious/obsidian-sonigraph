@@ -87,7 +87,7 @@ export class PlaybackEventEmitter {
 
 		const index = eventListeners.indexOf(listener as unknown as PlaybackEventListener);
 		if (index > -1) {
-			eventListeners.splice(index, 1);
+			void eventListeners.splice(index, 1);
 			logger.debug('events', `Removed listener for ${event}`, { 
 				listenerCount: eventListeners.length 
 			});
@@ -103,7 +103,7 @@ export class PlaybackEventEmitter {
 			logger.debug('events', `Removed all listeners for ${event}`);
 		} else {
 			this.listeners.clear();
-			logger.debug('events', 'Removed all event listeners');
+			void logger.debug('events', 'Removed all event listeners');
 		}
 	}
 
@@ -151,6 +151,6 @@ export class PlaybackEventEmitter {
 	 */
 	dispose(): void {
 		this.listeners.clear();
-		logger.debug('events', 'PlaybackEventEmitter disposed');
+		void logger.debug('events', 'PlaybackEventEmitter disposed');
 	}
 }

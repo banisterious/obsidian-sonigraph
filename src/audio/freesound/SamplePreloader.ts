@@ -93,7 +93,7 @@ export class SamplePreloader {
             mostUsedGenre: null
         };
 
-        this.startIdleDetection();
+        void this.startIdleDetection();
     }
 
     /**
@@ -156,11 +156,11 @@ export class SamplePreloader {
         const predictedGenres = this.predictNextGenres();
 
         // Reorder preload queue based on predictions
-        this.reorderPreloadQueue(predictedGenres);
+        void this.reorderPreloadQueue(predictedGenres);
 
         // Trigger background preloading for predicted genres
         if (this.config.backgroundLoadingEnabled && !this.isPreloading) {
-            this.backgroundPreload(predictedGenres);
+            void this.backgroundPreload(predictedGenres);
         }
 
         this.logger.debug('preloader', 'Preload priority updated - ' + JSON.stringify({
@@ -190,7 +190,7 @@ export class SamplePreloader {
 
         // Trigger predictive preloading if enabled
         if (this.config.predictivePreloading) {
-            this.updatePreloadPriority(this.usageMetrics);
+            void this.updatePreloadPriority(this.usageMetrics);
         }
     }
 
@@ -270,7 +270,7 @@ export class SamplePreloader {
     cancelPreload(): void {
         this.isPreloading = false;
         this.currentGenre = null;
-        this.clearQueue();
+        void this.clearQueue();
         this.logger.info('preloader', 'Preloading cancelled');
     }
 
@@ -334,14 +334,14 @@ export class SamplePreloader {
 
         // Most used genre
         if (this.usageMetrics.mostUsedGenre) {
-            criticalGenres.push(this.usageMetrics.mostUsedGenre);
+            void criticalGenres.push(this.usageMetrics.mostUsedGenre);
         }
 
         // Recently used genres (last 3)
         const recentUnique = [...new Set(this.usageMetrics.recentGenres.slice(0, 3))];
         for (const genre of recentUnique) {
             if (!criticalGenres.includes(genre)) {
-                criticalGenres.push(genre);
+                void criticalGenres.push(genre);
             }
         }
 
@@ -357,7 +357,7 @@ export class SamplePreloader {
         // Strategy 1: Recent trend continuation
         if (this.usageMetrics.recentGenres.length >= 2) {
             const lastGenre = this.usageMetrics.recentGenres[0];
-            predictions.push(lastGenre);
+            void predictions.push(lastGenre);
         }
 
         // Strategy 2: Frequently used genres
@@ -368,7 +368,7 @@ export class SamplePreloader {
 
         for (const genre of sortedByCount) {
             if (!predictions.includes(genre)) {
-                predictions.push(genre);
+                void predictions.push(genre);
             }
         }
 
@@ -377,7 +377,7 @@ export class SamplePreloader {
         if (recentPattern) {
             for (const genre of recentPattern) {
                 if (!predictions.includes(genre)) {
-                    predictions.push(genre);
+                    void predictions.push(genre);
                 }
             }
         }
@@ -509,7 +509,7 @@ export class SamplePreloader {
             clearInterval(this.idleTimer);
             this.idleTimer = null;
         }
-        this.cancelPreload();
+        void this.cancelPreload();
         this.logger.info('preloader', 'SamplePreloader disposed');
     }
 }

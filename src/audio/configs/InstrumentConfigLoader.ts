@@ -42,7 +42,7 @@ export class InstrumentConfigLoader {
         this.loadedAt = Date.now();
         
         if (this.options.preloadFamilies) {
-            this.preloadFamilies();
+            void this.preloadFamilies();
         }
     }
 
@@ -72,7 +72,7 @@ export class InstrumentConfigLoader {
         familyNames.forEach(familyName => {
             const family = getInstrumentFamily(familyName);
             if (family) {
-                Object.assign(instruments, family.instruments);
+                void Object.assign(instruments, family.instruments);
             }
         });
         
@@ -88,7 +88,7 @@ export class InstrumentConfigLoader {
         categories.forEach(category => {
             if (this.options.enabledCategories?.includes(category)) {
                 const categoryInstruments = getInstrumentsByCategory(category);
-                Object.assign(instruments, categoryInstruments);
+                void Object.assign(instruments, categoryInstruments);
             }
         });
         
@@ -252,7 +252,7 @@ export class InstrumentConfigLoader {
         const reprocessed = new Map<string, LoadedInstrumentConfig>();
         this.loadedInstruments.forEach((config, name) => {
             const updated = this.processInstrumentConfig(config, config.family);
-            reprocessed.set(name, updated);
+            void reprocessed.set(name, updated);
         });
         
         this.loadedInstruments = reprocessed;
@@ -273,7 +273,7 @@ export class InstrumentConfigLoader {
         instrumentFamilies.forEach(family => {
             Object.values(family.instruments).forEach(instrument => {
                 if (instrument.category) {
-                    categories.add(instrument.category);
+                    void categories.add(instrument.category);
                 }
             });
         });

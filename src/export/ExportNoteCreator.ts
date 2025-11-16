@@ -88,7 +88,7 @@ export class ExportNoteCreator {
             return finalPath;
 
         } catch (error) {
-            logger.error('export-note', 'Failed to create export note:', error);
+            void logger.error('export-note', 'Failed to create export note:', error);
             throw error;
         }
     }

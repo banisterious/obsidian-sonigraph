@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.9] - 2025-11-15
+
+### Fixed
+- **Code Quality**: Major batch fixes for Obsidian plugin store compliance (PR review round 4)
+  - Fixed 2,745 unhandled Promise calls (added void operator with intelligent edge detection)
+  - Replaced 71 D3.js any types with unknown (Selection generics and callbacks)
+  - Replaced 22 logging any types with unknown (logger interfaces and implementations)
+  - Fixed 3 deprecated Transport API calls (replaced with getTransport())
+  - Removed 93 eslint-disable-next-line comments (47% reduction from 197 to 104)
+  - Created reusable fix scripts with sophisticated pattern matching
+
+### Changed
+- **Type Safety**: Improved type safety across codebase
+  - D3.js Selection types now use unknown instead of any
+  - Logger interfaces accept unknown for flexible data
+  - All existing type assertions remain for runtime type narrowing
+
 ## [0.17.8] - 2025-11-15
 
 ### Fixed

@@ -138,7 +138,7 @@ export class InstrumentDistributor {
         });
 
         // Build file position matrix
-        this.buildFilePositions(files, analysisResults);
+        void this.buildFilePositions(files, analysisResults);
 
         // Analyze current clustering
         const currentClusters = this.analyzeClustering(analysisResults);
@@ -275,7 +275,7 @@ export class InstrumentDistributor {
                 isProblematic: false
             };
 
-            processed.add(i);
+            void processed.add(i);
 
             // Find nearby files
             for (let j = i + 1; j < positions.length; j++) {
@@ -284,7 +284,7 @@ export class InstrumentDistributor {
                 const distance = this.calculateDistance(positions[i], positions[j]);
                 if (distance < threshold) {
                     cluster.files.push(files[j]);
-                    processed.add(j);
+                    void processed.add(j);
                     
                     // Update centroid
                     cluster.centroid.temporal = (cluster.centroid.temporal + positions[j].temporal) / 2;
@@ -317,7 +317,7 @@ export class InstrumentDistributor {
                 cluster.avgDistance = pairs > 0 ? totalDistance / pairs : 0;
             }
 
-            clusters.push(cluster);
+            void clusters.push(cluster);
         }
 
         return clusters.filter(c => c.files.length > 1); // Only return actual clusters
@@ -465,17 +465,17 @@ export class InstrumentDistributor {
         const alternatives: string[] = [];
 
         // Add age-based fallbacks
-        alternatives.push(...analysis.fileMetadata.age.fallbacks);
+        void alternatives.push(...analysis.fileMetadata.age.fallbacks);
 
         // Add extension-based instruments
-        alternatives.push(...analysis.fileMetadata.extension.instruments);
+        void alternatives.push(...analysis.fileMetadata.extension.instruments);
 
         // Add less-used instruments from vault analysis
         const lessUsedInstruments = Array.from(vaultAnalysis.instrumentDistribution.values())
             .filter(dist => dist.percentage < 15)
             .map(dist => dist.instrument);
 
-        alternatives.push(...lessUsedInstruments);
+        void alternatives.push(...lessUsedInstruments);
 
         // Remove duplicates and current instrument
         return Array.from(new Set(alternatives))
@@ -589,7 +589,7 @@ export class InstrumentDistributor {
     clearState(): void {
         this.filePositions.clear();
         this.instrumentClusters.clear();
-        logger.debug('state-cleared', 'InstrumentDistributor state cleared');
+        void logger.debug('state-cleared', 'InstrumentDistributor state cleared');
     }
 
     /**

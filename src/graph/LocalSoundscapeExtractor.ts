@@ -106,7 +106,7 @@ export class LocalSoundscapeExtractor {
 	 */
 	setFilters(filters: LocalSoundscapeFilters): void {
 		this.filters = filters;
-		logger.info('filters-set', 'Filters configured', filters);
+		void logger.info('filters-set', 'Filters configured', filters);
 	}
 
 	/**
@@ -137,8 +137,8 @@ export class LocalSoundscapeExtractor {
 
 		// Create center node
 		const centerNode = await this.createNode(centerFile, 0, 'center');
-		allNodes.push(centerNode);
-		visitedNodes.add(centerFile.path);
+		void allNodes.push(centerNode);
+		void visitedNodes.add(centerFile.path);
 		nodesByDepth.set(0, [centerNode]);
 
 		// BFS traversal
@@ -155,7 +155,7 @@ export class LocalSoundscapeExtractor {
 			for (const link of centerCache.links) {
 				const linkedFile = this.app.metadataCache.getFirstLinkpathDest(link.link, centerFile.path);
 				if (linkedFile) {
-					centerOutgoingPaths.add(linkedFile.path);
+					void centerOutgoingPaths.add(linkedFile.path);
 				}
 			}
 		}
@@ -164,7 +164,7 @@ export class LocalSoundscapeExtractor {
 		const backlinks = this.app.metadataCache.getBacklinksForFile(centerFile);
 		if (backlinks) {
 			for (const backlinkPath of backlinks.keys()) {
-				centerIncomingPaths.add(backlinkPath);
+				void centerIncomingPaths.add(backlinkPath);
 			}
 		}
 
@@ -212,12 +212,12 @@ export class LocalSoundscapeExtractor {
 						continue;
 					}
 
-					visitedNodes.add(linkedFile.path);
-					nodeDirections.set(linkedFile.path, direction);
+					void visitedNodes.add(linkedFile.path);
+					void nodeDirections.set(linkedFile.path, direction);
 
 					// Create node
 					const node = await this.createNode(linkedFile, depth + 1, direction);
-					allNodes.push(node);
+					void allNodes.push(node);
 
 					if (!nodesByDepth.has(depth + 1)) {
 						nodesByDepth.set(depth + 1, []);
@@ -280,12 +280,12 @@ export class LocalSoundscapeExtractor {
 							continue;
 						}
 
-						visitedNodes.add(backlinkPath);
-						nodeDirections.set(backlinkPath, direction);
+						void visitedNodes.add(backlinkPath);
+						void nodeDirections.set(backlinkPath, direction);
 
 						// Create node
 						const node = await this.createNode(backlinkFile, depth + 1, direction);
-						allNodes.push(node);
+						void allNodes.push(node);
 
 						if (!nodesByDepth.has(depth + 1)) {
 							nodesByDepth.set(depth + 1, []);
@@ -460,7 +460,7 @@ export class LocalSoundscapeExtractor {
 			if (cache?.tags) {
 				cache.tags.forEach(tagCache => {
 					const tag = tagCache.tag.startsWith('#') ? tagCache.tag.slice(1) : tagCache.tag;
-					allTags.add(tag);
+					void allTags.add(tag);
 				});
 			}
 			if (cache?.frontmatter?.tags) {
@@ -468,7 +468,7 @@ export class LocalSoundscapeExtractor {
 				if (Array.isArray(fmTags)) {
 					fmTags.forEach(tag => allTags.add(tag));
 				} else if (typeof fmTags === 'string') {
-					allTags.add(fmTags);
+					void allTags.add(fmTags);
 				}
 			}
 			if (allTags.size > 0) {
@@ -562,7 +562,7 @@ export class LocalSoundscapeExtractor {
 		if (cache?.tags) {
 			cache.tags.forEach(tagCache => {
 				const tag = tagCache.tag.startsWith('#') ? tagCache.tag.slice(1) : tagCache.tag;
-				fileTags.add(tag);
+				void fileTags.add(tag);
 			});
 		}
 		if (cache?.frontmatter?.tags) {
@@ -570,7 +570,7 @@ export class LocalSoundscapeExtractor {
 			if (Array.isArray(fmTags)) {
 				fmTags.forEach(tag => fileTags.add(tag));
 			} else if (typeof fmTags === 'string') {
-				fileTags.add(fmTags);
+				void fileTags.add(fmTags);
 			}
 		}
 
@@ -782,7 +782,7 @@ export class LocalSoundscapeExtractor {
 			// Start new cluster
 			const clusterId = nextClusterId++;
 			const queue = [node.id];
-			nodeClusters.set(node.id, clusterId);
+			void nodeClusters.set(node.id, clusterId);
 
 			// BFS to find tightly connected nodes
 			while (queue.length > 0 && nodeClusters.size < nodes.length) {
@@ -801,8 +801,8 @@ export class LocalSoundscapeExtractor {
 
 						// If more than 30% of connections are to this cluster, add to cluster
 						if (connectionsToCluster / neighborConnections.size > 0.3) {
-							nodeClusters.set(neighbor, clusterId);
-							queue.push(neighbor);
+							void nodeClusters.set(neighbor, clusterId);
+							void queue.push(neighbor);
 						}
 					}
 				});

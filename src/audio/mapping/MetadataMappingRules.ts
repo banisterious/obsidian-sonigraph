@@ -86,10 +86,10 @@ export class MetadataMappingRules {
         this.cacheTimestamps = new Map();
         this.frontmatterSchema = {};
         
-        this.initializeDefaultRules();
-        this.initializeFrontmatterSchema();
+        void this.initializeDefaultRules();
+        void this.initializeFrontmatterSchema();
         
-        logger.info('mapping-rules-init', 'MetadataMappingRules initialized');
+        void logger.info('mapping-rules-init', 'MetadataMappingRules initialized');
     }
 
     /**
@@ -149,7 +149,7 @@ export class MetadataMappingRules {
     removeRule(id: string): boolean {
         const removed = this.rules.delete(id);
         if (removed) {
-            this.clearEvaluationCache();
+            void this.clearEvaluationCache();
             logger.info('rule-removed', `Removed mapping rule: ${id}`);
         }
         return removed;
@@ -187,7 +187,7 @@ export class MetadataMappingRules {
 
         for (const rule of enabledRules) {
             const result = this.evaluateRule(rule, filePath, metadata, fileStats);
-            results.push(result);
+            void results.push(result);
         }
 
         const evaluationTime = performance.now() - startTime;
@@ -613,7 +613,7 @@ export class MetadataMappingRules {
     private clearEvaluationCache(): void {
         this.evaluationCache.clear();
         this.cacheTimestamps.clear();
-        logger.debug('cache-clear', 'Rule evaluation cache cleared');
+        void logger.debug('cache-clear', 'Rule evaluation cache cleared');
     }
 
     /**
@@ -704,7 +704,7 @@ export class MetadataMappingRules {
         }
 
         if (imported > 0) {
-            this.clearEvaluationCache();
+            void this.clearEvaluationCache();
             logger.info('rules-imported', `Imported ${imported} rules`, { errors: errors.length });
         }
 

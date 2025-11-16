@@ -26,22 +26,16 @@ export interface RendererConfig {
 
 export class LocalSoundscapeRenderer {
 	private container: HTMLElement;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-	private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-	private g: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
+	private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
+	private g: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>;
 	private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
 	private config: RendererConfig;
 	private layoutAlgorithm: RadialLayoutAlgorithm;
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-	private clusterGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-	private linkGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-	private nodeGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-	private labelGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
+	private clusterGroup: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>;
+	private linkGroup: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>;
+	private nodeGroup: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>;
+	private labelGroup: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>;
 
 	// Tooltip
 	private tooltip: HTMLElement | null = null;
@@ -79,15 +73,15 @@ export class LocalSoundscapeRenderer {
 		this.layoutAlgorithm = new RadialLayoutAlgorithm(layoutConfig);
 
 		// Initialize SVG
-		this.initializeSVG();
+		void this.initializeSVG();
 
 		// Create tooltip
-		this.createTooltip();
+		void this.createTooltip();
 
 		// Create context menu
-		this.createContextMenu();
+		void this.createContextMenu();
 
-		logger.info('renderer-init', 'LocalSoundscapeRenderer initialized', this.config);
+		void logger.info('renderer-init', 'LocalSoundscapeRenderer initialized', this.config);
 	}
 
 	/**
@@ -125,10 +119,10 @@ export class LocalSoundscapeRenderer {
 			this.svg.call(this.zoom);
 
 			// Set initial zoom to fit content
-			this.resetZoom();
+			void this.resetZoom();
 		}
 
-		logger.debug('svg-initialized', 'SVG structure created');
+		void logger.debug('svg-initialized', 'SVG structure created');
 	}
 
 	/**
@@ -149,28 +143,28 @@ export class LocalSoundscapeRenderer {
 		if (needsLayout) {
 			this.layoutAlgorithm.applyLayout(data);
 		} else {
-			logger.debug('skip-layout', 'Nodes already have positions, skipping layout');
+			void logger.debug('skip-layout', 'Nodes already have positions, skipping layout');
 		}
 
 		// Render clusters if available (before links and nodes for proper layering)
 		if (data.clusters && data.clusters.length > 0) {
-			this.renderClusters(data.clusters, data.allNodes);
+			void this.renderClusters(data.clusters, data.allNodes);
 		}
 
 		// Render links
-		this.renderLinks(data.links);
+		void this.renderLinks(data.links);
 
 		// Render nodes
-		this.renderNodes(data.allNodes);
+		void this.renderNodes(data.allNodes);
 
 		// Render labels if enabled
 		if (this.config.showLabels) {
-			this.renderLabels(data.allNodes);
+			void this.renderLabels(data.allNodes);
 		}
 
 		// Fit to content
 		if (this.config.enableZoom) {
-			this.fitToContent();
+			void this.fitToContent();
 		}
 
 		const renderTime = performance.now() - startTime;
@@ -532,12 +526,12 @@ export class LocalSoundscapeRenderer {
 	 * Handle node click (left-click)
 	 */
 	private handleNodeClick(event: MouseEvent, node: LocalSoundscapeNode): void {
-		event.stopPropagation();
+		void event.stopPropagation();
 		logger.info('node-clicked', 'Node clicked', { node: node.basename });
 
 		// Left-click opens the note
 		if (this.onNodeOpen) {
-			this.onNodeOpen(node);
+			void this.onNodeOpen(node);
 		}
 	}
 
@@ -545,12 +539,12 @@ export class LocalSoundscapeRenderer {
 	 * Handle node right-click
 	 */
 	private handleNodeRightClick(event: MouseEvent, node: LocalSoundscapeNode): void {
-		event.preventDefault();
-		event.stopPropagation();
+		void event.preventDefault();
+		void event.stopPropagation();
 		logger.info('node-right-clicked', 'Node right-clicked', { node: node.basename });
 
 		// Show context menu
-		this.showContextMenu(event, node);
+		void this.showContextMenu(event, node);
 	}
 
 	/**
@@ -566,7 +560,7 @@ export class LocalSoundscapeRenderer {
 			.attr('stroke-width', 4);
 
 		// Show tooltip
-		this.showTooltip(event, node);
+		void this.showTooltip(event, node);
 
 		logger.debug('node-hover', 'Node hovered', { node: node.basename });
 	}
@@ -584,7 +578,7 @@ export class LocalSoundscapeRenderer {
 			.attr('stroke-width', (d) => (d.depth === 0 ? 3 : 2));
 
 		// Hide tooltip
-		this.hideTooltip();
+		void this.hideTooltip();
 	}
 
 	/**
@@ -686,7 +680,7 @@ export class LocalSoundscapeRenderer {
 
 		// Close context menu when clicking elsewhere
 		document.addEventListener('click', () => {
-			this.hideContextMenu();
+			void this.hideContextMenu();
 		});
 	}
 
@@ -705,11 +699,11 @@ export class LocalSoundscapeRenderer {
 		const openItem = menu.createDiv({ cls: 'context-menu-item' });
 		openItem.textContent = 'Open note';
 		openItem.addEventListener('click', (e) => {
-			e.stopPropagation();
+			void e.stopPropagation();
 			if (this.onNodeOpen) {
-				this.onNodeOpen(node);
+				void this.onNodeOpen(node);
 			}
-			this.hideContextMenu();
+			void this.hideContextMenu();
 		});
 
 		// Re-center soundscape option (only if not already center)
@@ -717,11 +711,11 @@ export class LocalSoundscapeRenderer {
 			const recenterItem = menu.createDiv({ cls: 'context-menu-item' });
 			recenterItem.textContent = 'Re-center soundscape here';
 			recenterItem.addEventListener('click', (e) => {
-				e.stopPropagation();
+				void e.stopPropagation();
 				if (this.onNodeRecenter) {
-					this.onNodeRecenter(node);
+					void this.onNodeRecenter(node);
 				}
-				this.hideContextMenu();
+				void this.hideContextMenu();
 			});
 		}
 
@@ -786,7 +780,7 @@ export class LocalSoundscapeRenderer {
 			.ease(d3.easeCubicOut)
 			.attr('r', (d) => this.getNodeRadius(d));
 
-		logger.debug('clear-highlights', 'Cleared all playing node highlights');
+		void logger.debug('clear-highlights', 'Cleared all playing node highlights');
 	}
 
 	/**
@@ -806,11 +800,11 @@ export class LocalSoundscapeRenderer {
 			...config
 		};
 
-		logger.debug('config-updated', 'Renderer config updated', this.config);
+		void logger.debug('config-updated', 'Renderer config updated', this.config);
 
 		// Re-render if we have data
 		if (this.data) {
-			this.render(this.data);
+			void this.render(this.data);
 		}
 	}
 
@@ -820,6 +814,6 @@ export class LocalSoundscapeRenderer {
 	dispose(): void {
 		d3.select(this.container).selectAll('*').remove();
 		this.data = null;
-		logger.debug('renderer-disposed', 'Renderer disposed');
+		void logger.debug('renderer-disposed', 'Renderer disposed');
 	}
 }

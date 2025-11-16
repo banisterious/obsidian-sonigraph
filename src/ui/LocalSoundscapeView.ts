@@ -137,12 +137,12 @@ export class LocalSoundscapeView extends ItemView {
 				this.plugin.audioEngine, // Pass audio engine for enabled instruments
 				this.plugin.settings // Pass full settings for context-aware modifiers
 			);
-			logger.info('view-init', 'DepthBasedMapper initialized with Control Center settings and enabled instruments');
+			void logger.info('view-init', 'DepthBasedMapper initialized with Control Center settings and enabled instruments');
 		} else {
-			logger.warn('view-init', 'MusicalMapper not available, audio will not work');
+			void logger.warn('view-init', 'MusicalMapper not available, audio will not work');
 		}
 
-		logger.info('view-init', 'LocalSoundscapeView initialized');
+		void logger.info('view-init', 'LocalSoundscapeView initialized');
 	}
 
 	getViewType(): string {
@@ -161,11 +161,11 @@ export class LocalSoundscapeView extends ItemView {
 	}
 
 	async onOpen(): Promise<void> {
-		logger.info('view-open', 'Opening Local Soundscape view');
+		void logger.info('view-open', 'Opening Local Soundscape view');
 
 		const container = this.containerEl;
-		container.empty();
-		container.addClass('local-soundscape-view');
+		void container.empty();
+		void container.addClass('local-soundscape-view');
 
 		// Ensure container has height (ItemView sometimes doesn't set this automatically)
 		if (!container.style.height) {
@@ -173,19 +173,19 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		// Create main layout structure
-		this.createLayout();
+		void this.createLayout();
 
 		// Register metadata change listener for staleness detection
 		this.registerEvent(
 			this.app.metadataCache.on('changed', () => {
-				this.markAsStale();
+				void this.markAsStale();
 			})
 		);
 
 		// Register active file change listener for auto-play feature
 		this.registerEvent(
 			this.app.workspace.on('active-leaf-change', () => {
-				this.handleActiveFileChange();
+				void this.handleActiveFileChange();
 			})
 		);
 
@@ -198,12 +198,12 @@ export class LocalSoundscapeView extends ItemView {
 		if (activeFile) {
 			await this.setCenterFile(activeFile);
 		} else {
-			this.showPlaceholder();
+			void this.showPlaceholder();
 		}
 	}
 
 	async onClose(): Promise<void> {
-		logger.info('view-close', 'Closing Local Soundscape view');
+		void logger.info('view-close', 'Closing Local Soundscape view');
 
 		// Stop audio playback
 		if (this.isPlaying && this.plugin.audioEngine) {
@@ -211,12 +211,12 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		// Stop and cleanup continuous layers
-		this.stopContinuousLayers();
+		void this.stopContinuousLayers();
 		if (this.continuousLayerManager) {
 			try {
 				await this.continuousLayerManager.dispose();
 			} catch (error) {
-				logger.warn('view-close', 'Error disposing layer manager', error as Error);
+				void logger.warn('view-close', 'Error disposing layer manager', error as Error);
 			}
 			this.continuousLayerManager = null;
 		}
@@ -241,13 +241,13 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Header section (top bar with controls - only depth and filter now)
 		this.headerContainer = mainContainer.createDiv({ cls: 'local-soundscape-header' });
-		this.createHeader();
+		void this.createHeader();
 
 		// Single sidebar container (no left/right split)
 		this.sidebarContainer = mainContainer.createDiv({ cls: 'local-soundscape-sidebar-fullwidth' });
-		this.createSidebar();
+		void this.createSidebar();
 
-		logger.debug('layout-created', 'Layout structure created');
+		void logger.debug('layout-created', 'Layout structure created');
 	}
 
 	/**
@@ -296,7 +296,7 @@ export class LocalSoundscapeView extends ItemView {
 			const target = e.target as HTMLInputElement;
 			const newDepth = parseInt(target.value);
 			depthValue.textContent = newDepth.toString();
-			this.setDepth(newDepth);
+			void this.setDepth(newDepth);
 		});
 
 		// Filter button
@@ -304,9 +304,9 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'header-button filter-button',
 			attr: { 'aria-label': 'Filter graph' }
 		});
-		this.createFilterIcon(filterButton);
+		void this.createFilterIcon(filterButton);
 		filterButton.addEventListener('click', () => {
-			this.openFilterModal();
+			void this.openFilterModal();
 		});
 
 		// Control Center button
@@ -315,12 +315,12 @@ export class LocalSoundscapeView extends ItemView {
 			attr: { 'aria-label': 'Open Control Center' }
 		});
 		const controlCenterIcon = createLucideIcon('keyboard-music', 16);
-		controlCenterButton.appendChild(controlCenterIcon);
+		void controlCenterButton.appendChild(controlCenterIcon);
 		controlCenterButton.addEventListener('click', () => {
-			this.openControlCenter();
+			void this.openControlCenter();
 		});
 
-		logger.debug('header-created', 'Header created with depth and filter controls');
+		void logger.debug('header-created', 'Header created with depth and filter controls');
 	}
 
 	/**
@@ -377,7 +377,7 @@ export class LocalSoundscapeView extends ItemView {
 		clusteringSelect.addEventListener('change', (e) => {
 			const target = e.target as HTMLSelectElement;
 			this.clusteringMethod = target.value as typeof this.clusteringMethod;
-			this.onClusteringMethodChanged();
+			void this.onClusteringMethodChanged();
 		});
 
 		// Layout dropdown
@@ -403,7 +403,7 @@ export class LocalSoundscapeView extends ItemView {
 		layoutSelect.addEventListener('change', (e) => {
 			const target = e.target as HTMLSelectElement;
 			this.layoutType = target.value as typeof this.layoutType;
-			this.onLayoutTypeChanged();
+			void this.onLayoutTypeChanged();
 		});
 
 		// Graph action buttons
@@ -414,9 +414,9 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'local-soundscape-graph-button refresh-button',
 			attr: { 'aria-label': 'Refresh graph' }
 		});
-		this.createRefreshIcon(refreshButton);
+		void this.createRefreshIcon(refreshButton);
 		refreshButton.addEventListener('click', () => {
-			this.refresh();
+			void this.refresh();
 		});
 
 		// Export button
@@ -424,9 +424,9 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'local-soundscape-graph-button export-button',
 			attr: { 'aria-label': 'Export graph as image' }
 		});
-		this.createExportIcon(exportButton);
+		void this.createExportIcon(exportButton);
 		exportButton.addEventListener('click', () => {
-			this.exportGraph();
+			void this.exportGraph();
 		});
 
 		// Staleness indicator
@@ -440,18 +440,18 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Toggle collapse/expand
 		graphHeader.addEventListener('click', (e) => {
-			e.stopPropagation();
+			void e.stopPropagation();
 			const isCollapsed = graphContent.classList.contains('collapsed');
 			logger.debug('graph-toggle', `Toggle clicked. Currently collapsed: ${isCollapsed}`);
 
 			if (isCollapsed) {
 				graphContent.classList.remove('collapsed');
 				toggleButton.textContent = '▲'; // Up arrow (expanded state)
-				logger.debug('graph-toggle', 'Graph section expanded');
+				void logger.debug('graph-toggle', 'Graph section expanded');
 			} else {
 				graphContent.classList.add('collapsed');
 				toggleButton.textContent = '▼'; // Down arrow (collapsed state)
-				logger.debug('graph-toggle', 'Graph section collapsed');
+				void logger.debug('graph-toggle', 'Graph section collapsed');
 			}
 		});
 
@@ -502,12 +502,12 @@ export class LocalSoundscapeView extends ItemView {
 		this.playbackContentContainer = playbackContent as HTMLElement;
 
 		// Create playback controls
-		this.createPlaybackControls(playbackContent as HTMLElement);
+		void this.createPlaybackControls(playbackContent as HTMLElement);
 
 		// Create settings panel
-		this.createSettingsPanel(settingsContent as HTMLElement);
+		void this.createSettingsPanel(settingsContent as HTMLElement);
 
-		logger.debug('sidebar-created', 'Sidebar created with tabs');
+		void logger.debug('sidebar-created', 'Sidebar created with tabs');
 	}
 
 	/**
@@ -609,7 +609,7 @@ export class LocalSoundscapeView extends ItemView {
 			this.plugin.openControlCenter();
 		});
 
-		logger.debug('settings-panel-created', 'Settings panel populated');
+		void logger.debug('settings-panel-created', 'Settings panel populated');
 	}
 
 	/**
@@ -623,7 +623,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Playback buttons section
 		const buttonSection = container.createDiv({ cls: 'playback-buttons' });
-		logger.debug('playback-buttons-created', 'Button section created');
+		void logger.debug('playback-buttons-created', 'Button section created');
 
 		// Play/Pause button
 		this.playButton = buttonSection.createEl('button', {
@@ -661,7 +661,7 @@ export class LocalSoundscapeView extends ItemView {
 			attr: { 'aria-label': 'Play the currently active note' }
 		});
 		const playActiveNoteIcon = createLucideIcon('music', 20);
-		playActiveNoteButton.appendChild(playActiveNoteIcon);
+		void playActiveNoteButton.appendChild(playActiveNoteIcon);
 		playActiveNoteButton.appendChild(createSpan({ text: 'Play active note' }));
 		playActiveNoteButton.addEventListener('click', () => void this.playActiveNote());
 
@@ -698,8 +698,8 @@ export class LocalSoundscapeView extends ItemView {
 		const voiceCountContainer = statsSection.createDiv({ cls: 'stat-item' });
 		const voiceLabel = voiceCountContainer.createSpan({ cls: 'stat-label' });
 		const voiceIcon = createLucideIcon('music', 14);
-		voiceIcon.addClass('stat-icon');
-		voiceLabel.appendChild(voiceIcon);
+		void voiceIcon.addClass('stat-icon');
+		void voiceLabel.appendChild(voiceIcon);
 		voiceLabel.appendChild(createSpan({ text: 'Active Voices' }));
 		this.voiceCountDisplay = voiceCountContainer.createSpan({
 			text: '0',
@@ -709,8 +709,8 @@ export class LocalSoundscapeView extends ItemView {
 		const volumeContainer = statsSection.createDiv({ cls: 'stat-item' });
 		const volumeLabel = volumeContainer.createSpan({ cls: 'stat-label' });
 		const volumeIcon = createLucideIcon('volume-2', 14);
-		volumeIcon.addClass('stat-icon');
-		volumeLabel.appendChild(volumeIcon);
+		void volumeIcon.addClass('stat-icon');
+		void volumeLabel.appendChild(volumeIcon);
 		volumeLabel.appendChild(createSpan({ text: 'Volume' }));
 		this.volumeDisplay = volumeContainer.createSpan({
 			text: '0%',
@@ -747,7 +747,7 @@ export class LocalSoundscapeView extends ItemView {
 		modeSelect.addEventListener('change', (e) => {
 			const target = e.target as HTMLSelectElement;
 			this.visualizationMode = target.value as VisualizationMode;
-			this.updateVisualizationMode();
+			void this.updateVisualizationMode();
 		});
 
 		// Visualization container
@@ -756,9 +756,9 @@ export class LocalSoundscapeView extends ItemView {
 		});
 
 		// Initialize visualization manager
-		this.initializeVisualization();
+		void this.initializeVisualization();
 
-		logger.debug('playback-controls-created', 'Playback controls initialized with visualization');
+		void logger.debug('playback-controls-created', 'Playback controls initialized with visualization');
 	}
 
 	/**
@@ -947,7 +947,7 @@ export class LocalSoundscapeView extends ItemView {
 			densityRow.style.display = chordVoicingCheckbox.checked ? 'flex' : 'none';
 		});
 
-		logger.debug('musical-controls-created', 'Musical scale controls initialized');
+		void logger.debug('musical-controls-created', 'Musical scale controls initialized');
 	}
 
 	/**
@@ -955,7 +955,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async toggleScaleQuantization(enabled: boolean): Promise<void> {
 		if (!this.depthMapper) {
-			logger.warn('toggle-quantization', 'No depth mapper available');
+			void logger.warn('toggle-quantization', 'No depth mapper available');
 			return;
 		}
 
@@ -984,7 +984,7 @@ export class LocalSoundscapeView extends ItemView {
 		scaleType?: 'major' | 'minor' | 'harmonic-minor' | 'melodic-minor' | 'pentatonic-major' | 'pentatonic-minor' | 'blues' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian'
 	): Promise<void> {
 		if (!this.depthMapper) {
-			logger.warn('update-scale', 'No depth mapper available');
+			void logger.warn('update-scale', 'No depth mapper available');
 			return;
 		}
 
@@ -1015,7 +1015,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async updateQuantizationStrength(strength: number): Promise<void> {
 		if (!this.depthMapper) {
-			logger.warn('update-quantization-strength', 'No depth mapper available');
+			void logger.warn('update-quantization-strength', 'No depth mapper available');
 			return;
 		}
 
@@ -1040,7 +1040,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async toggleAdaptivePitch(enabled: boolean): Promise<void> {
 		if (!this.depthMapper) {
-			logger.warn('toggle-adaptive-pitch', 'No depth mapper available');
+			void logger.warn('toggle-adaptive-pitch', 'No depth mapper available');
 			return;
 		}
 
@@ -1066,7 +1066,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async toggleChordVoicing(enabled: boolean): Promise<void> {
 		if (!this.depthMapper) {
-			logger.warn('toggle-chord-voicing', 'No depth mapper available');
+			void logger.warn('toggle-chord-voicing', 'No depth mapper available');
 			return;
 		}
 
@@ -1092,7 +1092,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async updateVoicingDensity(density: number): Promise<void> {
 		if (!this.depthMapper) {
-			logger.warn('update-voicing-density', 'No depth mapper available');
+			void logger.warn('update-voicing-density', 'No depth mapper available');
 			return;
 		}
 
@@ -1117,7 +1117,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private initializeVisualization(): void {
 		if (!this.visualizationContainer) {
-			logger.warn('init-visualization', 'No visualization container available');
+			void logger.warn('init-visualization', 'No visualization container available');
 			return;
 		}
 
@@ -1143,12 +1143,12 @@ export class LocalSoundscapeView extends ItemView {
 
 				if (audioContext && masterVolume) {
 					this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
-					logger.info('init-visualization', 'Connected spectrum analyzer to audio');
+					void logger.info('init-visualization', 'Connected spectrum analyzer to audio');
 				}
 			}
 
 			// Setup audio engine integration
-			this.setupVisualizationAudioIntegration();
+			void this.setupVisualizationAudioIntegration();
 
 			// Start visualization render loop immediately (even when not playing, shows grid/empty state)
 			this.visualizationManager.start(0);
@@ -1157,13 +1157,13 @@ export class LocalSoundscapeView extends ItemView {
 			setTimeout(() => {
 				if (this.visualizationManager) {
 					this.visualizationManager.forceResize();
-					logger.debug('init-visualization', 'Forced visualization resize after initialization');
+					void logger.debug('init-visualization', 'Forced visualization resize after initialization');
 				}
 			}, 100);
 
-			logger.info('init-visualization', 'Visualization manager initialized and started');
+			void logger.info('init-visualization', 'Visualization manager initialized and started');
 		} catch (error) {
-			logger.error('init-visualization', 'Failed to initialize visualization', error);
+			void logger.error('init-visualization', 'Failed to initialize visualization', error);
 			new Notice('Failed to initialize visualization');
 		}
 	}
@@ -1173,7 +1173,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private updateVisualizationMode(): void {
 		if (!this.visualizationManager) {
-			logger.warn('update-visualization', 'No visualization manager available');
+			void logger.warn('update-visualization', 'No visualization manager available');
 			return;
 		}
 
@@ -1190,7 +1190,7 @@ export class LocalSoundscapeView extends ItemView {
 
 				if (audioContext && masterVolume) {
 					this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
-					logger.info('update-visualization', 'Connected spectrum analyzer for spectrum mode');
+					void logger.info('update-visualization', 'Connected spectrum analyzer for spectrum mode');
 				}
 			}
 
@@ -1201,7 +1201,7 @@ export class LocalSoundscapeView extends ItemView {
 				mode: this.visualizationMode
 			});
 		} catch (error) {
-			logger.error('update-visualization', 'Failed to update visualization mode', error);
+			void logger.error('update-visualization', 'Failed to update visualization mode', error);
 		}
 	}
 
@@ -1210,7 +1210,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private setupVisualizationAudioIntegration(): void {
 		if (!this.visualizationManager) {
-			logger.warn('setup-audio-integration', 'No visualization manager available');
+			void logger.warn('setup-audio-integration', 'No visualization manager available');
 			return;
 		}
 
@@ -1242,7 +1242,7 @@ export class LocalSoundscapeView extends ItemView {
 			}
 		});
 
-		logger.info('setup-audio-integration', 'Audio engine integration setup complete');
+		void logger.info('setup-audio-integration', 'Audio engine integration setup complete');
 	}
 
 	/**
@@ -1334,7 +1334,7 @@ export class LocalSoundscapeView extends ItemView {
 			await new Promise(resolve => setTimeout(resolve, delayMs));
 		}
 
-		logger.warn('leaf-timeout', 'Workspace leaf not ready after timeout');
+		void logger.warn('leaf-timeout', 'Workspace leaf not ready after timeout');
 		// Don't throw - allow view to try anyway
 	}
 
@@ -1419,7 +1419,7 @@ export class LocalSoundscapeView extends ItemView {
 		// Stop audio playback if currently playing
 		const wasPlaying = this.isPlaying;
 		if (this.isPlaying) {
-			logger.info('set-depth', 'Stopping playback for depth change');
+			void logger.info('set-depth', 'Stopping playback for depth change');
 			await this.stopPlayback();
 		}
 
@@ -1450,7 +1450,7 @@ export class LocalSoundscapeView extends ItemView {
 	 * Refresh the graph
 	 */
 	private async refresh(): Promise<void> {
-		logger.info('refresh', 'Refreshing graph');
+		void logger.info('refresh', 'Refreshing graph');
 
 		if (this.centerFile) {
 			// Stop audio if playing
@@ -1466,7 +1466,7 @@ export class LocalSoundscapeView extends ItemView {
 				await this.extractAndRenderGraph();
 
 				// Mark as up-to-date
-				this.markAsUpToDate();
+				void this.markAsUpToDate();
 
 				new Notice('Graph refreshed');
 			} catch (error) {
@@ -1535,7 +1535,7 @@ export class LocalSoundscapeView extends ItemView {
 			null,  // No temporal animator for Local Soundscape (static graph)
 			this.currentNoteCentricMapping  // Pass note-centric mapping if available
 		);
-		modal.open();
+		void modal.open();
 	}
 
 	/**
@@ -1544,7 +1544,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async rerollVariation(): Promise<void> {
 		if (!this.centerFile || !this.graphData) {
-			logger.warn('reroll', 'Cannot re-roll - no center file or graph data');
+			void logger.warn('reroll', 'Cannot re-roll - no center file or graph data');
 			return;
 		}
 
@@ -1570,15 +1570,15 @@ export class LocalSoundscapeView extends ItemView {
 
 		// If we're not at the end of history, truncate everything after current index
 		if (this.currentVariationIndex < history.length - 1) {
-			history.splice(this.currentVariationIndex + 1);
+			void history.splice(this.currentVariationIndex + 1);
 		}
 
 		// Add new seed to history
-		history.push(newSeed);
+		void history.push(newSeed);
 
 		// Limit history size
 		if (history.length > this.maxVariationHistory) {
-			history.shift();
+			void history.shift();
 			// Adjust index if we removed the first item
 			if (this.currentVariationIndex > 0) {
 				this.currentVariationIndex--;
@@ -1603,7 +1603,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async previousVariation(): Promise<void> {
 		if (!this.centerFile || !this.graphData) {
-			logger.warn('prev-variation', 'Cannot go to previous - no center file or graph data');
+			void logger.warn('prev-variation', 'Cannot go to previous - no center file or graph data');
 			return;
 		}
 
@@ -1611,7 +1611,7 @@ export class LocalSoundscapeView extends ItemView {
 		const history = this.variationHistory.get(centerPath);
 
 		if (!history || this.currentVariationIndex <= 0) {
-			logger.debug('prev-variation', 'Already at first variation');
+			void logger.debug('prev-variation', 'Already at first variation');
 			return;
 		}
 
@@ -1634,14 +1634,14 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async remapAndPlay(seed?: number): Promise<void> {
 		if (!this.graphData || !this.depthMapper || !this.plugin.audioEngine) {
-			logger.warn('remap-play', 'Cannot remap - missing required components');
+			void logger.warn('remap-play', 'Cannot remap - missing required components');
 			return;
 		}
 
 		// Stop current playback if playing
 		const wasPlaying = this.isPlaying;
 		if (wasPlaying) {
-			this.stopPlayback();
+			void this.stopPlayback();
 		}
 
 		try {
@@ -1654,7 +1654,7 @@ export class LocalSoundscapeView extends ItemView {
 			});
 
 			// Update variation display
-			this.updateVariationDisplay();
+			void this.updateVariationDisplay();
 
 			// If was playing, restart playback
 			if (wasPlaying) {
@@ -1663,7 +1663,7 @@ export class LocalSoundscapeView extends ItemView {
 
 			new Notice(`Variation ${this.currentVariationIndex + 1}`);
 		} catch (error) {
-			logger.error('remap-error', 'Error remapping with seed', error as Error);
+			void logger.error('remap-error', 'Error remapping with seed', error as Error);
 			new Notice('Failed to generate variation');
 		}
 	}
@@ -1707,7 +1707,7 @@ export class LocalSoundscapeView extends ItemView {
 			this.currentVariationIndex = history.length - 1;
 		}
 
-		this.updateVariationDisplay();
+		void this.updateVariationDisplay();
 	}
 
 	/**
@@ -1719,7 +1719,7 @@ export class LocalSoundscapeView extends ItemView {
 			return;
 		}
 
-		logger.info('export-start', 'Exporting graph as image');
+		void logger.info('export-start', 'Exporting graph as image');
 
 		try {
 			// Find the SVG element
@@ -1763,10 +1763,10 @@ export class LocalSoundscapeView extends ItemView {
 
 				// Draw white background
 				ctx.fillStyle = '#ffffff';
-				ctx.fillRect(0, 0, width, height);
+				void ctx.fillRect(0, 0, width, height);
 
 				// Draw the SVG image
-				ctx.drawImage(img, 0, 0);
+				void ctx.drawImage(img, 0, 0);
 
 				// Convert to PNG blob
 				canvas.toBlob((blob) => {
@@ -1785,11 +1785,11 @@ export class LocalSoundscapeView extends ItemView {
 					a.download = `local-soundscape-${noteName}-${timestamp}.png`;
 
 					// Trigger download
-					a.click();
+					void a.click();
 
 					// Cleanup
-					URL.revokeObjectURL(url);
-					URL.revokeObjectURL(svgUrl);
+					void URL.revokeObjectURL(url);
+					void URL.revokeObjectURL(svgUrl);
 
 					logger.info('export-complete', 'Graph exported successfully', { filename: a.download });
 					new Notice('Graph exported successfully!');
@@ -1803,7 +1803,7 @@ export class LocalSoundscapeView extends ItemView {
 			img.src = svgUrl;
 
 		} catch (error) {
-			logger.error('export-error', 'Failed to export graph', error as Error);
+			void logger.error('export-error', 'Failed to export graph', error as Error);
 			new Notice('Failed to export graph. Please try again.');
 		}
 	}
@@ -1818,7 +1818,7 @@ export class LocalSoundscapeView extends ItemView {
 			(newFilters) => {
 				void (async () => {
 					this.filters = newFilters;
-					logger.info('filters-changed', 'Filters updated', newFilters);
+					void logger.info('filters-changed', 'Filters updated', newFilters);
 
 					// Re-extract and render with new filters
 					if (this.centerFile) {
@@ -1828,7 +1828,7 @@ export class LocalSoundscapeView extends ItemView {
 				})();
 			}
 		);
-		modal.open();
+		void modal.open();
 	}
 
 	/**
@@ -1837,7 +1837,7 @@ export class LocalSoundscapeView extends ItemView {
 	private openControlCenter(): void {
 		import('./control-panel').then(({ MaterialControlPanelModal }) => {
 			const controlCenter = new MaterialControlPanelModal(this.app, this.plugin);
-			controlCenter.open();
+			void controlCenter.open();
 		});
 	}
 
@@ -1847,7 +1847,7 @@ export class LocalSoundscapeView extends ItemView {
 	private markAsStale(): void {
 		// Only mark as stale if we have graph data and enough time has passed since extraction
 		if (!this.graphData || !this.lastExtractionTime) {
-			logger.debug('staleness', 'Skipping stale mark - no graph data or extraction time');
+			void logger.debug('staleness', 'Skipping stale mark - no graph data or extraction time');
 			return;
 		}
 
@@ -1863,7 +1863,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		if (!this.isStale) {
 			this.isStale = true;
-			this.updateStalenessIndicator();
+			void this.updateStalenessIndicator();
 			logger.info('staleness', 'Graph marked as stale', {
 				timeSinceExtraction: `${(timeSinceExtraction / 1000).toFixed(1)}s`
 			});
@@ -1984,7 +1984,7 @@ export class LocalSoundscapeView extends ItemView {
 	private markAsUpToDate(): void {
 		this.isStale = false;
 		this.lastExtractionTime = Date.now();
-		this.updateStalenessIndicator();
+		void this.updateStalenessIndicator();
 	}
 
 	/**
@@ -2035,7 +2035,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async extractAndRenderGraph(): Promise<void> {
 		if (!this.centerFile) {
-			logger.warn('extract-graph', 'No center file set');
+			void logger.warn('extract-graph', 'No center file set');
 			return;
 		}
 
@@ -2081,13 +2081,13 @@ export class LocalSoundscapeView extends ItemView {
 			});
 
 			// Initialize variation history for this center note
-			this.initializeVariationHistory();
+			void this.initializeVariationHistory();
 
 			// Clear loading indicator
 			this.graphContainer.empty();
 
 			// Display extraction stats in sidebar
-			this.displayGraphStats();
+			void this.displayGraphStats();
 
 			// Get container dimensions - must be valid at this point
 			const width = this.graphContainer.clientWidth;
@@ -2121,41 +2121,41 @@ export class LocalSoundscapeView extends ItemView {
 
 			// Apply layout based on selected type
 			if (this.layoutType === 'force') {
-				logger.info('apply-layout', 'Applying force-directed layout');
+				void logger.info('apply-layout', 'Applying force-directed layout');
 				const forceLayout = new ForceDirectedLayout({
 					width,
 					height,
 					centerX: width / 2,
 					centerY: height / 2
 				});
-				forceLayout.applyLayout(this.graphData);
+				void forceLayout.applyLayout(this.graphData);
 			}
 			// Radial layout is applied by the renderer by default
 
 			// Render the graph
-			logger.info('render-start', 'Starting graph render');
+			void logger.info('render-start', 'Starting graph render');
 			this.renderer.render(this.graphData);
-			logger.info('render-complete', 'Graph render complete');
+			void logger.info('render-complete', 'Graph render complete');
 
 			// Mark as up-to-date after successful extraction
-			this.markAsUpToDate();
+			void this.markAsUpToDate();
 
 			// Update playback UI to enable Play button
-			this.updatePlaybackUI();
+			void this.updatePlaybackUI();
 
 			// Auto-start audio if enabled
 			if (this.plugin.settings.localSoundscape?.autoPlay && !this.isPlaying) {
-				logger.info('auto-start', 'Auto-starting audio playback');
+				void logger.info('auto-start', 'Auto-starting audio playback');
 				// Small delay to let rendering complete
 				setTimeout(() => {
-					this.startPlayback();
+					void this.startPlayback();
 				}, 500);
 			}
 
-			logger.info('extract-complete', 'Graph extraction and rendering complete');
+			void logger.info('extract-complete', 'Graph extraction and rendering complete');
 
 		} catch (error) {
-			logger.error('extract-error', 'Failed to extract graph', error as Error);
+			void logger.error('extract-error', 'Failed to extract graph', error as Error);
 
 			this.graphContainer.empty();
 			const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
@@ -2180,7 +2180,7 @@ export class LocalSoundscapeView extends ItemView {
 		if (!statsContainer) return;
 
 		// Clear existing stats
-		statsContainer.empty();
+		void statsContainer.empty();
 
 		// Create collapsible section
 		const statsHeader = statsContainer.createDiv({ cls: 'stats-header' });
@@ -2217,7 +2217,7 @@ export class LocalSoundscapeView extends ItemView {
 	 * Toggle playback state
 	 */
 	private async togglePlayback(): Promise<void> {
-		logger.debug('ui-interaction', 'Play button clicked, toggling playback');
+		void logger.debug('ui-interaction', 'Play button clicked, toggling playback');
 		logger.info('toggle-playback', 'Play button clicked', {
 			hasGraphData: !!this.graphData,
 			hasCenterFile: !!this.centerFile,
@@ -2225,7 +2225,7 @@ export class LocalSoundscapeView extends ItemView {
 		});
 
 		if (!this.graphData || !this.centerFile) {
-			logger.warn('toggle-playback', 'No graph data or center file');
+			void logger.warn('toggle-playback', 'No graph data or center file');
 			new Notice('Please open a note in Local Soundscape first');
 			return;
 		}
@@ -2259,9 +2259,9 @@ export class LocalSoundscapeView extends ItemView {
 			// Initialize audio engine first
 			const audioStatus = this.plugin.audioEngine.getStatus();
 			if (!audioStatus.isInitialized) {
-				logger.info('audio-init', 'Initializing audio engine for playback');
+				void logger.info('audio-init', 'Initializing audio engine for playback');
 				await this.plugin.audioEngine.initialize();
-				logger.info('audio-init', 'Audio engine initialized successfully');
+				void logger.info('audio-init', 'Audio engine initialized successfully');
 			}
 
 			// Route to appropriate playback system
@@ -2272,10 +2272,10 @@ export class LocalSoundscapeView extends ItemView {
 			}
 
 		} catch (error) {
-			logger.error('playback-error', 'Failed to start playback', error as Error);
+			void logger.error('playback-error', 'Failed to start playback', error as Error);
 			new Notice(`Failed to start audio: ${error.message}`);
 			this.isPlaying = false;
-			this.updatePlaybackUI();
+			void this.updatePlaybackUI();
 		}
 	}
 
@@ -2298,7 +2298,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		if (!this.currentNoteCentricMapping) {
 			new Notice('Could not analyze center note for playback');
-			logger.warn('note-centric-playback', 'Failed to create note-centric mapping');
+			void logger.warn('note-centric-playback', 'Failed to create note-centric mapping');
 			return;
 		}
 
@@ -2311,7 +2311,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Start playback
 		this.isPlaying = true;
-		this.updatePlaybackUI();
+		void this.updatePlaybackUI();
 
 		// Play the note-centric mapping
 		await this.noteCentricPlayer.play(this.currentNoteCentricMapping);
@@ -2320,7 +2320,7 @@ export class LocalSoundscapeView extends ItemView {
 		await this.startContinuousLayers();
 
 		// Start UI update loop for voice count tracking
-		this.startNoteCentricUIUpdateLoop();
+		void this.startNoteCentricUIUpdateLoop();
 
 		new Notice(`Playing note-centric soundscape (${this.currentNoteCentricMapping.centerPhrase.melody.length} notes)`);
 	}
@@ -2329,7 +2329,7 @@ export class LocalSoundscapeView extends ItemView {
 	 * Start UI update loop for note-centric playback
 	 */
 	private startNoteCentricUIUpdateLoop(): void {
-		logger.debug('ui-update-loop', 'Starting UI update loop for note-centric playback');
+		void logger.debug('ui-update-loop', 'Starting UI update loop for note-centric playback');
 
 		// Poll voice count every 100ms to keep UI synchronized
 		const updateInterval = setInterval(() => {
@@ -2363,10 +2363,10 @@ export class LocalSoundscapeView extends ItemView {
 
 			// Check if playback finished (no more playing notes and player stopped)
 			if (this.currentVoiceCount === 0 && !this.noteCentricPlayer.getIsPlaying()) {
-				logger.info('note-centric-complete', 'Note-centric playback completed naturally');
+				void logger.info('note-centric-complete', 'Note-centric playback completed naturally');
 				clearInterval(updateInterval);
 				this.isPlaying = false;
-				this.updatePlaybackUI();
+				void this.updatePlaybackUI();
 			}
 		}, 100);
 	}
@@ -2376,7 +2376,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async startGraphCentricPlayback(): Promise<void> {
 		if (!this.depthMapper) {
-			logger.warn('graph-centric-playback', 'Depth mapper not initialized');
+			void logger.warn('graph-centric-playback', 'Depth mapper not initialized');
 			new Notice('Graph-centric playback not available');
 			return;
 		}
@@ -2401,7 +2401,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		if (this.currentMappings.length === 0) {
 			new Notice('No mappings created - check that instruments are enabled in Control Center');
-			logger.warn('playback-start', 'No mappings created from graph data');
+			void logger.warn('playback-start', 'No mappings created from graph data');
 			return;
 		}
 
@@ -2411,7 +2411,7 @@ export class LocalSoundscapeView extends ItemView {
 		this.currentVoiceCount = this.currentMappings.length;
 		this.currentVolume = 0.7; // Average volume
 
-		this.updatePlaybackUI();
+		void this.updatePlaybackUI();
 
 		// Start visualization and time tracking
 		const playbackStartTime = Date.now();
@@ -2433,7 +2433,7 @@ export class LocalSoundscapeView extends ItemView {
 		new Notice(`Playing ${this.currentVoiceCount} notes`);
 
 		// Start real-time playback using single polling loop (memory-efficient pattern like main Sonic Graph)
-		this.startRealtimePlayback();
+		void this.startRealtimePlayback();
 
 		// Start continuous layers if enabled
 		await this.startContinuousLayers();
@@ -2444,11 +2444,11 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async pausePlayback(): Promise<void> {
 		if (!this.plugin.audioEngine) {
-			logger.warn('playback-pause', 'Cannot pause - audio engine not available');
+			void logger.warn('playback-pause', 'Cannot pause - audio engine not available');
 			return;
 		}
 
-		logger.info('playback-pause', 'Pausing soundscape playback');
+		void logger.info('playback-pause', 'Pausing soundscape playback');
 
 		// Clear the realtime polling loop
 		if (this.realtimeTimer !== null) {
@@ -2467,9 +2467,9 @@ export class LocalSoundscapeView extends ItemView {
 		// Stop the audio engine (AudioEngine doesn't have a pause method, so we stop)
 		this.plugin.audioEngine.stop();
 		this.isPlaying = false;
-		this.updatePlaybackUI();
+		void this.updatePlaybackUI();
 
-		logger.info('playback-paused', 'Soundscape playback paused');
+		void logger.info('playback-paused', 'Soundscape playback paused');
 	}
 
 	/**
@@ -2477,11 +2477,11 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	private async stopPlayback(): Promise<void> {
 		if (!this.plugin.audioEngine) {
-			logger.warn('playback-stop', 'Cannot stop - audio engine not available');
+			void logger.warn('playback-stop', 'Cannot stop - audio engine not available');
 			return;
 		}
 
-		logger.info('playback-stop', 'Stopping soundscape playback');
+		void logger.info('playback-stop', 'Stopping soundscape playback');
 
 		// Stop note-centric player if active
 		if (this.noteCentricPlayer && this.noteCentricPlayer.getIsPlaying()) {
@@ -2506,7 +2506,7 @@ export class LocalSoundscapeView extends ItemView {
 		this.plugin.audioEngine.stop();
 
 		// Stop continuous layers if running
-		this.stopContinuousLayers();
+		void this.stopContinuousLayers();
 
 		// Clear mappings and reset state
 		this.currentMappings = [];
@@ -2514,15 +2514,15 @@ export class LocalSoundscapeView extends ItemView {
 		this.currentVoiceCount = 0;
 		this.currentVolume = 0;
 		this.nextNoteIndex = 0; // Reset note tracking
-		this.updatePlaybackUI();
+		void this.updatePlaybackUI();
 
 		// Stop visualization
 		if (this.visualizationManager) {
 			this.visualizationManager.stop();
-			logger.debug('playback-stop', 'Visualization stopped');
+			void logger.debug('playback-stop', 'Visualization stopped');
 		}
 
-		logger.info('playback-stopped', 'Soundscape playback stopped');
+		void logger.info('playback-stopped', 'Soundscape playback stopped');
 	}
 
 	/**
@@ -2532,11 +2532,11 @@ export class LocalSoundscapeView extends ItemView {
 		// Check if continuous layers are enabled
 		const layersEnabled = this.plugin.settings.localSoundscape?.continuousLayers?.enabled;
 		if (!layersEnabled) {
-			logger.debug('layers', 'Continuous layers disabled in settings');
+			void logger.debug('layers', 'Continuous layers disabled in settings');
 			return;
 		}
 
-		logger.info('layers', 'Starting continuous layers for Local Soundscape');
+		void logger.info('layers', 'Starting continuous layers for Local Soundscape');
 
 		try {
 			// Lazy-load ContinuousLayerManager
@@ -2568,15 +2568,15 @@ export class LocalSoundscapeView extends ItemView {
 				);
 
 				await this.continuousLayerManager.initialize();
-				logger.info('layers', 'ContinuousLayerManager initialized', layerConfig);
+				void logger.info('layers', 'ContinuousLayerManager initialized', layerConfig);
 			}
 
 			// Start playback
 			await this.continuousLayerManager.start();
-			logger.info('layers', 'Continuous layers started successfully');
+			void logger.info('layers', 'Continuous layers started successfully');
 
 		} catch (error) {
-			logger.error('layers', 'Failed to start continuous layers', error as Error);
+			void logger.error('layers', 'Failed to start continuous layers', error as Error);
 			// Don't block main playback if layers fail
 		}
 	}
@@ -2591,9 +2591,9 @@ export class LocalSoundscapeView extends ItemView {
 
 		try {
 			void this.continuousLayerManager.stop();
-			logger.info('layers', 'Continuous layers stopped');
+			void logger.info('layers', 'Continuous layers stopped');
 		} catch (error) {
-			logger.error('layers', 'Error stopping continuous layers', error as Error);
+			void logger.error('layers', 'Error stopping continuous layers', error as Error);
 		}
 	}
 
@@ -2623,7 +2623,7 @@ export class LocalSoundscapeView extends ItemView {
 		// Start the audio context if suspended
 		if (getContext().state === 'suspended') {
 			getContext().resume();
-			logger.debug('context', 'Resumed suspended audio context for Local Soundscape playback');
+			void logger.debug('context', 'Resumed suspended audio context for Local Soundscape playback');
 		}
 
 		// Use 100ms polling interval for responsive note triggering
@@ -2668,7 +2668,7 @@ export class LocalSoundscapeView extends ItemView {
 					});
 
 					// Trigger the note immediately (polling loop ensures we trigger "just in time")
-					this.playNoteFromPollingLoop(mapping, currentTime, elapsedTime);
+					void this.playNoteFromPollingLoop(mapping, currentTime, elapsedTime);
 				} else {
 					// No more notes ready to play yet, break until next poll
 					break;
@@ -2692,13 +2692,13 @@ export class LocalSoundscapeView extends ItemView {
 				const playbackComplete = elapsedTime > (lastNote.timing + lastNote.duration + 0.5); // Add 0.5s buffer
 
 				if (playbackComplete) {
-					logger.info('playback-complete', 'Local Soundscape playback completed');
-					this.stopPlayback();
+					void logger.info('playback-complete', 'Local Soundscape playback completed');
+					void this.stopPlayback();
 				}
 			}
 		}, 100); // 100ms polling interval
 
-		logger.info('playback-loop-started', 'Real-time polling loop started');
+		void logger.info('playback-loop-started', 'Real-time polling loop started');
 	}
 
 	/**
@@ -2854,7 +2854,7 @@ export class LocalSoundscapeView extends ItemView {
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 	async setState(state: LocalSoundscapeViewState, result: any): Promise<void> {
-		logger.info('set-state', 'Restoring view state', state);
+		void logger.info('set-state', 'Restoring view state', state);
 
 		if (state.currentDepth) {
 			this.currentDepth = state.currentDepth;

@@ -29,17 +29,17 @@ export class SonicGraphLayersSettings {
 	 * Render all audio layers settings
 	 */
 	public render(container: HTMLElement): void {
-		logger.debug('layers-settings', 'Rendering audio layers settings');
+		void logger.debug('layers-settings', 'Rendering audio layers settings');
 
 		// Section 1: Enable/Disable Continuous Layers
-		this.renderEnableSection(container);
+		void this.renderEnableSection(container);
 
 		// Section 2: Additional settings (only if enabled)
 		if (this.plugin.settings.audioEnhancement?.continuousLayers?.enabled) {
-			this.renderIntensitySection(container);
-			this.renderLayerTypesSection(container);
-			this.renderMusicalSettingsSection(container);
-			this.renderAdaptiveSection(container);
+			void this.renderIntensitySection(container);
+			void this.renderLayerTypesSection(container);
+			void this.renderMusicalSettingsSection(container);
+			void this.renderAdaptiveSection(container);
 		}
 	}
 
@@ -144,11 +144,11 @@ export class SonicGraphLayersSettings {
 
 					// Trigger parent tab re-render to show/hide Freesound integration
 					if (this.onToggleCallback) {
-						this.onToggleCallback();
+						void this.onToggleCallback();
 					} else {
 						// Fallback: re-render just the layers settings
-						container.empty();
-						this.render(container);
+						void container.empty();
+						void this.render(container);
 					}
 				})
 			);
@@ -207,7 +207,7 @@ export class SonicGraphLayersSettings {
 
 					// Notify control panel to refresh sample browser
 					if (this.onGenreChangeCallback) {
-						this.onGenreChangeCallback();
+						void this.onGenreChangeCallback();
 					}
 				})
 			);
@@ -314,8 +314,8 @@ export class SonicGraphLayersSettings {
 					logger.info('layers-settings', `Rhythmic layer: ${value}`);
 
 					// Re-render to show/hide detailed settings
-					container.empty();
-					this.render(container);
+					void container.empty();
+					void this.render(container);
 				})
 			);
 
@@ -407,8 +407,8 @@ export class SonicGraphLayersSettings {
 					logger.info('layers-settings', `Harmonic layer: ${value}`);
 
 					// Re-render to show/hide detailed settings
-					container.empty();
-					this.render(container);
+					void container.empty();
+					void this.render(container);
 				})
 			);
 
@@ -603,7 +603,7 @@ export class SonicGraphLayersSettings {
 			marginTop: '0.5rem'
 		});
 		noteP.createEl('strong', { text: 'Adaptive Behavior:' });
-		noteP.appendText(' When enabled, layers respond to:');
+		void noteP.appendText(' When enabled, layers respond to:');
 
 		const noteUl = note.createEl('ul');
 		noteUl.setCssProps({

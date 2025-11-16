@@ -712,7 +712,7 @@ export class FileTypeAnalyzer {
         this.analysisCache.clear();
         this.cacheTimestamps.clear();
         
-        logger.info('file-type-analyzer-config-update', 'Configuration updated, cache cleared');
+        void logger.info('file-type-analyzer-config-update', 'Configuration updated, cache cleared');
     }
 
     /**
@@ -738,6 +738,6 @@ export class FileTypeAnalyzer {
         this.analysisCache.clear();
         this.cacheTimestamps.clear();
         
-        logger.info('file-type-analyzer-cache-clear', 'Analysis cache cleared');
+        void logger.info('file-type-analyzer-cache-clear', 'Analysis cache cleared');
     }
 }

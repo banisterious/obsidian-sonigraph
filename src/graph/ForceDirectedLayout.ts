@@ -38,7 +38,7 @@ export class ForceDirectedLayout {
 			...config
 		};
 
-		logger.debug('force-layout-init', 'ForceDirectedLayout initialized', this.config);
+		void logger.debug('force-layout-init', 'ForceDirectedLayout initialized', this.config);
 	}
 
 	/**
@@ -80,11 +80,11 @@ export class ForceDirectedLayout {
 		// Run simulation synchronously (not animated)
 		const iterations = 300; // Number of ticks to run
 		for (let i = 0; i < iterations; i++) {
-			simulation.tick();
+			void simulation.tick();
 		}
 
 		// Stop simulation
-		simulation.stop();
+		void simulation.stop();
 
 		// Unpin center node (keep computed position but allow future updates)
 		if (centerNode) {
@@ -133,6 +133,6 @@ export class ForceDirectedLayout {
 			...this.config,
 			...config
 		};
-		logger.debug('config-updated', 'Force layout config updated', this.config);
+		void logger.debug('config-updated', 'Force layout config updated', this.config);
 	}
 }

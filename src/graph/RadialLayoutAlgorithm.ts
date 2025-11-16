@@ -54,10 +54,10 @@ export class RadialLayoutAlgorithm {
 
 			if (this.config.separateDirections) {
 				// Separate incoming (left) and outgoing (right) nodes
-				this.positionNodesByDirection(nodesAtDepth, depth);
+				void this.positionNodesByDirection(nodesAtDepth, depth);
 			} else {
 				// Distribute evenly around circle
-				this.positionNodesEvenly(nodesAtDepth, depth);
+				void this.positionNodesEvenly(nodesAtDepth, depth);
 			}
 		}
 
@@ -108,12 +108,12 @@ export class RadialLayoutAlgorithm {
 
 			// Top nodes (90° to 135°)
 			if (topNodes.length > 0) {
-				this.positionNodesInArc(topNodes, radius, 90, 45);
+				void this.positionNodesInArc(topNodes, radius, 90, 45);
 			}
 
 			// Bottom nodes (225° to 270°)
 			if (bottomNodes.length > 0) {
-				this.positionNodesInArc(bottomNodes, radius, 225, 45);
+				void this.positionNodesInArc(bottomNodes, radius, 225, 45);
 			}
 		}
 	}
@@ -123,7 +123,7 @@ export class RadialLayoutAlgorithm {
 	 */
 	private positionNodesEvenly(nodes: LocalSoundscapeNode[], depth: number): void {
 		const radius = depth * this.config.radiusPerDepth;
-		this.positionNodesInArc(nodes, radius, 0, 360);
+		void this.positionNodesInArc(nodes, radius, 0, 360);
 	}
 
 	/**
@@ -169,7 +169,7 @@ export class RadialLayoutAlgorithm {
 			...config
 		};
 
-		logger.debug('config-updated', 'Radial layout config updated', this.config);
+		void logger.debug('config-updated', 'Radial layout config updated', this.config);
 	}
 
 	/**

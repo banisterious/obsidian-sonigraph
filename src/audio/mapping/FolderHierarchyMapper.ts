@@ -210,7 +210,7 @@ export class FolderHierarchyMapper {
             // Partial match
             for (const [folder, family] of Object.entries(FolderHierarchyMapper.FOLDER_MAPPINGS)) {
                 if (component.includes(folder) || folder.includes(component)) {
-                    foundFamilies.push(family);
+                    void foundFamilies.push(family);
                     break;
                 }
             }

@@ -46,7 +46,7 @@ export class StaffRenderer implements VisualizationRenderer {
             staffBottomMargin: 20
         };
 
-        logger.debug('initialization', 'StaffRenderer created');
+        void logger.debug('initialization', 'StaffRenderer created');
     }
 
     /**
@@ -65,26 +65,26 @@ export class StaffRenderer implements VisualizationRenderer {
         // Get 2D context
         const ctx = this.canvas.getContext('2d');
         if (!ctx) {
-            logger.error('initialization', 'Failed to get 2D context');
+            void logger.error('initialization', 'Failed to get 2D context');
             return;
         }
         this.ctx = ctx;
 
         // Setup canvas sizing
-        this.resizeCanvas();
+        void this.resizeCanvas();
 
         // Add resize listener
         window.addEventListener('resize', () => this.resizeCanvas());
 
-        logger.info('initialization', 'StaffRenderer initialized');
+        void logger.info('initialization', 'StaffRenderer initialized');
     }
 
     /**
      * Force resize (public method for when container visibility changes)
      */
     public forceResize(): void {
-        logger.info('resize', 'Force resize requested');
-        this.resizeCanvas();
+        void logger.info('resize', 'Force resize requested');
+        void this.resizeCanvas();
     }
 
     /**
@@ -115,16 +115,16 @@ export class StaffRenderer implements VisualizationRenderer {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Draw staff lines
-        this.drawStaffLines();
+        void this.drawStaffLines();
 
         // Draw clefs
-        this.drawClefs();
+        void this.drawClefs();
 
         // Draw notes
-        this.drawNotes(events, currentTime);
+        void this.drawNotes(events, currentTime);
 
         // Draw playhead
-        this.drawPlayhead(currentTime, events);
+        void this.drawPlayhead(currentTime, events);
     }
 
     /**
@@ -227,7 +227,7 @@ export class StaffRenderer implements VisualizationRenderer {
 
             if (isChord) {
                 // Draw chord (multiple notes stacked vertically)
-                this.drawChord(group, x, currentTime, layerColors);
+                void this.drawChord(group, x, currentTime, layerColors);
             } else {
                 // Draw single note
                 const event = group[0];
@@ -283,14 +283,14 @@ export class StaffRenderer implements VisualizationRenderer {
                 currentGroup.push(sorted[i]);
             } else {
                 // Save current group and start new one
-                groups.push(currentGroup);
+                void groups.push(currentGroup);
                 currentGroup = [sorted[i]];
             }
         }
 
         // Don't forget the last group
         if (currentGroup.length > 0) {
-            groups.push(currentGroup);
+            void groups.push(currentGroup);
         }
 
         return groups;
@@ -513,7 +513,7 @@ export class StaffRenderer implements VisualizationRenderer {
      */
     public updateConfig(config: Partial<VisualizationConfig>): void {
         this.config = { ...this.config, ...config };
-        logger.debug('config', 'Staff renderer config updated', config);
+        void logger.debug('config', 'Staff renderer config updated', config);
     }
 
     /**
@@ -524,6 +524,6 @@ export class StaffRenderer implements VisualizationRenderer {
         this.canvas = null;
         this.ctx = null;
 
-        logger.debug('lifecycle', 'StaffRenderer destroyed');
+        void logger.debug('lifecycle', 'StaffRenderer destroyed');
     }
 }

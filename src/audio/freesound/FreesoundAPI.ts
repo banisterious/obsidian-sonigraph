@@ -107,15 +107,15 @@ export class FreesoundAPI {
 		const params = new URLSearchParams();
 
 		if (filters.query) {
-			params.append('query', filters.query);
+			void params.append('query', filters.query);
 		}
 
 		if (filters.filter) {
-			params.append('filter', filters.filter);
+			void params.append('filter', filters.filter);
 		}
 
 		if (filters.sort) {
-			params.append('sort', filters.sort);
+			void params.append('sort', filters.sort);
 		}
 
 		if (filters.page) {
@@ -128,7 +128,7 @@ export class FreesoundAPI {
 
 		// Request preview URLs and other essential fields
 		const defaultFields = 'id,name,tags,description,username,duration,previews,license,type,url,num_downloads,avg_rating';
-		params.append('fields', filters.fields || defaultFields);
+		void params.append('fields', filters.fields || defaultFields);
 
 		try {
 			const response = await requestUrl({

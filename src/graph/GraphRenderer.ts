@@ -46,14 +46,10 @@ interface HubTier {
 
 export class GraphRenderer {
   private container: HTMLElement;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-  private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-  private g: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-  private linkGroup: d3.Selection<d3.BaseType, unknown, d3.BaseType, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-  private nodeGroup: d3.Selection<d3.BaseType, unknown, d3.BaseType, any>;
+  private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
+  private g: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>;
+  private linkGroup: d3.Selection<d3.BaseType, unknown, d3.BaseType, unknown>;
+  private nodeGroup: d3.Selection<d3.BaseType, unknown, d3.BaseType, unknown>;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private onZoomChangeCallback: ((zoomLevel: number) => void) | null = null;
   // Removed tooltip property - using native browser tooltips
@@ -93,8 +89,7 @@ export class GraphRenderer {
   private smartClustering: SmartClusteringAlgorithms | null = null;
   private smartClusteringSettings: SonicGraphSettings['smartClustering'] | null = null;
   private clusteringResult: ClusteringResult | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection type has complex nested generics
-  private clusterGroup: d3.Selection<SVGGElement, unknown, HTMLElement, any> | null = null;
+  private clusterGroup: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null;
   
   // Tooltip variables removed - using native browser tooltips
 
@@ -145,8 +140,8 @@ export class GraphRenderer {
       debugMode: false
     });
 
-    this.initializeSVG();
-    this.initializeSimulation();
+    void this.initializeSVG();
+    void this.initializeSimulation();
     // Tooltip initialization removed - using native browser tooltips
     
     logger.debug('renderer', 'GraphRenderer initialized', { config: this.config });
@@ -174,7 +169,7 @@ export class GraphRenderer {
     this.g.append('g').attr('class', 'sonigraph-temporal-nodes');
     
     // Performance optimization: Initialize viewport bounds
-    this.initializeViewportBounds();
+    void this.initializeViewportBounds();
 
     // Setup zoom behavior
     if (this.config.enableZoom) {
@@ -183,12 +178,12 @@ export class GraphRenderer {
         .on('zoom', (event) => {
           this.g.attr('transform', event.transform);
           // Performance optimization: Update viewport bounds for culling
-          this.updateViewportBounds(event.transform);
-          this.scheduleViewportUpdate();
+          void this.updateViewportBounds(event.transform);
+          void this.scheduleViewportUpdate();
           
           // Adaptive detail levels: Notify zoom change callback
           if (this.onZoomChangeCallback) {
-            this.onZoomChangeCallback(event.transform.k);
+            void this.onZoomChangeCallback(event.transform.k);
           }
         });
 
@@ -256,7 +251,7 @@ export class GraphRenderer {
       });
 
     // Apply Content-Aware Positioning forces
-    this.applyContentAwareForces();
+    void this.applyContentAwareForces();
 
     this.simulation.on('tick', () => {
         // Performance optimization: Frame skipping for dense graphs
@@ -270,14 +265,14 @@ export class GraphRenderer {
         
         // Performance optimization: Only constrain coordinates occasionally
         if (this.simulation.alpha() > 0.3 || Math.random() < 0.1) {
-          this.constrainNodeCoordinates();
+          void this.constrainNodeCoordinates();
         }
         
         // Optimized position updates
-        this.updatePositions();
+        void this.updatePositions();
         
         // Update debug visualization if enabled (Content-Aware Positioning debug overlay)
-        this.updateDebugVisualization();
+        void this.updateDebugVisualization();
       })
       .alphaDecay(this.getAlphaDecay()) // Adaptive convergence based on performance mode
       .velocityDecay(this.getVelocityDecay()) // Adaptive velocity decay
@@ -306,35 +301,35 @@ export class GraphRenderer {
     this.links = links;
     
     // Performance optimization: Initialize node coordinates to prevent invalid positions
-    this.initializeNodeCoordinates();
+    void this.initializeNodeCoordinates();
     
     // Performance optimization: Detect graph complexity and set performance mode
-    this.detectPerformanceMode(nodes.length, links.length);
+    void this.detectPerformanceMode(nodes.length, links.length);
     this.isDenseGraph = this.performanceMode === 'performance';
     
     if (this.isDenseGraph) {
       logger.info('renderer', `Performance mode: ${this.performanceMode} (${nodes.length} nodes, ${links.length} links)`);
-      this.disableTransitionsForDenseGraph();
+      void this.disableTransitionsForDenseGraph();
     } else {
-      this.enableTransitionsForNormalGraph();
+      void this.enableTransitionsForNormalGraph();
     }
     
     // Phase 3.8: Apply adaptive performance scaling
-    this.applyAdaptiveScaling(nodes.length);
+    void this.applyAdaptiveScaling(nodes.length);
     
     // Phase 3.8: Apply initial clustering positioning (one-time)
-    this.applyInitialClustering();
+    void this.applyInitialClustering();
     
     // Apply Smart Clustering analysis and visualization
-    this.applySmartClustering();
+    void this.applySmartClustering();
     
     // Initialize all nodes as visible for static rendering
     this.visibleNodes = new Set(nodes.map(n => n.id));
     this.visibleLinks = new Set(links.map((l, i) => this.getLinkId(l, i)));
     
-    this.updateSimulation();
-    this.renderLinks();
-    this.renderNodes();
+    void this.updateSimulation();
+    void this.renderLinks();
+    void this.renderNodes();
     
     // Note: Initial view/zoom is now controlled by the calling component (SonicGraphView)
     // this.setInitialView(); // Removed to prevent zoom conflicts
@@ -357,8 +352,8 @@ export class GraphRenderer {
       }
     });
     
-    this.updateNodeVisibility();
-    this.updateLinkVisibility();
+    void this.updateNodeVisibility();
+    void this.updateLinkVisibility();
   }
 
   /**
@@ -423,8 +418,7 @@ export class GraphRenderer {
     
     const linkSelection = this.g.select('.sonigraph-temporal-links')
       .selectAll('line')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js data binding requires any for heterogeneous data types
-      .data(validLinks, (d: any, i) => this.getLinkId(d, i));
+      .data(validLinks, (d: unknown, i) => this.getLinkId(d, i));
 
     // Enter new links with Phase 3.8 enhancements
     const linkEnter = linkSelection.enter()
@@ -598,16 +592,14 @@ export class GraphRenderer {
     nodeElement.select('circle')
       .transition()
       .duration(200)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('r', (d: any) => this.calculateNodeSize(d as GraphNode))
+      .attr('r', (d: unknown) => this.calculateNodeSize(d as GraphNode))
       .style('filter', null); // Reset to CSS filter
 
     // Reset label position
     nodeElement.select('text')
       .transition()
       .duration(200)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('dy', (d: any) => this.calculateNodeSize(d as GraphNode) + 15);
+      .attr('dy', (d: unknown) => this.calculateNodeSize(d as GraphNode) + 15);
   }
 
   /**
@@ -667,8 +659,7 @@ export class GraphRenderer {
     
     const nodeSelection = this.g.select('.sonigraph-temporal-nodes')
       .selectAll('.sonigraph-temporal-node')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js data binding requires any for heterogeneous data types
-      .data(validNodes, (d: any) => d.id);
+      .data(validNodes, (d: unknown) => d.id);
 
     // Enter new nodes
     const nodeEnter = nodeSelection.enter()
@@ -702,19 +693,14 @@ export class GraphRenderer {
 
     // Update existing nodes with new sizing and hub classification
     nodeSelection.selectAll('circle')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('r', (d: any) => this.calculateNodeSize(d as GraphNode))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('class', (d: any) => `${(d as GraphNode).type}-node ${this.getHubClass(d as GraphNode)}`)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('data-connections', (d: any) => (d as GraphNode).connections.length)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('data-hub-tier', (d: any) => this.getHubTier(d as GraphNode).name);
+      .attr('r', (d: unknown) => this.calculateNodeSize(d as GraphNode))
+      .attr('class', (d: unknown) => `${(d as GraphNode).type}-node ${this.getHubClass(d as GraphNode)}`)
+      .attr('data-connections', (d: unknown) => (d as GraphNode).connections.length)
+      .attr('data-hub-tier', (d: unknown) => this.getHubTier(d as GraphNode).name);
 
     // Update existing title elements for tooltips
     nodeSelection.selectAll('title')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js text accessor function uses any for bound data
-      .text((d: any) => {
+      .text((d: unknown) => {
         const node = d as GraphNode;
         const fileName = node.title.split('/').pop() || node.title;
         const connections = node.connections.length;
@@ -723,8 +709,7 @@ export class GraphRenderer {
 
     // Update existing labels positioning based on new node sizes
     nodeSelection.selectAll('text')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('dy', (d: any) => this.calculateNodeSize(d as GraphNode) + 15);
+      .attr('dy', (d: unknown) => this.calculateNodeSize(d as GraphNode) + 15);
 
     // Animate new nodes
     nodeEnter.transition()
@@ -753,38 +738,38 @@ export class GraphRenderer {
     selection
       .on('mouseover', (event, d) => {
         // Highlight connected links
-        this.highlightConnectedLinks(d.id, true);
+        void this.highlightConnectedLinks(d.id, true);
         
         // Hub highlighting: Add special hover effects for hubs
         const hubTier = this.getHubTier(d);
         const nodeElement = d3.select(event.currentTarget);
         
         // Add hover class for CSS styling
-        nodeElement.classed('hub-hovered', true);
+        void nodeElement.classed('hub-hovered', true);
         
         // For major and mega hubs, temporarily boost their visual prominence
         if (hubTier.name === 'major-hub' || hubTier.name === 'mega-hub') {
-          this.temporaryHubBoost(nodeElement, d);
+          void this.temporaryHubBoost(nodeElement, d);
         }
         
         // Enhanced tooltip for hubs
         if (d.connections.length >= 5) {
-          this.showHubTooltip(d, event);
+          void this.showHubTooltip(d, event);
         }
       })
       .on('mouseout', (event, d) => {
         // Remove highlight from connected links
-        this.highlightConnectedLinks(d.id, false);
+        void this.highlightConnectedLinks(d.id, false);
         
         // Remove hover effects
         const nodeElement = d3.select(event.currentTarget);
-        nodeElement.classed('hub-hovered', false);
+        void nodeElement.classed('hub-hovered', false);
         
         // Remove temporary boost
-        this.removeHubBoost(nodeElement);
+        void this.removeHubBoost(nodeElement);
         
         // Hide hub tooltip
-        this.hideHubTooltip();
+        void this.hideHubTooltip();
       })
       .on('click', (_, d) => {
         // Enhanced logging for hubs
@@ -802,8 +787,7 @@ export class GraphRenderer {
    */
   private highlightConnectedLinks(nodeId: string, highlight: boolean): void {
     this.linkGroup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js Selection methods use any for chained operations
-      .classed('highlighted', function(d: any) {
+      .classed('highlighted', function(d: unknown) {
         const sourceId = typeof d.source === 'string' ? d.source : d.source.id;
         const targetId = typeof d.target === 'string' ? d.target : d.target.id;
 
@@ -827,8 +811,7 @@ export class GraphRenderer {
    */
   private updateLinkVisibility(): void {
     this.linkGroup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js style accessor uses any for dynamic CSS property access
-      .style('display', (d: any, i: number) => {
+      .style('display', (d: unknown, i: number) => {
         const linkId = this.getLinkId(d, i);
         return this.visibleLinks.has(linkId) ? 'block' : 'none';
       });
@@ -840,9 +823,9 @@ export class GraphRenderer {
   private updatePositions(): void {
     // Performance optimization: Batch position updates for dense graphs
     if (this.isDenseGraph) {
-      this.updatePositionsBatched();
+      void this.updatePositionsBatched();
     } else {
-      this.updatePositionsStandard();
+      void this.updatePositionsStandard();
     }
     
     // Update cluster positions if clustering is enabled
@@ -850,13 +833,13 @@ export class GraphRenderer {
       // Only update occasionally for performance
       if (Math.random() < 0.1) { // 10% of ticks
         this.smartClustering.recalculateClusterPositions();
-        this.renderClusterVisualization();
+        void this.renderClusterVisualization();
       }
     }
     
     // Performance optimization: Much less frequent cleanup for better performance
     if (Math.random() < 0.02) { // Only 2% of the time for much better performance
-      this.forceRemoveInvalidLinks();
+      void this.forceRemoveInvalidLinks();
     }
   }
   
@@ -867,21 +850,15 @@ export class GraphRenderer {
     // Update link positions - hide invalid links, update valid ones
     this.linkGroup = this.g.select('.sonigraph-temporal-links').selectAll('line');
     this.linkGroup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js style accessor uses any for dynamic CSS property access
-      .style('display', (d: any) => {
+      .style('display', (d: unknown) => {
         const hasValidCoords = this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target);
         return hasValidCoords ? 'block' : 'none';
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js filter callback receives any for bound data elements
-      .filter((d: any) => this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('x1', (d: any) => d.source.x)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('y1', (d: any) => d.source.y)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('x2', (d: any) => d.target.x)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('y2', (d: any) => d.target.y);
+      .filter((d: unknown) => this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target))
+      .attr('x1', (d: unknown) => d.source.x)
+      .attr('y1', (d: unknown) => d.source.y)
+      .attr('x2', (d: unknown) => d.target.x)
+      .attr('y2', (d: unknown) => d.target.y);
 
     // Update node positions - hide invalid nodes, update valid ones
     this.nodeGroup = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
@@ -900,8 +877,7 @@ export class GraphRenderer {
     // Update link positions - hide invalid links, show only valid and visible ones
     this.linkGroup = this.g.select('.sonigraph-temporal-links').selectAll('line');
     this.linkGroup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js style accessor uses any for dynamic CSS property access
-      .style('display', (d: any) => {
+      .style('display', (d: unknown) => {
         // First check for valid coordinates
         if (!this.hasValidCoordinates(d.source) || !this.hasValidCoordinates(d.target)) {
           return 'none';
@@ -912,8 +888,7 @@ export class GraphRenderer {
         const targetVisible = this.isNodeInViewport(d.target, bounds);
         return (sourceVisible || targetVisible) ? 'block' : 'none';
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js filter callback receives any for bound data elements
-      .filter((d: any) => {
+      .filter((d: unknown) => {
         // Only update positions for valid and visible links
         if (!this.hasValidCoordinates(d.source) || !this.hasValidCoordinates(d.target)) {
           return false;
@@ -923,14 +898,10 @@ export class GraphRenderer {
         const targetVisible = this.isNodeInViewport(d.target, bounds);
         return sourceVisible || targetVisible;
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('x1', (d: any) => d.source.x)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('y1', (d: any) => d.source.y)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('x2', (d: any) => d.target.x)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('y2', (d: any) => d.target.y);
+      .attr('x1', (d: unknown) => d.source.x)
+      .attr('y1', (d: unknown) => d.source.y)
+      .attr('x2', (d: unknown) => d.target.x)
+      .attr('y2', (d: unknown) => d.target.y);
 
     // Update node positions - hide invalid nodes, show only valid and visible ones
     this.nodeGroup = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
@@ -979,8 +950,7 @@ export class GraphRenderer {
       const nodeSelection = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
       if (!nodeSelection.empty()) {
         nodeSelection.selectAll('circle')
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr callback receives any for bound data
-          .attr('r', (d: any) => this.calculateNodeSize(d as GraphNode));
+          .attr('r', (d: unknown) => this.calculateNodeSize(d as GraphNode));
       }
     }
     
@@ -1047,7 +1017,6 @@ export class GraphRenderer {
   /**
    * Public method to set zoom transform (called by SonicGraphView)
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js zoom transform has complex internal type structure
   setZoomTransform(transform: any): void {
     if (this.config.enableZoom && this.zoom) {
       this.svg.call(this.zoom.transform, transform);
@@ -1098,7 +1067,7 @@ export class GraphRenderer {
    * Handle simulation end
    */
   private onSimulationEnd(): void {
-    logger.debug('renderer', 'Force simulation ended');
+    void logger.debug('renderer', 'Force simulation ended');
   }
 
   /**
@@ -1191,13 +1160,13 @@ export class GraphRenderer {
    * Phase 3.8: Update layout settings and apply changes
    */
   updateLayoutSettings(settings: SonicGraphSettings['layout']): void {
-    logger.debug('layout-settings', 'Updating layout settings', settings);
+    void logger.debug('layout-settings', 'Updating layout settings', settings);
     
     this.layoutSettings = settings;
     
     // Apply layout preset if specified
     if (settings.layoutPreset) {
-      this.applyLayoutPreset(settings.layoutPreset);
+      void this.applyLayoutPreset(settings.layoutPreset);
     }
     
     // Update force parameters based on settings
@@ -1206,18 +1175,18 @@ export class GraphRenderer {
     
     // Update simulation forces if simulation exists
     if (this.simulation) {
-      this.updateSimulationForces();
+      void this.updateSimulationForces();
       this.simulation.alpha(0.3).restart(); // Gentle restart to apply changes
     }
     
-    logger.debug('layout-settings', 'Layout settings applied', settings);
+    void logger.debug('layout-settings', 'Layout settings applied', settings);
   }
 
   /**
    * Update Content-Aware Positioning settings
    */
   updateContentAwareSettings(settings: SonicGraphSettings['contentAwarePositioning']): void {
-    logger.debug('content-aware-settings', 'Updating content-aware positioning settings', settings);
+    void logger.debug('content-aware-settings', 'Updating content-aware positioning settings', settings);
     
     this.contentAwareSettings = settings;
     
@@ -1228,18 +1197,18 @@ export class GraphRenderer {
     
     // Re-apply forces if simulation exists and content-aware positioning is enabled
     if (this.simulation && settings.enabled) {
-      this.applyContentAwareForces();
+      void this.applyContentAwareForces();
       this.simulation.alpha(0.3).restart(); // Gentle restart to apply changes
     }
     
-    logger.debug('content-aware-settings', 'Content-aware positioning settings applied', settings);
+    void logger.debug('content-aware-settings', 'Content-aware positioning settings applied', settings);
   }
 
   /**
    * Update Smart Clustering settings
    */
   updateSmartClusteringSettings(settings: SonicGraphSettings['smartClustering']): void {
-    logger.debug('smart-clustering-settings', 'Updating smart clustering settings', settings);
+    void logger.debug('smart-clustering-settings', 'Updating smart clustering settings', settings);
     
     this.smartClusteringSettings = settings;
     
@@ -1263,10 +1232,10 @@ export class GraphRenderer {
     if (this.simulation && settings.enabled && this.nodes.length > 0) {
       this.applySmartClustering(); // Async call, no need to await here
     } else if (!settings.enabled) {
-      this.clearClusterVisualization();
+      void this.clearClusterVisualization();
     }
     
-    logger.debug('smart-clustering-settings', 'Smart clustering settings applied', settings);
+    void logger.debug('smart-clustering-settings', 'Smart clustering settings applied', settings);
   }
 
   /**
@@ -1316,7 +1285,7 @@ export class GraphRenderer {
    * Phase 3.8: Apply initial clustering positioning (one-time optimization)
    */
   private applyInitialClustering(): void {
-    logger.debug('clustering', 'Applying initial clustering positioning');
+    void logger.debug('clustering', 'Applying initial clustering positioning');
     
     const layoutSettings = this.layoutSettings;
     if (!layoutSettings) return;
@@ -1345,7 +1314,7 @@ export class GraphRenderer {
       }
     });
     
-    logger.debug('clustering', 'Initial clustering positioning applied');
+    void logger.debug('clustering', 'Initial clustering positioning applied');
   }
 
   // Phase 3.8: Clustering methods removed - now using one-time initial positioning
@@ -1480,7 +1449,7 @@ export class GraphRenderer {
     
     // Update simulation with new parameters if it exists
     if (this.simulation) {
-      this.updateSimulationForces();
+      void this.updateSimulationForces();
     }
   }
 
@@ -1510,7 +1479,7 @@ export class GraphRenderer {
       })
       ?.strength((d: GraphLink) => d.strength * this.forceConfig.linkStrength * 1.5);
     
-    logger.debug('adaptive-scaling', 'Updated simulation forces with new parameters');
+    void logger.debug('adaptive-scaling', 'Updated simulation forces with new parameters');
   }
 
   /**
@@ -1540,7 +1509,7 @@ export class GraphRenderer {
     this.contentAwarePositioning.applyForcesToSimulation(this.simulation);
     
     // Update debug visualization if enabled
-    this.updateDebugVisualization();
+    void this.updateDebugVisualization();
   }
 
   /**
@@ -1548,7 +1517,7 @@ export class GraphRenderer {
    */
   private async applySmartClustering(): Promise<void> {
     if (!this.smartClustering || !this.smartClusteringSettings?.enabled) {
-      this.clearClusterVisualization();
+      void this.clearClusterVisualization();
       return;
     }
     
@@ -1572,11 +1541,11 @@ export class GraphRenderer {
       });
       
       // Render cluster visualization
-      this.renderClusterVisualization();
+      void this.renderClusterVisualization();
       
     } catch (error) {
       logger.error('smart-clustering', 'Failed to apply smart clustering', (error as Error).message);
-      this.clearClusterVisualization();
+      void this.clearClusterVisualization();
     }
   }
 
@@ -1585,13 +1554,13 @@ export class GraphRenderer {
    */
   private updateDebugVisualization(): void {
     if (!this.contentAwarePositioning || !this.contentAwareSettings?.debugVisualization) {
-      this.clearDebugVisualization();
+      void this.clearDebugVisualization();
       return;
     }
 
     const debugData = this.contentAwarePositioning.getDebugVisualization();
     if (!debugData) {
-      this.clearDebugVisualization();
+      void this.clearDebugVisualization();
       return;
     }
 
@@ -1615,13 +1584,13 @@ export class GraphRenderer {
     }
 
     // Render temporal zones
-    this.renderTemporalZones(debugGroup, temporalZones);
+    void this.renderTemporalZones(debugGroup, temporalZones);
 
     // Render tag connections
-    this.renderTagConnections(debugGroup, tagConnections);
+    void this.renderTagConnections(debugGroup, tagConnections);
 
     // Render hub indicators
-    this.renderHubIndicators(debugGroup, hubNodes);
+    void this.renderHubIndicators(debugGroup, hubNodes);
   }
 
   /**
@@ -1630,8 +1599,7 @@ export class GraphRenderer {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and zone data have dynamic structures
   private renderTemporalZones(debugGroup: any, zones: any[]): void {
     const zoneSelection = debugGroup.selectAll('.temporal-zone')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js data binding requires any for heterogeneous data types
-      .data(zones, (d: any) => d.name);
+      .data(zones, (d: unknown) => d.name);
 
     // Enter new zones
     const zoneEnter = zoneSelection.enter()
@@ -1644,14 +1612,10 @@ export class GraphRenderer {
 
     // Update existing zones
     zoneSelection.merge(zoneEnter)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('cx', (d: any) => d.centerX)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('cy', (d: any) => d.centerY)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('r', (d: any) => d.radius)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('stroke', (d: any) => {
+      .attr('cx', (d: unknown) => d.centerX)
+      .attr('cy', (d: unknown) => d.centerY)
+      .attr('r', (d: unknown) => d.radius)
+      .attr('stroke', (d: unknown) => {
         switch (d.name) {
           case 'recent': return '#4ade80'; // Green for recent
           case 'established': return '#3b82f6'; // Blue for established
@@ -1665,8 +1629,7 @@ export class GraphRenderer {
 
     // Add zone labels
     const labelSelection = debugGroup.selectAll('.temporal-zone-label')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js data binding requires any for heterogeneous data types
-      .data(zones, (d: any) => d.name);
+      .data(zones, (d: unknown) => d.name);
 
     const labelEnter = labelSelection.enter()
       .append('text')
@@ -1677,12 +1640,9 @@ export class GraphRenderer {
       .attr('fill-opacity', 0.7);
 
     labelSelection.merge(labelEnter)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('x', (d: any) => d.centerX)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('y', (d: any) => d.centerY - d.radius + 20)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('fill', (d: any) => {
+      .attr('x', (d: unknown) => d.centerX)
+      .attr('y', (d: unknown) => d.centerY - d.radius + 20)
+      .attr('fill', (d: unknown) => {
         switch (d.name) {
           case 'recent': return '#22c55e';
           case 'established': return '#2563eb';
@@ -1690,8 +1650,7 @@ export class GraphRenderer {
           default: return '#6b7280';
         }
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js text accessor function uses any for bound data
-      .text((d: any) => d.name.toUpperCase());
+      .text((d: unknown) => d.name.toUpperCase());
 
     labelSelection.exit().remove();
   }
@@ -1702,8 +1661,7 @@ export class GraphRenderer {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and connection data have dynamic structures
   private renderTagConnections(debugGroup: any, connections: any[]): void {
     const connectionSelection = debugGroup.selectAll('.tag-connection')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js data binding requires any for heterogeneous data types
-      .data(connections, (d: any) => `${d.sourceId}-${d.targetId}`);
+      .data(connections, (d: unknown) => `${d.sourceId}-${d.targetId}`);
 
     // Enter new connections
     const connectionEnter = connectionSelection.enter()
@@ -1715,25 +1673,20 @@ export class GraphRenderer {
 
     // Update existing connections
     connectionSelection.merge(connectionEnter)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('stroke-width', (d: any) => Math.max(1, d.strength * 4))
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('x1', (d: any) => {
+      .attr('stroke-width', (d: unknown) => Math.max(1, d.strength * 4))
+      .attr('x1', (d: unknown) => {
         const sourceNode = this.nodes.find(n => n.id === d.sourceId);
         return sourceNode?.x || 0;
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('y1', (d: any) => {
+      .attr('y1', (d: unknown) => {
         const sourceNode = this.nodes.find(n => n.id === d.sourceId);
         return sourceNode?.y || 0;
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('x2', (d: any) => {
+      .attr('x2', (d: unknown) => {
         const targetNode = this.nodes.find(n => n.id === d.targetId);
         return targetNode?.x || 0;
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('y2', (d: any) => {
+      .attr('y2', (d: unknown) => {
         const targetNode = this.nodes.find(n => n.id === d.targetId);
         return targetNode?.y || 0;
       });
@@ -1748,8 +1701,7 @@ export class GraphRenderer {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js group and hub data have dynamic structures
   private renderHubIndicators(debugGroup: any, hubs: any[]): void {
     const hubSelection = debugGroup.selectAll('.hub-indicator')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js data binding requires any for heterogeneous data types
-      .data(hubs, (d: any) => d.nodeId);
+      .data(hubs, (d: unknown) => d.nodeId);
 
     // Enter new hub indicators
     const hubEnter = hubSelection.enter()
@@ -1762,18 +1714,15 @@ export class GraphRenderer {
 
     // Update existing hub indicators
     hubSelection.merge(hubEnter)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('cx', (d: any) => {
+      .attr('cx', (d: unknown) => {
         const hubNode = this.nodes.find(n => n.id === d.nodeId);
         return hubNode?.x || 0;
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('cy', (d: any) => {
+      .attr('cy', (d: unknown) => {
         const hubNode = this.nodes.find(n => n.id === d.nodeId);
         return hubNode?.y || 0;
       })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('r', (d: any) => 15 + (d.centralityScore * 10)); // Scale with centrality
+      .attr('r', (d: unknown) => 15 + (d.centralityScore * 10)); // Scale with centrality
 
     // Remove old hub indicators
     hubSelection.exit().remove();
@@ -1785,7 +1734,7 @@ export class GraphRenderer {
   private clearDebugVisualization(): void {
     const debugGroup = this.g.select('.debug-visualization');
     if (!debugGroup.empty()) {
-      debugGroup.remove();
+      void debugGroup.remove();
     }
   }
 
@@ -1794,7 +1743,7 @@ export class GraphRenderer {
    */
   private renderClusterVisualization(): void {
     if (!this.clusteringResult || !this.smartClusteringSettings?.visualization.enableVisualization) {
-      this.clearClusterVisualization();
+      void this.clearClusterVisualization();
       return;
     }
 
@@ -1812,11 +1761,11 @@ export class GraphRenderer {
     }
 
     // Render cluster boundaries
-    this.renderClusterBoundaries();
+    void this.renderClusterBoundaries();
     
     // Render cluster labels if enabled
     if (this.smartClusteringSettings.visualization.showClusterLabels) {
-      this.renderClusterLabels();
+      void this.renderClusterLabels();
     }
   }
 
@@ -1827,8 +1776,7 @@ export class GraphRenderer {
     if (!this.clusterGroup || !this.clusteringResult) return;
 
     const boundarySelection = this.clusterGroup.selectAll('.cluster-boundary')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js data binding requires any for heterogeneous data types
-      .data(this.clusteringResult.clusters, (d: any) => d.id);
+      .data(this.clusteringResult.clusters, (d: unknown) => d.id);
 
     // Remove old boundaries
     boundarySelection.exit().remove();
@@ -1846,17 +1794,12 @@ export class GraphRenderer {
     const boundaryStyle = this.smartClusteringSettings?.visualization.clusterBoundaries || 'subtle';
 
     boundaryUpdate
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('cx', (d: any) => d.centroid.x)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('cy', (d: any) => d.centroid.y)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('r', (d: any) => d.radius) // Use calculated radius without artificial minimum
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('stroke', (d: any) => d.color)
+      .attr('cx', (d: unknown) => d.centroid.x)
+      .attr('cy', (d: unknown) => d.centroid.y)
+      .attr('r', (d: unknown) => d.radius) // Use calculated radius without artificial minimum
+      .attr('stroke', (d: unknown) => d.color)
       .attr('data-style', boundaryStyle)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('data-type', (d: any) => d.type);
+      .attr('data-type', (d: unknown) => d.type);
   }
 
   /**
@@ -1866,8 +1809,7 @@ export class GraphRenderer {
     if (!this.clusterGroup || !this.clusteringResult) return;
 
     const labelSelection = this.clusterGroup.selectAll('.cluster-label')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js data binding requires any for heterogeneous data types
-      .data(this.clusteringResult.clusters, (d: any) => d.id);
+      .data(this.clusteringResult.clusters, (d: unknown) => d.id);
 
     // Remove old labels
     labelSelection.exit().remove();
@@ -1881,14 +1823,10 @@ export class GraphRenderer {
     const labelUpdate = labelSelection.merge(labelEnter);
 
     labelUpdate
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('x', (d: any) => d.centroid.x)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('y', (d: any) => d.centroid.y - d.radius + 15) // Position above cluster
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js attr accessor functions use any for dynamic property access
-      .attr('data-type', (d: any) => d.type)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js text accessor function uses any for bound data
-      .text((d: any) => d.label || `Cluster ${d.nodes.length}`);
+      .attr('x', (d: unknown) => d.centroid.x)
+      .attr('y', (d: unknown) => d.centroid.y - d.radius + 15) // Position above cluster
+      .attr('data-type', (d: unknown) => d.type)
+      .text((d: unknown) => d.label || `Cluster ${d.nodes.length}`);
   }
 
   /**
@@ -1918,26 +1856,26 @@ export class GraphRenderer {
     (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)?.links(this.links);
     
     // Re-render with new data
-    this.renderNodes();
-    this.renderLinks();
+    void this.renderNodes();
+    void this.renderLinks();
     
     // Restart simulation to apply spacing changes
-    this.restartSimulation();
+    void this.restartSimulation();
     
-    logger.debug('renderer', 'Graph data updated and simulation restarted');
+    void logger.debug('renderer', 'Graph data updated and simulation restarted');
   }
 
   /**
    * Restart simulation with current configuration
    */
   restartSimulation(): void {
-    logger.debug('renderer', 'Restarting simulation with updated spacing parameters');
+    void logger.debug('renderer', 'Restarting simulation with updated spacing parameters');
     
     // Update all forces with current configuration
-    this.updateSimulationForces();
+    void this.updateSimulationForces();
     
     // Apply Content-Aware Positioning forces if enabled
-    this.applyContentAwareForces();
+    void this.applyContentAwareForces();
     
     // Restart with medium alpha for visible movement but not chaos
     this.simulation.alpha(0.5).restart();
@@ -1954,7 +1892,7 @@ export class GraphRenderer {
    * Force apply better spacing immediately
    */
   applyBetterSpacing(): void {
-    logger.debug('renderer', 'Applying better spacing configuration');
+    void logger.debug('renderer', 'Applying better spacing configuration');
     
     // Update force configuration with better spacing
     this.forceConfig.collisionRadius = 24;  // One node-sized space between nodes
@@ -1963,9 +1901,9 @@ export class GraphRenderer {
     this.forceConfig.weakLinkDistance = 80;
     
     // Apply changes immediately
-    this.restartSimulation();
+    void this.restartSimulation();
     
-    logger.debug('renderer', 'Better spacing applied and simulation restarted');
+    void logger.debug('renderer', 'Better spacing applied and simulation restarted');
   }
 
   // Performance optimization: Viewport culling methods
@@ -1975,7 +1913,7 @@ export class GraphRenderer {
    */
   private initializeViewportBounds(): void {
     const identity = d3.zoomIdentity;
-    this.updateViewportBounds(identity);
+    void this.updateViewportBounds(identity);
   }
   
   /**
@@ -2005,14 +1943,14 @@ export class GraphRenderer {
         cancelAnimationFrame(this.pendingUpdate);
       }
       this.pendingUpdate = requestAnimationFrame(() => {
-        this.updateVisibleElements();
+        void this.updateVisibleElements();
         this.lastUpdateTime = performance.now();
         this.pendingUpdate = null;
       });
       return;
     }
     
-    this.updateVisibleElements();
+    void this.updateVisibleElements();
     this.lastUpdateTime = now;
   }
   
@@ -2028,8 +1966,7 @@ export class GraphRenderer {
     
     // Update visible links based on viewport culling
     this.linkGroup.selectAll('line')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js style accessor uses any for dynamic CSS property access
-      .style('display', (d: any) => {
+      .style('display', (d: unknown) => {
         const sourceNode = d.source;
         const targetNode = d.target;
         
@@ -2054,8 +1991,7 @@ export class GraphRenderer {
     
     // Update visible nodes based on viewport culling
     this.nodeGroup.selectAll('circle')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js style accessor uses any for dynamic CSS property access
-      .style('display', (d: any) => {
+      .style('display', (d: unknown) => {
         // Only show nodes with valid coordinates that are in viewport
         if (!this.hasValidCoordinates(d)) {
           return 'none';
@@ -2177,7 +2113,7 @@ export class GraphRenderer {
    */
   private enableTransitionsForNormalGraph(): void {
     this.container.classList.remove('dense-graph-mode');
-    logger.debug('performance', 'Enabled CSS transitions for normal graph');
+    void logger.debug('performance', 'Enabled CSS transitions for normal graph');
   }
   
   /**
@@ -2187,8 +2123,7 @@ export class GraphRenderer {
     const allLines = this.g.select('.sonigraph-temporal-links').selectAll('line');
     let removedCount = 0;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- D3.js each callback receives any for bound data
-    allLines.each(function(d: any) {
+    allLines.each(function(d: unknown) {
       const sourceNode = d.source;
       const targetNode = d.target;
       
@@ -2256,7 +2191,7 @@ export class GraphRenderer {
     const color = layerColors[layer] || '#888888';
 
     // Add active class for CSS animations
-    nodeElement.classed('note-active', true);
+    void nodeElement.classed('note-active', true);
     nodeElement.classed(`note-active-${layer}`, true);
 
     // Apply glow effect
@@ -2271,7 +2206,7 @@ export class GraphRenderer {
       .attr('stroke-width', 1.5)
       .style('filter', null)
       .on('end', () => {
-        nodeElement.classed('note-active', false);
+        void nodeElement.classed('note-active', false);
         nodeElement.classed(`note-active-${layer}`, false);
       });
   }
@@ -2316,6 +2251,6 @@ export class GraphRenderer {
     // Remove all DOM elements
     d3.select(this.container).selectAll('*').remove();
 
-    logger.debug('renderer', 'GraphRenderer destroyed and memory released');
+    void logger.debug('renderer', 'GraphRenderer destroyed and memory released');
   }
 } 

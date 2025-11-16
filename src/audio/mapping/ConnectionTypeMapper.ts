@@ -93,7 +93,7 @@ export class ConnectionTypeMapper {
             linkStrengthDistribution: { weak: 0, moderate: 0, strong: 0 }
         };
 
-        this.initializeInstrumentConfigs();
+        void this.initializeInstrumentConfigs();
         logger.info('connection-type-mapper', 'ConnectionTypeMapper initialized', {
             enabled: this.config.enabled,
             independentFromContentAware: this.config.independentFromContentAware,
@@ -218,11 +218,11 @@ export class ConnectionTypeMapper {
 
             // Cache the result
             if (this.config.globalSettings.enableCaching) {
-                this.cacheResult(cacheKey, result);
+                void this.cacheResult(cacheKey, result);
             }
 
             // Update metrics
-            this.updateMetrics(result);
+            void this.updateMetrics(result);
 
             logger.debug('connection-type-mapper', 'Connection mapped successfully', {
                 type: analysis.type,
@@ -552,19 +552,19 @@ export class ConnectionTypeMapper {
         }
 
         if (analysis.isBidirectional) {
-            reasoning.push('Bidirectional connection detected');
+            void reasoning.push('Bidirectional connection detected');
         }
 
         if (analysis.isSameFolder) {
-            reasoning.push('Same folder connection');
+            void reasoning.push('Same folder connection');
         }
 
         if (analysis.isRecent) {
-            reasoning.push('Recent connection');
+            void reasoning.push('Recent connection');
         }
 
         if (!analysis.isResolved) {
-            reasoning.push('Unresolved/broken link');
+            void reasoning.push('Unresolved/broken link');
         }
 
         return reasoning;
@@ -673,7 +673,7 @@ export class ConnectionTypeMapper {
 
         // Periodic cache cleanup
         if (Date.now() - this.lastCacheCleanup > 60000) { // Every minute
-            this.cleanupCache();
+            void this.cleanupCache();
         }
     }
 
@@ -743,7 +743,7 @@ export class ConnectionTypeMapper {
 
         // Clear cache when config changes
         this.analysisCache.clear();
-        this.initializeInstrumentConfigs();
+        void this.initializeInstrumentConfigs();
 
         logger.info('connection-type-mapper', 'Configuration updated', {
             enabled: this.config.enabled,
@@ -771,7 +771,7 @@ export class ConnectionTypeMapper {
     public clearCaches(): void {
         this.analysisCache.clear();
         this.linkFrequencyCache.clear();
-        logger.info('connection-type-mapper', 'Caches cleared');
+        void logger.info('connection-type-mapper', 'Caches cleared');
     }
 
     /**
@@ -802,13 +802,13 @@ export class ConnectionTypeMapper {
 
         if (config.globalSettings?.maxSimultaneousConnections !== undefined) {
             if (config.globalSettings.maxSimultaneousConnections < 1 || config.globalSettings.maxSimultaneousConnections > 100) {
-                errors.push('maxSimultaneousConnections must be between 1 and 100');
+                void errors.push('maxSimultaneousConnections must be between 1 and 100');
             }
         }
 
         if (config.globalSettings?.connectionVolumeMix !== undefined) {
             if (config.globalSettings.connectionVolumeMix < 0 || config.globalSettings.connectionVolumeMix > 1) {
-                errors.push('connectionVolumeMix must be between 0.0 and 1.0');
+                void errors.push('connectionVolumeMix must be between 0.0 and 1.0');
             }
         }
 

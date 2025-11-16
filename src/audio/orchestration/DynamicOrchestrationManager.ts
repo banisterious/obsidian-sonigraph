@@ -100,7 +100,7 @@ export class DynamicOrchestrationManager {
 
     // Check if tier change is needed
     if (complexity.tier !== this.orchestrationState.activeTier) {
-      this.initiateTierTransition(complexity.tier);
+      void this.initiateTierTransition(complexity.tier);
     }
 
     // Update state
@@ -109,10 +109,10 @@ export class DynamicOrchestrationManager {
     this.orchestrationState.lastUpdateTime = Date.now();
 
     // Update instrument layers
-    this.updateInstrumentLayers(complexity, temporal);
+    void this.updateInstrumentLayers(complexity, temporal);
 
     // Update transition progress
-    this.updateTransitionProgress();
+    void this.updateTransitionProgress();
   }
 
   /**
@@ -175,7 +175,7 @@ export class DynamicOrchestrationManager {
         temporalSensitivity: this.getLayerTemporalSensitivity(layerType)
       };
 
-      layers.push(layer);
+      void layers.push(layer);
     }
 
     this.orchestrationState.activeInstrumentLayers = layers;
@@ -311,7 +311,7 @@ export class DynamicOrchestrationManager {
   startAutoUpdate(intervalMs: number = 60000): void {
     if (!this.settings.autoAdjust) return;
 
-    this.stopAutoUpdate();
+    void this.stopAutoUpdate();
 
     this.updateInterval = window.setInterval(() => {
       // Update temporal influence only (complexity updated on graph changes)
@@ -398,9 +398,9 @@ export class DynamicOrchestrationManager {
     // Restart auto-update if setting changed
     if (settings.autoAdjust !== undefined) {
       if (settings.autoAdjust) {
-        this.startAutoUpdate();
+        void this.startAutoUpdate();
       } else {
-        this.stopAutoUpdate();
+        void this.stopAutoUpdate();
       }
     }
   }
@@ -422,7 +422,7 @@ export class DynamicOrchestrationManager {
    * Dispose resources
    */
   dispose(): void {
-    this.stopAutoUpdate();
+    void this.stopAutoUpdate();
     this.complexityAnalyzer.dispose();
     this.temporalInfluence.dispose();
   }

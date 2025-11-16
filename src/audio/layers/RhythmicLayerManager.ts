@@ -5,26 +5,24 @@
  * Provides subtle percussion and arpeggiator patterns that respond to vault activity.
  */
 
-import { 
-  PolySynth, 
-  MembraneSynth, 
+import {
+  PolySynth,
+  MembraneSynth,
   MetalSynth,
   FMSynth,
-  Sequence, 
+  Sequence,
   Pattern,
-  Transport,
+  getTransport,
   Volume,
   Filter,
   Reverb,
-  start 
+  start
 } from 'tone';
 
 import {
   RhythmicLayerConfig,
   ActivityMetrics,
-  VaultState,
   ContinuousLayerError,
-  LayerPerformanceMetrics,
   LayerState
 } from './types';
 import { SonigraphSettings } from '../../utils/constants';
@@ -124,9 +122,9 @@ export class RhythmicLayerManager {
     this.filter = new Filter(800, 'lowpass');
     this.reverb = new Reverb(1.5);
     
-    this.initializeRhythmPatterns();
+    void this.initializeRhythmPatterns();
     
-    logger.debug('initialization', 'RhythmicLayerManager created');
+    void logger.debug('initialization', 'RhythmicLayerManager created');
   }
   
   /**
@@ -138,18 +136,18 @@ export class RhythmicLayerManager {
     }
     
     try {
-      logger.info('initialization', 'Initializing RhythmicLayerManager');
+      void logger.info('initialization', 'Initializing RhythmicLayerManager');
       
       await start();
       
       // Connect audio chain
-      this.connectAudioChain();
+      void this.connectAudioChain();
       
       this.isInitialized = true;
       
-      logger.info('initialization', 'RhythmicLayerManager initialized');
+      void logger.info('initialization', 'RhythmicLayerManager initialized');
     } catch (error) {
-      logger.error('initialization', 'Failed to initialize RhythmicLayerManager', error);
+      void logger.error('initialization', 'Failed to initialize RhythmicLayerManager', error);
       throw new ContinuousLayerError('Rhythmic layer initialization failed', 'rhythmic');
     }
   }
@@ -159,7 +157,7 @@ export class RhythmicLayerManager {
    */
   async start(): Promise<void> {
     if (!this.config.enabled) {
-      logger.debug('playback', 'Rhythmic layer disabled, skipping start');
+      void logger.debug('playback', 'Rhythmic layer disabled, skipping start');
       return;
     }
     
@@ -172,21 +170,21 @@ export class RhythmicLayerManager {
     }
     
     try {
-      logger.info('playback', 'Starting rhythmic layer playback');
+      void logger.info('playback', 'Starting rhythmic layer playback');
       
       // Set initial tempo
-      Transport.bpm.value = this.config.baseTempo;
+      getTransport().bpm.value = this.config.baseTempo;
       
       // Start with a simple pattern
-      this.startPattern('gentle');
+      void this.startPattern('gentle');
       
       this.isPlaying = true;
       
-      this.notifyStateChange();
+      void this.notifyStateChange();
       
-      logger.info('playback', 'Rhythmic layer playback started');
+      void logger.info('playback', 'Rhythmic layer playback started');
     } catch (error) {
-      logger.error('playback', 'Failed to start rhythmic layer', error);
+      void logger.error('playback', 'Failed to start rhythmic layer', error);
       throw new ContinuousLayerError('Rhythmic layer start failed', 'rhythmic');
     }
   }
@@ -200,10 +198,10 @@ export class RhythmicLayerManager {
     }
     
     try {
-      logger.info('playback', 'Stopping rhythmic layer playback');
+      void logger.info('playback', 'Stopping rhythmic layer playback');
       
       // Stop all patterns
-      this.stopAllPatterns();
+      void this.stopAllPatterns();
       
       // Fade out volume
       this.masterVolume.volume.rampTo(-60, 1);
@@ -214,11 +212,11 @@ export class RhythmicLayerManager {
       this.isPlaying = false;
       this.activeVoices = 0;
       
-      this.notifyStateChange();
+      void this.notifyStateChange();
       
-      logger.info('playback', 'Rhythmic layer playback stopped');
+      void logger.info('playback', 'Rhythmic layer playback stopped');
     } catch (error) {
-      logger.error('playback', 'Error stopping rhythmic layer', error);
+      void logger.error('playback', 'Error stopping rhythmic layer', error);
     }
   }
   
@@ -248,15 +246,15 @@ export class RhythmicLayerManager {
       const targetTempo = this.config.tempoRange[0] + (activityRatio * tempoRange);
       
       // Smooth tempo changes
-      Transport.bpm.rampTo(targetTempo, 2);
+      getTransport().bpm.rampTo(targetTempo, 2);
       
       // Handle intensity spikes
       if (metrics.intensitySpikes) {
-        this.triggerDensityBurst(metrics.recentEventCount);
+        void this.triggerDensityBurst(metrics.recentEventCount);
       }
       
       // Adjust pattern complexity based on activity
-      this.adjustPatternComplexity(activityRatio);
+      void this.adjustPatternComplexity(activityRatio);
       
       logger.debug('activity', `Updated rhythm activity`, {
         eventRate: metrics.eventRate,
@@ -266,7 +264,7 @@ export class RhythmicLayerManager {
       });
       
     } catch (error) {
-      logger.error('activity', 'Error updating rhythm activity', error);
+      void logger.error('activity', 'Error updating rhythm activity', error);
     }
   }
   
@@ -277,17 +275,17 @@ export class RhythmicLayerManager {
     const oldEnabled = this.config.enabled;
     this.config = { ...this.config, ...newConfig };
     
-    logger.debug('configuration', 'Updated rhythmic layer config', newConfig);
+    void logger.debug('configuration', 'Updated rhythmic layer config', newConfig);
     
     // Handle enable/disable
     if (newConfig.enabled !== undefined && newConfig.enabled !== oldEnabled) {
       if (newConfig.enabled && !this.isPlaying) {
         this.start().catch(error => {
-          logger.error('configuration', 'Failed to start after enabling', error);
+          void logger.error('configuration', 'Failed to start after enabling', error);
         });
       } else if (!newConfig.enabled && this.isPlaying) {
         this.stop().catch(error => {
-          logger.error('configuration', 'Failed to stop after disabling', error);
+          void logger.error('configuration', 'Failed to stop after disabling', error);
         });
       }
     }
@@ -298,7 +296,7 @@ export class RhythmicLayerManager {
       this.masterVolume.volume.rampTo(targetVolume, 1);
     }
     
-    this.notifyStateChange();
+    void this.notifyStateChange();
   }
   
   /**
@@ -315,7 +313,7 @@ export class RhythmicLayerManager {
     return {
       isPlaying: this.isPlaying,
       enabled: this.config.enabled,
-      tempo: Transport.bpm.value,
+      tempo: getTransport().bpm.value,
       activeVoices: this.activeVoices,
       cpuUsage: this.cpuUsage,
       activePatterns: Array.from(this.activePatterns)
@@ -333,7 +331,7 @@ export class RhythmicLayerManager {
    * Clean up resources
    */
   async dispose(): Promise<void> {
-    logger.info('cleanup', 'Disposing RhythmicLayerManager');
+    void logger.info('cleanup', 'Disposing RhythmicLayerManager');
     
     try {
       await this.stop();
@@ -348,9 +346,9 @@ export class RhythmicLayerManager {
       
       this.isInitialized = false;
       
-      logger.info('cleanup', 'RhythmicLayerManager disposed');
+      void logger.info('cleanup', 'RhythmicLayerManager disposed');
     } catch (error) {
-      logger.error('cleanup', 'Error disposing rhythmic layer', error);
+      void logger.error('cleanup', 'Error disposing rhythmic layer', error);
     }
   }
   
@@ -406,12 +404,12 @@ export class RhythmicLayerManager {
     
     try {
       // Stop existing patterns
-      this.stopAllPatterns();
+      void this.stopAllPatterns();
       
       // Create new sequence
       this.currentSequence = new Sequence((time, note) => {
         if (note && note.note) {
-          this.playRhythmNote(time, note.note, note.velocity);
+          void this.playRhythmNote(time, note.note, note.velocity);
         }
       }, pattern.notes.map((note, i) => ({
         note,
@@ -473,7 +471,7 @@ export class RhythmicLayerManager {
       }
       
     } catch (error) {
-      logger.error('playback', 'Error playing rhythm note', error);
+      void logger.error('playback', 'Error playing rhythm note', error);
     }
   }
   
@@ -496,7 +494,7 @@ export class RhythmicLayerManager {
       });
       
     } catch (error) {
-      logger.error('activity', 'Error triggering density burst', error);
+      void logger.error('activity', 'Error triggering density burst', error);
     }
   }
   
@@ -514,7 +512,7 @@ export class RhythmicLayerManager {
     // Only switch if we're not already using this pattern
     if (!this.activePatterns.has(targetPattern)) {
       logger.debug('patterns', `Switching to ${targetPattern} pattern (activity: ${activityRatio.toFixed(2)})`);
-      this.startPattern(targetPattern);
+      void this.startPattern(targetPattern);
     }
   }
   

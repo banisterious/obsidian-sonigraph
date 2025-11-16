@@ -34,34 +34,34 @@ export class LocalSoundscapeFilterModal extends Modal {
 
 	onOpen(): void {
 		const { contentEl } = this;
-		contentEl.empty();
-		contentEl.addClass('local-soundscape-filter-modal');
+		void contentEl.empty();
+		void contentEl.addClass('local-soundscape-filter-modal');
 
 		contentEl.createEl('h2', { text: 'Filter Local Soundscape' });
 
 		// Tag filters section
-		this.createTagFiltersSection(contentEl);
+		void this.createTagFiltersSection(contentEl);
 
 		// Folder filters section
-		this.createFolderFiltersSection(contentEl);
+		void this.createFolderFiltersSection(contentEl);
 
 		// File type filters section
-		this.createFileTypeFiltersSection(contentEl);
+		void this.createFileTypeFiltersSection(contentEl);
 
 		// Link direction filters section
-		this.createLinkDirectionFiltersSection(contentEl);
+		void this.createLinkDirectionFiltersSection(contentEl);
 
 		// Buttons
 		const buttonContainer = contentEl.createDiv({ cls: 'modal-button-container' });
 
 		const clearButton = buttonContainer.createEl('button', { text: 'Clear All' });
 		clearButton.addEventListener('click', () => {
-			this.clearAllFilters();
+			void this.clearAllFilters();
 		});
 
 		const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
 		cancelButton.addEventListener('click', () => {
-			this.close();
+			void this.close();
 		});
 
 		const applyButton = buttonContainer.createEl('button', {
@@ -69,7 +69,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 			cls: 'mod-cta'
 		});
 		applyButton.addEventListener('click', () => {
-			this.applyFilters();
+			void this.applyFilters();
 		});
 	}
 
@@ -119,7 +119,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 				tagEl.addEventListener('click', () => {
 					if (!this.filters.includeTags.includes(tag)) {
 						this.filters.includeTags.push(tag);
-						this.refresh();
+						void this.refresh();
 					}
 				});
 			});
@@ -178,7 +178,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 				folderEl.addEventListener('click', () => {
 					if (!this.filters.includeFolders.includes(folder)) {
 						this.filters.includeFolders.push(folder);
-						this.refresh();
+						void this.refresh();
 					}
 				});
 			});
@@ -258,7 +258,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 				cache.tags.forEach(tagCache => {
 					// Remove the # prefix from tags
 					const tag = tagCache.tag.startsWith('#') ? tagCache.tag.slice(1) : tagCache.tag;
-					tags.add(tag);
+					void tags.add(tag);
 				});
 			}
 			// Also check frontmatter tags
@@ -267,7 +267,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 				if (Array.isArray(fmTags)) {
 					fmTags.forEach(tag => tags.add(tag));
 				} else if (typeof fmTags === 'string') {
-					tags.add(fmTags);
+					void tags.add(fmTags);
 				}
 			}
 		});
@@ -281,7 +281,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 
 		const collectFolders = (folder: TFolder) => {
 			if (folder.path !== '/') {
-				folders.push(folder.path);
+				void folders.push(folder.path);
 			}
 			folder.children.forEach(child => {
 				if (child instanceof TFolder) {
@@ -303,22 +303,22 @@ export class LocalSoundscapeFilterModal extends Modal {
 			includeFileTypes: [],
 			linkDirections: []
 		};
-		this.refresh();
+		void this.refresh();
 	}
 
 	private refresh(): void {
-		this.close();
-		this.open();
+		void this.close();
+		void this.open();
 	}
 
 	private applyFilters(): void {
-		logger.info('filters-applied', 'Applying filters', this.filters);
-		this.onApply(this.filters);
-		this.close();
+		void logger.info('filters-applied', 'Applying filters', this.filters);
+		void this.onApply(this.filters);
+		void this.close();
 	}
 
 	onClose(): void {
 		const { contentEl } = this;
-		contentEl.empty();
+		void contentEl.empty();
 	}
 }

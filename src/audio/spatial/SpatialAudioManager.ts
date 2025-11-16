@@ -65,7 +65,7 @@ export class SpatialAudioManager {
 
         // Recalculate all pan positions with new config
         if (config.enabled) {
-            this.recalculateAllPanPositions();
+            void this.recalculateAllPanPositions();
         }
 
         this.emitEvent({
@@ -82,7 +82,7 @@ export class SpatialAudioManager {
         this.stats.lastBoundsUpdate = Date.now();
 
         // Recalculate positions with new bounds
-        this.recalculateAllPanPositions();
+        void this.recalculateAllPanPositions();
 
         this.emitEvent({
             type: 'bounds-update',
@@ -117,7 +117,7 @@ export class SpatialAudioManager {
         this.stats.trackedNodes = this.nodeStates.size;
 
         // Apply pan to audio node
-        this.applyPanToNode(nodeId, panPosition);
+        void this.applyPanToNode(nodeId, panPosition);
     }
 
     /**
@@ -158,7 +158,7 @@ export class SpatialAudioManager {
 
         // Apply if pan changed significantly
         if (Math.abs(newPan - oldPan) > 0.01) {
-            this.applyPanToNode(nodeId, newPan);
+            void this.applyPanToNode(nodeId, newPan);
 
             this.emitEvent({
                 type: 'pan-change',
@@ -181,7 +181,7 @@ export class SpatialAudioManager {
         // Dispose panner node
         const panner = this.pannerNodes.get(nodeId);
         if (panner) {
-            panner.dispose();
+            void panner.dispose();
             this.pannerNodes.delete(nodeId);
         }
 
@@ -222,7 +222,7 @@ export class SpatialAudioManager {
                 const newPan = this.calculateNodePan(nodeId, state.position);
                 if (Math.abs(newPan - state.finalPan) > 0.01) {
                     state.finalPan = newPan;
-                    this.applyPanToNode(nodeId, newPan);
+                    void this.applyPanToNode(nodeId, newPan);
                 }
             }
         }
@@ -306,11 +306,11 @@ export class SpatialAudioManager {
             const newPan = this.calculateNodePan(nodeId, state.position);
             if (Math.abs(newPan - state.finalPan) > 0.01) {
                 state.finalPan = newPan;
-                this.applyPanToNode(nodeId, newPan);
+                void this.applyPanToNode(nodeId, newPan);
             }
         }
 
-        this.updateStatistics();
+        void this.updateStatistics();
     }
 
     /**
@@ -379,7 +379,7 @@ export class SpatialAudioManager {
         if (handlers) {
             const index = handlers.indexOf(handler);
             if (index > -1) {
-                handlers.splice(index, 1);
+                void handlers.splice(index, 1);
             }
         }
     }
@@ -406,7 +406,7 @@ export class SpatialAudioManager {
      */
     enable(): void {
         this.config.enabled = true;
-        this.recalculateAllPanPositions();
+        void this.recalculateAllPanPositions();
     }
 
     /**
@@ -427,7 +427,7 @@ export class SpatialAudioManager {
     dispose(): void {
         // Dispose all panner nodes
         for (const panner of this.pannerNodes.values()) {
-            panner.dispose();
+            void panner.dispose();
         }
 
         this.pannerNodes.clear();

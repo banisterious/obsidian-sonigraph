@@ -40,7 +40,7 @@ export class GraphDemoModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.empty();
+		void contentEl.empty();
 
 		// Create modal header
 		contentEl.createEl('h2', { text: 'D3-Force Animation Demo' });
@@ -50,13 +50,13 @@ export class GraphDemoModal extends Modal {
 		const graphContainer = contentEl.createDiv('sonigraph-demo-container');
 
 		// Create sample data
-		this.createSampleData();
+		void this.createSampleData();
 
 		// Initialize D3 visualization
-		this.initializeVisualization(graphContainer);
+		void this.initializeVisualization(graphContainer);
 
 		// Add controls
-		this.addControls(contentEl);
+		void this.addControls(contentEl);
 	}
 
 	private createSampleData() {
@@ -226,7 +226,7 @@ export class GraphDemoModal extends Modal {
 				d.fy = null;
 			});
 
-		nodeGroup.call(drag);
+		void nodeGroup.call(drag);
 
 		// Update positions on each tick
 		this.simulation.on('tick', () => {
@@ -273,7 +273,7 @@ export class GraphDemoModal extends Modal {
 		// Info text
 		const infoText = controlsContainer.createDiv('info-text');
 		infoText.appendText('Blue = Notes, Orange = Images');
-		infoText.createEl('br');
+		void infoText.createEl('br');
 		infoText.appendText('Node size = text length + connections');
 	}
 
@@ -308,10 +308,10 @@ export class GraphDemoModal extends Modal {
 					.style('opacity', 1);
 
 				// Show links that connect to visible nodes
-				this.updateVisibleLinks();
+				void this.updateVisibleLinks();
 
 				// Play a note for this node
-				this.playNodeSound(node);
+				void this.playNodeSound(node);
 
 				// Restart simulation to settle new node
 				if (this.simulation) {
@@ -371,11 +371,11 @@ export class GraphDemoModal extends Modal {
 			gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
 			gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
 			
-			oscillator.connect(gainNode);
-			gainNode.connect(audioContext.destination);
+			void oscillator.connect(gainNode);
+			void gainNode.connect(audioContext.destination);
 			
-			oscillator.start(audioContext.currentTime);
-			oscillator.stop(audioContext.currentTime + 0.3);
+			void oscillator.start(audioContext.currentTime);
+			void oscillator.stop(audioContext.currentTime + 0.3);
 		} catch (error) {
 			// Fallback if audio context fails
 			logger.info('audio-fallback', `♪ ${node.name} (${node.type})`);
@@ -411,6 +411,6 @@ export class GraphDemoModal extends Modal {
 			this.simulation.stop();
 		}
 		const { contentEl } = this;
-		contentEl.empty();
+		void contentEl.empty();
 	}
 } 

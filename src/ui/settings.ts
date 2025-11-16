@@ -15,7 +15,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 
-		containerEl.empty();
+		void containerEl.empty();
 
 		logger.debug('rendering', 'Rendering settings tab', { 
 			settings: this.plugin.settings 
@@ -30,7 +30,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 		const dismissBtn = onboardingActions.createEl('button', { text: 'Dismiss', cls: 'mod-muted' });
 		
 		dismissBtn.addEventListener('click', () => {
-			onboardingSection.addClass('sonigraph-onboarding-bordered--dismissed');
+			void onboardingSection.addClass('sonigraph-onboarding-bordered--dismissed');
 		});
 
 		// Control Center Setting
@@ -71,7 +71,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 		});
 		const li1 = noteUl.createEl('li');
 		li1.createEl('strong', { text: 'Control Center > Sonic Graph tab' });
-		li1.appendText(' for comprehensive settings');
+		void li1.appendText(' for comprehensive settings');
 		const li2 = noteUl.createEl('li');
 		li2.createEl('strong', { text: 'Sonic Graph settings panel' });
 		li2.appendText(' (⚙️ icon) for quick visualization controls');
@@ -130,7 +130,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					logger.info('settings-change', 'Adaptive detail levels toggled', { enabled: value });
 					
 					// Refresh the settings display to show/hide sub-options
-					this.display();
+					void this.display();
 				})
 			);
 
@@ -348,7 +348,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.addOption('debug', 'Debug')
 				.setValue(LoggerFactory.getLogLevel())
 				.onChange((value: 'off' | 'error' | 'warn' | 'info' | 'debug') => {
-					LoggerFactory.setLogLevel(value);
+					void LoggerFactory.setLogLevel(value);
 					logger.info('settings-change', 'Log level changed', { level: value });
 				})
 			);
@@ -370,13 +370,13 @@ export class SonigraphSettingTab extends PluginSettingTab {
 					a.href = url;
 					a.download = filename;
 					document.body.appendChild(a);
-					a.click();
+					void a.click();
 					document.body.removeChild(a);
-					URL.revokeObjectURL(url);
+					void URL.revokeObjectURL(url);
 					logger.info('export', 'Logs exported', { filename });
 				})
 			);
 
-		logger.debug('rendering', 'Settings tab rendered successfully');
+		void logger.debug('rendering', 'Settings tab rendered successfully');
 	}
 } 

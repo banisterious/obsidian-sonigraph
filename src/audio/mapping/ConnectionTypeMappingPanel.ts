@@ -77,7 +77,7 @@ export class ConnectionTypeMappingPanel {
             validationErrors: []
         };
 
-        this.render();
+        void this.render();
         logger.debug('connection-type-mapping-panel', 'Panel initialized', {
             enabled: this.config.enabled,
             mappingsCount: Object.keys(this.config.mappings).length
@@ -91,7 +91,7 @@ export class ConnectionTypeMappingPanel {
         this.container.empty();
 
         // Create collapsible section header
-        this.createSectionHeader();
+        void this.createSectionHeader();
 
         // Create collapsible content
         const contentContainer = this.container.createDiv({
@@ -99,7 +99,7 @@ export class ConnectionTypeMappingPanel {
         });
 
         if (this.state.isExpanded) {
-            this.renderContent(contentContainer);
+            void this.renderContent(contentContainer);
         }
     }
 
@@ -133,7 +133,7 @@ export class ConnectionTypeMappingPanel {
         // Add click handler for expand/collapse
         expandButton.addEventListener('click', () => {
             this.state.isExpanded = !this.state.isExpanded;
-            this.render();
+            void this.render();
         });
 
         // Phase 4.4 identifier
@@ -148,25 +148,25 @@ export class ConnectionTypeMappingPanel {
      */
     private renderContent(container: HTMLElement): void {
         // Master controls section
-        this.createMasterControls(container);
+        void this.createMasterControls(container);
 
         // Preset management section
-        this.createPresetManagement(container);
+        void this.createPresetManagement(container);
 
         // Global settings section
-        this.createGlobalSettings(container);
+        void this.createGlobalSettings(container);
 
         // Connection type mappings section
-        this.createConnectionTypeMappings(container);
+        void this.createConnectionTypeMappings(container);
 
         // Advanced features section
-        this.createAdvancedFeatures(container);
+        void this.createAdvancedFeatures(container);
 
         // Validation and status section
-        this.createValidationSection(container);
+        void this.createValidationSection(container);
 
         // Action buttons
-        this.createActionButtons(container);
+        void this.createActionButtons(container);
     }
 
     /**
@@ -185,9 +185,9 @@ export class ConnectionTypeMappingPanel {
                     .setValue(this.config.enabled)
                     .onChange(value => {
                         this.config.enabled = value;
-                        this.markDirty();
+                        void this.markDirty();
                         this.callbacks.onConfigChange(this.config);
-                        this.updateStatusIndicator();
+                        void this.updateStatusIndicator();
                     });
             });
 
@@ -201,7 +201,7 @@ export class ConnectionTypeMappingPanel {
                     .setValue(this.config.independentFromContentAware)
                     .onChange(value => {
                         this.config.independentFromContentAware = value;
-                        this.markDirty();
+                        void this.markDirty();
                         this.callbacks.onConfigChange(this.config);
                     });
             });
@@ -271,7 +271,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     this.config.globalSettings.connectionVolumeMix = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -285,7 +285,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     this.config.globalSettings.maxSimultaneousConnections = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -299,7 +299,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     this.config.globalSettings.connectionAudioFadeTime = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -314,7 +314,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(this.config.globalSettings.enableCaching)
                 .onChange(value => {
                     this.config.globalSettings.enableCaching = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -325,7 +325,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(this.config.globalSettings.selectiveProcessing)
                 .onChange(value => {
                     this.config.globalSettings.selectiveProcessing = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
     }
@@ -368,7 +368,7 @@ export class ConnectionTypeMappingPanel {
         });
 
         tabBtn.addEventListener('click', () => {
-            this.selectConnectionType(connectionType);
+            void this.selectConnectionType(connectionType);
         });
 
         // Tab content (only visible when selected)
@@ -377,7 +377,7 @@ export class ConnectionTypeMappingPanel {
         });
 
         this.connectionTypeSections.set(connectionType, contentDiv);
-        this.renderConnectionTypeContent(contentDiv, connectionType, mapping);
+        void this.renderConnectionTypeContent(contentDiv, connectionType, mapping);
     }
 
     /**
@@ -396,9 +396,9 @@ export class ConnectionTypeMappingPanel {
                 .setValue(mapping.enabled)
                 .onChange(value => {
                     mapping.enabled = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
-                    this.updateConnectionTypeTab(connectionType);
+                    void this.updateConnectionTypeTab(connectionType);
                 }));
 
         // Instrument family selection
@@ -419,8 +419,8 @@ export class ConnectionTypeMappingPanel {
                     .setValue(mapping.instrumentFamily)
                     .onChange(value => {
                         mapping.instrumentFamily = value as InstrumentFamily;
-                        this.updateInstrumentNames(mapping);
-                        this.markDirty();
+                        void this.updateInstrumentNames(mapping);
+                        void this.markDirty();
                         this.callbacks.onConfigChange(this.config);
                     });
             });
@@ -435,18 +435,18 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     mapping.intensity = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
         // Audio characteristics subsection
-        this.createAudioCharacteristicsSection(container, mapping);
+        void this.createAudioCharacteristicsSection(container, mapping);
 
         // Link strength analysis subsection
-        this.createLinkStrengthAnalysisSection(container, mapping);
+        void this.createLinkStrengthAnalysisSection(container, mapping);
 
         // Contextual modifiers subsection
-        this.createContextualModifiersSection(container, mapping);
+        void this.createContextualModifiersSection(container, mapping);
 
         // Preview button
         const previewBtn = container.createEl('button', {
@@ -477,7 +477,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     characteristics.baseVolume = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -491,7 +491,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     characteristics.noteDuration = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -505,7 +505,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     characteristics.harmonicRichness = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -521,7 +521,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     characteristics.reverbAmount = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -533,7 +533,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     characteristics.spatialSpread = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -548,7 +548,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(characteristics.chordsEnabled)
                 .onChange(value => {
                     characteristics.chordsEnabled = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -559,7 +559,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(characteristics.bidirectionalHarmony)
                 .onChange(value => {
                     characteristics.bidirectionalHarmony = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -570,7 +570,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(characteristics.brokenLinkDissonance)
                 .onChange(value => {
                     characteristics.brokenLinkDissonance = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
     }
@@ -591,7 +591,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(linkStrength.enabled)
                 .onChange(value => {
                     linkStrength.enabled = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -604,7 +604,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     linkStrength.frequencyThreshold = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -617,7 +617,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     linkStrength.volumeBoost = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
     }
@@ -640,7 +640,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     modifiers.sameFolderBoost = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -653,7 +653,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     modifiers.recentConnectionBoost = value / 100;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -666,7 +666,7 @@ export class ConnectionTypeMappingPanel {
                 .setDynamicTooltip()
                 .onChange(value => {
                     modifiers.timeDecayDays = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
     }
@@ -687,7 +687,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(features.connectionChords)
                 .onChange(value => {
                     features.connectionChords = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -698,7 +698,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(features.contextualHarmony)
                 .onChange(value => {
                     features.contextualHarmony = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -709,7 +709,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(features.dynamicInstrumentation)
                 .onChange(value => {
                     features.dynamicInstrumentation = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
 
@@ -720,7 +720,7 @@ export class ConnectionTypeMappingPanel {
                 .setValue(features.velocityModulation)
                 .onChange(value => {
                     features.velocityModulation = value;
-                    this.markDirty();
+                    void this.markDirty();
                     this.callbacks.onConfigChange(this.config);
                 }));
     }
@@ -786,7 +786,7 @@ export class ConnectionTypeMappingPanel {
             cls: `connection-type-mapping-btn apply-btn ${this.state.isDirty ? 'dirty' : ''}`
         });
         applyBtn.addEventListener('click', () => {
-            this.applyChanges();
+            void this.applyChanges();
         });
 
         const revertBtn = actions.createEl('button', {
@@ -794,7 +794,7 @@ export class ConnectionTypeMappingPanel {
             cls: 'connection-type-mapping-btn revert-btn'
         });
         revertBtn.addEventListener('click', () => {
-            this.revertChanges();
+            void this.revertChanges();
         });
 
         const exportBtn = actions.createEl('button', {
@@ -802,7 +802,7 @@ export class ConnectionTypeMappingPanel {
             cls: 'connection-type-mapping-btn export-btn'
         });
         exportBtn.addEventListener('click', () => {
-            this.exportConfiguration();
+            void this.exportConfiguration();
         });
     }
 
@@ -900,7 +900,7 @@ export class ConnectionTypeMappingPanel {
 
     private markDirty(): void {
         this.state.isDirty = true;
-        this.validateConfiguration();
+        void this.validateConfiguration();
     }
 
     private validateConfiguration(): void {
@@ -908,7 +908,7 @@ export class ConnectionTypeMappingPanel {
         this.state.validationErrors = validation.errors;
 
         if (this.validationDisplay) {
-            this.createValidationSection(this.validationDisplay.parentElement);
+            void this.createValidationSection(this.validationDisplay.parentElement);
         }
     }
 
@@ -931,12 +931,12 @@ export class ConnectionTypeMappingPanel {
             });
 
             this.config.currentPreset = presetName;
-            this.markDirty();
+            void this.markDirty();
             this.callbacks.onConfigChange(this.config);
             this.callbacks.onPresetLoad(preset);
 
             // Re-render to reflect changes
-            this.render();
+            void this.render();
 
             logger.info('connection-type-mapping-panel', 'Preset loaded', {
                 presetName,
@@ -959,9 +959,9 @@ export class ConnectionTypeMappingPanel {
     private resetToDefaults(): void {
         if (confirm('Reset all connection type mappings to default values? This cannot be undone.')) {
             this.config = { ...DEFAULT_CONNECTION_TYPE_MAPPING_CONFIG };
-            this.markDirty();
+            void this.markDirty();
             this.callbacks.onConfigChange(this.config);
-            this.render();
+            void this.render();
         }
     }
 
@@ -985,7 +985,7 @@ export class ConnectionTypeMappingPanel {
         if (confirm('Revert all unsaved changes? This cannot be undone.')) {
             // In a real implementation, this would revert to the last saved state
             this.state.isDirty = false;
-            this.render();
+            void this.render();
         }
     }
 
@@ -999,11 +999,11 @@ export class ConnectionTypeMappingPanel {
         const a = document.createElement('a');
         a.href = url;
         a.download = `connection-type-mapping-config-${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
+        void a.click();
 
-        URL.revokeObjectURL(url);
+        void URL.revokeObjectURL(url);
 
-        logger.info('connection-type-mapping-panel', 'Configuration exported');
+        void logger.info('connection-type-mapping-panel', 'Configuration exported');
     }
 
     /**
@@ -1012,7 +1012,7 @@ export class ConnectionTypeMappingPanel {
 
     public updateConfig(newConfig: ConnectionTypeMappingConfig): void {
         this.config = { ...newConfig };
-        this.render();
+        void this.render();
     }
 
     public getConfig(): ConnectionTypeMappingConfig {
@@ -1021,12 +1021,12 @@ export class ConnectionTypeMappingPanel {
 
     public collapse(): void {
         this.state.isExpanded = false;
-        this.render();
+        void this.render();
     }
 
     public expand(): void {
         this.state.isExpanded = true;
-        this.render();
+        void this.render();
     }
 
     public isDirty(): boolean {

@@ -64,20 +64,20 @@ export class ElectronicEngine {
 	
 	constructor(masterVolume: Volume) {
 		this.masterVolume = masterVolume;
-		logger.debug('initialization', 'ElectronicEngine created');
+		void logger.debug('initialization', 'ElectronicEngine created');
 	}
 
 	async initializeElectronic(): Promise<void> {
-		logger.info('initialization', 'Initializing advanced electronic synthesis');
+		void logger.info('initialization', 'Initializing advanced electronic synthesis');
 		
 		try {
-			this.initializeLeadSynth();
-			this.initializeBassSynth();
-			this.initializeArpSynth();
+			void this.initializeLeadSynth();
+			void this.initializeBassSynth();
+			void this.initializeArpSynth();
 
-			logger.info('initialization', 'Advanced electronic synthesis ready');
+			void logger.info('initialization', 'Advanced electronic synthesis ready');
 		} catch (error) {
-			logger.error('initialization', 'Failed to initialize electronic synthesis', error);
+			void logger.error('initialization', 'Failed to initialize electronic synthesis', error);
 			throw error;
 		}
 	}
@@ -117,19 +117,19 @@ export class ElectronicEngine {
 		}).start();
 
 		// Connect LFO to filter cutoff
-		filterLFO.connect(leadFilter.frequency);
+		void filterLFO.connect(leadFilter.frequency);
 
 		// Distortion for aggressive lead sound
 		const distortion = new Volume(-6); // Simple gain staging for mild distortion
 
 		// Chain: Synth -> Filter -> Distortion -> Master
-		leadSynth.chain(leadFilter, distortion, this.masterVolume);
+		void leadSynth.chain(leadFilter, distortion, this.masterVolume);
 		
 		this.leadSynths.set('main', leadSynth);
 		this.filterLFOs.set('lead', filterLFO);
 		this.filterInstances.set('lead', leadFilter);
 
-		logger.debug('lead-synth', 'Lead synth initialization complete');
+		void logger.debug('lead-synth', 'Lead synth initialization complete');
 	}
 
 	private initializeBassSynth(): void {
@@ -180,14 +180,14 @@ export class ElectronicEngine {
 		const compressor = new Volume(-3);
 
 		// Chain both oscillators
-		bassSynth.chain(bassFilter, compressor, this.masterVolume);
-		subOsc.chain(compressor, this.masterVolume);
+		void bassSynth.chain(bassFilter, compressor, this.masterVolume);
+		void subOsc.chain(compressor, this.masterVolume);
 		
 		this.bassSynths.set('main', bassSynth);
 		this.bassSynths.set('sub', subOsc);
 		this.filterInstances.set('bass', bassFilter);
 
-		logger.debug('bass-synth', 'Bass synth initialization complete');
+		void logger.debug('bass-synth', 'Bass synth initialization complete');
 	}
 
 	private initializeArpSynth(): void {
@@ -225,19 +225,19 @@ export class ElectronicEngine {
 		}).start();
 
 		// Connect sweep to filter
-		sweepLFO.connect(arpFilter.frequency);
+		void sweepLFO.connect(arpFilter.frequency);
 
 		// Reverb for space
 		const reverb = new Volume(0); // Placeholder for reverb processing
 
 		// Chain: Synth -> Filter -> Reverb -> Master
-		arpSynth.chain(arpFilter, reverb, this.masterVolume);
+		void arpSynth.chain(arpFilter, reverb, this.masterVolume);
 		
 		this.arpSynths.set('main', arpSynth);
 		this.filterLFOs.set('arp', sweepLFO);
 		this.filterInstances.set('arp', arpFilter);
 
-		logger.debug('arp-synth', 'Arp synth initialization complete');
+		void logger.debug('arp-synth', 'Arp synth initialization complete');
 	}
 
 	// Advanced lead synth with filter modulation
@@ -246,7 +246,7 @@ export class ElectronicEngine {
 		const filter = this.filterInstances.get('lead');
 		
 		if (!synth || !filter) {
-			logger.warn('lead-synth', 'Lead synth not initialized');
+			void logger.warn('lead-synth', 'Lead synth not initialized');
 			return;
 		}
 
@@ -269,7 +269,7 @@ export class ElectronicEngine {
 		const subSynth = this.bassSynths.get('sub');
 		
 		if (!mainSynth || !subSynth) {
-			logger.warn('bass-synth', 'Bass synth not initialized');
+			void logger.warn('bass-synth', 'Bass synth not initialized');
 			return;
 		}
 
@@ -292,7 +292,7 @@ export class ElectronicEngine {
 		const synth = this.arpSynths.get('main');
 		
 		if (!synth) {
-			logger.warn('arp-synth', 'Arp synth not initialized');
+			void logger.warn('arp-synth', 'Arp synth not initialized');
 			return;
 		}
 
@@ -356,9 +356,9 @@ export class ElectronicEngine {
 		const lfo = this.filterLFOs.get(instrument);
 		if (lfo) {
 			if (enabled) {
-				lfo.start();
+				void lfo.start();
 			} else {
-				lfo.stop();
+				void lfo.stop();
 			}
 		}
 	}
@@ -388,16 +388,16 @@ export class ElectronicEngine {
 		// Clean up all electronic resources
 		[this.leadSynths, this.bassSynths, this.arpSynths].forEach(map => {
 			for (const [key, synth] of map) {
-				synth.dispose();
+				void synth.dispose();
 			}
-			map.clear();
+			void map.clear();
 		});
 
 		[this.filterLFOs, this.modulationEnvelopes, this.filterInstances].forEach(map => {
 			for (const [key, processor] of map) {
 				if (processor.dispose) processor.dispose();
 			}
-			map.clear();
+			void map.clear();
 		});
 
 		// Clear arpeggiator timers
@@ -406,6 +406,6 @@ export class ElectronicEngine {
 		}
 		this.arpSequencers.clear();
 
-		logger.debug('cleanup', 'ElectronicEngine disposed');
+		void logger.debug('cleanup', 'ElectronicEngine disposed');
 	}
 }

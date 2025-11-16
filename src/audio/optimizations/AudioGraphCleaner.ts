@@ -27,7 +27,7 @@ export class AudioGraphCleaner {
         
         const timeoutId = window.setTimeout(() => {
             this.pendingCleanups.add(noteId);
-            this.scheduleBatchCleanup();
+            void this.scheduleBatchCleanup();
         }, cleanupDelay);
         
         this.scheduledCleanups.set(noteId, {
@@ -48,7 +48,7 @@ export class AudioGraphCleaner {
         
         // Wait 100ms to batch multiple cleanups together
         this.cleanupBatchTimer = window.setTimeout(() => {
-            this.performBatchCleanup();
+            void this.performBatchCleanup();
             this.cleanupBatchTimer = null;
         }, 100);
     }
@@ -70,7 +70,7 @@ export class AudioGraphCleaner {
         this.pendingCleanups.clear();
         
         // Force a minor garbage collection hint
-        this.requestIdleGC();
+        void this.requestIdleGC();
     }
     
     /**
@@ -81,7 +81,7 @@ export class AudioGraphCleaner {
             window.requestIdleCallback(() => {
                 // This is just a hint to the browser
                 // Actual GC is controlled by the JavaScript engine
-                logger.debug('gc-hint', 'Idle callback triggered for potential GC');
+                void logger.debug('gc-hint', 'Idle callback triggered for potential GC');
             }, { timeout: 1000 });
         }
     }
@@ -116,7 +116,7 @@ export class AudioGraphCleaner {
      * Clean up all resources
      */
     dispose(): void {
-        this.cancelAll();
-        logger.debug('dispose', 'AudioGraphCleaner disposed');
+        void this.cancelAll();
+        void logger.debug('dispose', 'AudioGraphCleaner disposed');
     }
 }

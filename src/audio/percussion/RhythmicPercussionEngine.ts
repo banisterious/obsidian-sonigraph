@@ -49,12 +49,12 @@ export class RhythmicPercussionEngine {
      */
     initialize(destination: Tone.ToneAudioNode): Promise<void> {
         if (this.isInitialized) {
-            logger.warn('rhythmic-percussion', 'Already initialized');
+            void logger.warn('rhythmic-percussion', 'Already initialized');
             return;
         }
 
         try {
-            logger.info('rhythmic-percussion', 'Initializing percussion engine');
+            void logger.info('rhythmic-percussion', 'Initializing percussion engine');
 
             // Create drum synths
             this.kick = createKickDrum();
@@ -72,10 +72,10 @@ export class RhythmicPercussionEngine {
             this.volume.connect(destination);
 
             this.isInitialized = true;
-            logger.info('rhythmic-percussion', 'Percussion engine initialized successfully');
+            void logger.info('rhythmic-percussion', 'Percussion engine initialized successfully');
 
         } catch (error) {
-            logger.error('rhythmic-percussion', 'Failed to initialize percussion engine:', error);
+            void logger.error('rhythmic-percussion', 'Failed to initialize percussion engine:', error);
             throw error;
         }
     }
@@ -98,7 +98,7 @@ export class RhythmicPercussionEngine {
         const velocity = this.mapper.getVelocityMultiplier(note);
 
         // Trigger the selected drum
-        this.triggerDrum(drum, velocity, note);
+        void this.triggerDrum(drum, velocity, note);
     }
 
     /**
@@ -158,7 +158,7 @@ export class RhythmicPercussionEngine {
             this.volume.volume.value = config.volume;
         }
 
-        logger.debug('rhythmic-percussion', 'Config updated', this.config);
+        void logger.debug('rhythmic-percussion', 'Config updated', this.config);
     }
 
     /**
@@ -210,7 +210,7 @@ export class RhythmicPercussionEngine {
     dispose(): void {
         if (!this.isInitialized) return;
 
-        logger.info('rhythmic-percussion', 'Disposing percussion engine');
+        void logger.info('rhythmic-percussion', 'Disposing percussion engine');
 
         // Dispose all synths
         this.kick?.dispose();

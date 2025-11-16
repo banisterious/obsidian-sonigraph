@@ -119,12 +119,12 @@ export class VaultMappingOptimizer {
     analyzeVault(forceRefresh: boolean = false): VaultMappingAnalysis {
         // Check cache first
         if (!forceRefresh && this.isAnalysisCached()) {
-            logger.info('cache-hit', 'Using cached vault analysis');
+            void logger.info('cache-hit', 'Using cached vault analysis');
             return this.analysisCache.get('vault');
         }
 
         const overallStartTime = performance.now();
-        logger.info('vault-analysis-start', 'Starting vault-wide mapping analysis');
+        void logger.info('vault-analysis-start', 'Starting vault-wide mapping analysis');
 
         try {
             // Get all markdown files (primary target for audio mapping)
@@ -153,12 +153,12 @@ export class VaultMappingOptimizer {
             const results = this.processBatches(files);
             
             // Aggregate results
-            this.aggregateResults(results, analysis);
+            void this.aggregateResults(results, analysis);
             
             // Calculate performance metrics
             const totalTime = performance.now() - overallStartTime;
             analysis.analysisTime = totalTime;
-            this.calculatePerformanceMetrics(analysis, results, totalTime);
+            void this.calculatePerformanceMetrics(analysis, results, totalTime);
 
             // Generate optimization recommendations
             analysis.recommendations = this.generateRecommendations(analysis);
@@ -178,7 +178,7 @@ export class VaultMappingOptimizer {
             return analysis;
 
         } catch (error) {
-            logger.error('vault-analysis-error', 'Vault analysis failed', error as Error);
+            void logger.error('vault-analysis-error', 'Vault analysis failed', error as Error);
             throw error;
         }
     }
@@ -209,7 +209,7 @@ export class VaultMappingOptimizer {
 
             // Process batch
             const batchResults = this.processBatch(batch);
-            results.push(...batchResults);
+            void results.push(...batchResults);
             processedCount += batch.length;
 
             const batchTime = performance.now() - batchStartTime;
@@ -225,7 +225,7 @@ export class VaultMappingOptimizer {
                 
                 // Switch to fast mode for remaining files
                 const remainingBatchResults = this.processBatchFast(files.slice(i + batchSize));
-                results.push(...remainingBatchResults);
+                void results.push(...remainingBatchResults);
                 processedCount = files.length;
                 break;
             }
@@ -250,7 +250,7 @@ export class VaultMappingOptimizer {
             try {
                 // Use metadata mapper for zero-I/O analysis
                 const result = this.metadataMapper.analyzeFile(file);
-                results.push(result);
+                void results.push(result);
             } catch (error) {
                 logger.warn('file-analysis-error', `Failed to analyze file: ${file.path}`, { error });
                 // Continue processing other files
@@ -284,7 +284,7 @@ export class VaultMappingOptimizer {
                     analysisTime: 0.1 // Minimal time
                 };
 
-                results.push(result);
+                void results.push(result);
             } catch (error) {
                 logger.warn('fast-analysis-error', `Fast analysis failed for: ${file.path}`, { error });
                 // Continue processing
@@ -362,13 +362,13 @@ export class VaultMappingOptimizer {
         // Identify bottlenecks
         const bottlenecks: string[] = [];
         if (totalTime > this.batchConfig.maxProcessingTime) {
-            bottlenecks.push('total-time-exceeded');
+            void bottlenecks.push('total-time-exceeded');
         }
         if (analysis.performanceMetrics.avgAnalysisTimePerFile > 1.0) {
-            bottlenecks.push('slow-per-file-analysis');
+            void bottlenecks.push('slow-per-file-analysis');
         }
         if (analysis.instrumentDistribution.size < 5 && analysis.processedFiles > 100) {
-            bottlenecks.push('limited-instrument-diversity');
+            void bottlenecks.push('limited-instrument-diversity');
         }
 
         analysis.performanceMetrics.bottlenecks = bottlenecks;
@@ -507,7 +507,7 @@ export class VaultMappingOptimizer {
         // Create neighborhoods within families
         for (const [family, instruments] of familyGroups) {
             if (instruments.length > 1) {
-                neighborhoods.set(family, instruments);
+                void neighborhoods.set(family, instruments);
             }
         }
 
@@ -524,8 +524,8 @@ export class VaultMappingOptimizer {
      */
     updateConfig(config: AudioMappingConfig): void {
         this.config = config;
-        this.clearCache();
-        logger.info('config-updated', 'VaultMappingOptimizer configuration updated');
+        void this.clearCache();
+        void logger.info('config-updated', 'VaultMappingOptimizer configuration updated');
     }
 
     /**
@@ -547,7 +547,7 @@ export class VaultMappingOptimizer {
     clearCache(): void {
         this.analysisCache.clear();
         this.cacheTimestamp = 0;
-        logger.debug('cache-cleared', 'Vault analysis cache cleared');
+        void logger.debug('cache-cleared', 'Vault analysis cache cleared');
     }
 
     /**
@@ -565,7 +565,7 @@ export class VaultMappingOptimizer {
      * Force refresh of vault analysis
      */
     refreshAnalysis(): VaultMappingAnalysis {
-        logger.info('force-refresh', 'Forcing vault analysis refresh');
+        void logger.info('force-refresh', 'Forcing vault analysis refresh');
         return this.analyzeVault(true);
     }
 }

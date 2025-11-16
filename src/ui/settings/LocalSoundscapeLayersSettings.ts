@@ -25,14 +25,14 @@ export class LocalSoundscapeLayersSettings {
 	 * Render all continuous layers settings
 	 */
 	public render(container: HTMLElement): void {
-		logger.debug('layers-settings', 'Rendering Local Soundscape continuous layers settings');
+		void logger.debug('layers-settings', 'Rendering Local Soundscape continuous layers settings');
 
 		// Section 1: Enable/Disable Continuous Layers
-		this.renderEnableSection(container);
+		void this.renderEnableSection(container);
 
 		// Section 2: Layer controls (only if enabled)
 		if (this.plugin.settings.localSoundscape?.continuousLayers?.enabled) {
-			this.renderLayerControlsSection(container);
+			void this.renderLayerControlsSection(container);
 		}
 	}
 
@@ -82,7 +82,7 @@ export class LocalSoundscapeLayersSettings {
 			color: 'var(--text-normal)'
 		});
 		noteText.createEl('strong', { text: 'Important:' });
-		noteText.appendText(' Continuous layers require Freesound samples to be enabled. Go to the ');
+		void noteText.appendText(' Continuous layers require Freesound samples to be enabled. Go to the ');
 		noteText.createEl('strong', { text: 'Layers' });
 		noteText.appendText(' tab and use the Sample Browser to enable at least one sample in each category (Ambient, Harmonic, Rhythmic) you want to use.');
 
@@ -114,7 +114,7 @@ export class LocalSoundscapeLayersSettings {
 					logger.info('layers-settings', `Continuous layers: ${value}`);
 
 					// Re-render to show/hide layer controls
-					this.render(container);
+					void this.render(container);
 				})
 			);
 

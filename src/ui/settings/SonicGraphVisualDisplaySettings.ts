@@ -25,16 +25,16 @@ export class SonicGraphVisualDisplaySettings {
 	 * Render all visual display settings sections
 	 */
 	public render(container: HTMLElement): void {
-		logger.debug('visual-display-settings', 'Rendering visual display settings');
+		void logger.debug('visual-display-settings', 'Rendering visual display settings');
 
 		// Section 1: Core Visual Display Settings
-		this.renderCoreDisplaySettings(container);
+		void this.renderCoreDisplaySettings(container);
 
 		// Section 2: Visualization Customization
-		this.renderVisualizationCustomization(container);
+		void this.renderVisualizationCustomization(container);
 
 		// Section 3: Performance Settings
-		this.renderPerformanceSettings(container);
+		void this.renderPerformanceSettings(container);
 	}
 
 	/**

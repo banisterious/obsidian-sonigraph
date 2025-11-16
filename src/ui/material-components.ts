@@ -122,7 +122,7 @@ export class MaterialCard {
 		
 		if (options.onClick) {
 			card.style.cursor = 'pointer';
-			card.addEventListener('click', options.onClick);
+			void card.addEventListener('click', options.onClick);
 		}
 
 		return card;
@@ -136,10 +136,10 @@ export class MaterialCard {
 
 		if (options.iconName) {
 			const icon = createLucideIcon(options.iconName, 24);
-			titleContainer.appendChild(icon);
+			void titleContainer.appendChild(icon);
 		}
 
-		titleContainer.appendText(options.title);
+		void titleContainer.appendText(options.title);
 
 		if (options.subtitle) {
 			const subtitle = header.createDiv({ cls: 'ospcc-card__subtitle' });
@@ -221,7 +221,7 @@ export class StatCard {
 		statCard.className = classes.join(' ');
 
 		if (options.onClick) {
-			statCard.addEventListener('click', options.onClick);
+			void statCard.addEventListener('click', options.onClick);
 		}
 
 		// Icon (optional)
@@ -229,7 +229,7 @@ export class StatCard {
 			const iconEl = statCard.createDiv();
 			iconEl.className = `ospcc-stat-card__icon ospcc-stat-card__icon--${options.color || 'primary'}`;
 			const icon = createLucideIcon(options.iconName, 20);
-			iconEl.appendChild(icon);
+			void iconEl.appendChild(icon);
 		}
 
 		// Value
@@ -288,11 +288,11 @@ export class InstrumentCard {
 
 		// Header
 		const header = card.createDiv({ cls: 'instrument-card__header' });
-		this.createHeader(header);
+		void this.createHeader(header);
 
 		// Content
 		const content = card.createDiv({ cls: 'instrument-card__content' });
-		this.createControls(content);
+		void this.createControls(content);
 
 		return card;
 	}
@@ -335,7 +335,7 @@ export class InstrumentCard {
 			// Add event listener with debugging
 			this.enableSwitch.addEventListener('change', (e) => {
 				logger.debug('ui', 'Instrument enable switch changed', { checked: this.enableSwitch.checked });
-				this.updateEnabledState(this.enableSwitch.checked);
+				void this.updateEnabledState(this.enableSwitch.checked);
 			});
 
 			const track = switchContainer.createDiv({ cls: 'ospcc-switch__track' });
@@ -344,7 +344,7 @@ export class InstrumentCard {
 			// Make the entire switch container clickable
 			switchContainer.addEventListener('click', (e) => {
 				if (e.target !== this.enableSwitch) {
-					e.preventDefault();
+					void e.preventDefault();
 					this.enableSwitch.checked = !this.enableSwitch.checked;
 					this.enableSwitch.dispatchEvent(new Event('change'));
 				}
@@ -400,10 +400,10 @@ export class InstrumentCard {
 		if (isToggle) {
 			const controlWrapper = group.createDiv({ cls: 'control-wrapper' });
 			const control = createControl();
-			controlWrapper.appendChild(control);
+			void controlWrapper.appendChild(control);
 		} else {
 			const control = createControl();
-			group.appendChild(control);
+			void group.appendChild(control);
 		}
 	}
 
@@ -425,7 +425,7 @@ export class InstrumentCard {
 		}
 
 		// Update voice indicators
-		this.updateVoiceIndicators();
+		void this.updateVoiceIndicators();
 
 		// Call callback
 		if (this.options.onEnabledChange) {
@@ -439,7 +439,7 @@ export class InstrumentCard {
 		// Recreate voice indicators
 		const indicatorsContainer = this.container.querySelector('.voice-indicators');
 		if (indicatorsContainer) {
-			indicatorsContainer.empty();
+			void indicatorsContainer.empty();
 			this.voiceIndicators = [];
 
 			for (let i = 0; i < maxVoices; i++) {
@@ -468,12 +468,12 @@ export class InstrumentCard {
 
 	setActiveVoices(activeVoices: number): void {
 		this.options.activeVoices = activeVoices;
-		this.updateVoiceIndicators();
+		void this.updateVoiceIndicators();
 	}
 
 	setEnabled(enabled: boolean): void {
 		this.enableSwitch.checked = enabled;
-		this.updateEnabledState(enabled);
+		void this.updateEnabledState(enabled);
 	}
 
 	setVolume(volume: number): void {
@@ -500,11 +500,11 @@ export class EffectSection {
 
 		// Header
 		const header = section.createDiv({ cls: 'effect-header' });
-		this.createHeader(header);
+		void this.createHeader(header);
 
 		// Parameters
 		if (this.options.parameters.length > 0) {
-			this.createParameters(section);
+			void this.createParameters(section);
 		}
 
 		return section;
@@ -514,8 +514,8 @@ export class EffectSection {
 		const title = container.createDiv({ cls: 'effect-title' });
 
 		const icon = createLucideIcon(this.options.iconName, 20);
-		title.appendChild(icon);
-		title.appendText(this.options.effectName);
+		void title.appendChild(icon);
+		void title.appendText(this.options.effectName);
 
 		// Enable toggle
 		const toggleContainer = container.createDiv({ cls: 'ospcc-switch' });
@@ -526,7 +526,7 @@ export class EffectSection {
 		}) as HTMLInputElement;
 		this.enableSwitch.checked = this.options.enabled;
 		this.enableSwitch.addEventListener('change', () => {
-			this.updateEnabledState(this.enableSwitch.checked);
+			void this.updateEnabledState(this.enableSwitch.checked);
 		});
 
 		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
@@ -535,7 +535,7 @@ export class EffectSection {
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
 			if (e.target !== this.enableSwitch) {
-				e.preventDefault();
+				void e.preventDefault();
 				this.enableSwitch.checked = !this.enableSwitch.checked;
 				this.enableSwitch.dispatchEvent(new Event('change'));
 			}
@@ -581,7 +581,7 @@ export class EffectSection {
 
 	setEnabled(enabled: boolean): void {
 		this.enableSwitch.checked = enabled;
-		this.updateEnabledState(enabled);
+		void this.updateEnabledState(enabled);
 	}
 
 	setParameterValue(parameterIndex: number, value: number): void {
@@ -608,19 +608,19 @@ export class ActionChip {
 
 		if (this.options.iconName) {
 			const icon = createLucideIcon(this.options.iconName, 16);
-			chip.appendChild(icon);
+			void chip.appendChild(icon);
 		}
 
-		chip.appendText(this.options.text);
+		void chip.appendText(this.options.text);
 
 		chip.addEventListener('click', () => {
 			if (!this.options.disabled) {
-				this.toggle();
+				void this.toggle();
 			}
 		});
 
 		if (this.options.disabled) {
-			chip.addClass('ospcc-chip--disabled');
+			void chip.addClass('ospcc-chip--disabled');
 		}
 
 		return chip;
@@ -667,7 +667,7 @@ export class MaterialSlider {
 
 	constructor(private options: SliderOptions) {
 		this.container = this.createSlider();
-		this.updateDisplay();
+		void this.updateDisplay();
 	}
 
 	private createSlider(): HTMLElement {
@@ -685,7 +685,7 @@ export class MaterialSlider {
 		this.valueDisplay = sliderContainer.createDiv({ cls: 'slider-value' });
 
 		// Mouse interaction
-		this.setupInteraction();
+		void this.setupInteraction();
 
 		return sliderContainer;
 	}
@@ -706,7 +706,7 @@ export class MaterialSlider {
 			value = Math.max(min, Math.min(max, value));
 
 			this.options.value = value;
-			this.updateDisplay();
+			void this.updateDisplay();
 
 			if (this.options.onChange) {
 				this.options.onChange(value);
@@ -716,7 +716,7 @@ export class MaterialSlider {
 		this.slider.addEventListener('mousedown', (e) => {
 			isDragging = true;
 			updateValue(e.clientX);
-			e.preventDefault();
+			void e.preventDefault();
 		});
 
 		document.addEventListener('mousemove', (e) => {
@@ -759,7 +759,7 @@ export class MaterialSlider {
 
 	setValue(value: number): void {
 		this.options.value = value;
-		this.updateDisplay();
+		void this.updateDisplay();
 	}
 
 	getValue(): number {
@@ -768,7 +768,7 @@ export class MaterialSlider {
 
 	setDisplayValue(displayValue: string): void {
 		this.options.displayValue = displayValue;
-		this.updateDisplay();
+		void this.updateDisplay();
 	}
 }
 
@@ -798,13 +798,13 @@ export class MaterialButton {
 
 		if (options.iconName) {
 			const icon = createLucideIcon(options.iconName, 18);
-			button.appendChild(icon);
+			void button.appendChild(icon);
 		}
 
-		button.appendText(options.text);
+		void button.appendText(options.text);
 
 		if (options.onClick) {
-			button.addEventListener('click', options.onClick);
+			void button.addEventListener('click', options.onClick);
 		}
 
 		return button;

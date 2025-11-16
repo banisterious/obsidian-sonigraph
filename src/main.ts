@@ -21,16 +21,16 @@ export default class SonigraphPlugin extends Plugin {
 	private currentGraphData: import('./graph/types').GraphData | null = null;
 
 	async onload() {
-		logger.info('lifecycle', 'Sonigraph plugin loading...');
+		void logger.info('lifecycle', 'Sonigraph plugin loading...');
 
 		// Load settings
 		await this.loadSettings();
 
 		// Initialize logging level from settings
-		this.initializeLoggingLevel();
+		void this.initializeLoggingLevel();
 
 		// Initialize components
-		this.initializeComponents();
+		void this.initializeComponents();
 
 		// Whale integration temporarily disabled due to CORS download issues
 		// TODO: Re-enable when we have a reliable sample delivery method (bundled samples or backend)
@@ -76,7 +76,7 @@ export default class SonigraphPlugin extends Plugin {
 			id: 'open-control-panel',
 			name: 'Open Control Panel',
 			callback: () => {
-				this.openControlPanel();
+				void this.openControlPanel();
 			}
 		});
 
@@ -110,33 +110,33 @@ export default class SonigraphPlugin extends Plugin {
 	}
 
 	onunload() {
-		logger.info('lifecycle', 'Sonigraph plugin unloading...');
+		void logger.info('lifecycle', 'Sonigraph plugin unloading...');
 
 		// Note: We don't detach leaves here - Obsidian handles that automatically
 		// See: https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines#Don't+detach+leaves+in+%60onunload%60
 
 		try {
 			// Clean up whale integration
-			logger.debug('lifecycle', 'Cleaning up whale integration...');
+			void logger.debug('lifecycle', 'Cleaning up whale integration...');
 			const whaleIntegration = getWhaleIntegration();
 			if (whaleIntegration) {
-				whaleIntegration.cleanup();
+				void whaleIntegration.cleanup();
 			}
-			logger.debug('lifecycle', 'Whale integration cleaned up');
+			void logger.debug('lifecycle', 'Whale integration cleaned up');
 		} catch (error) {
-			logger.error('lifecycle', 'Error cleaning up whale integration:', error);
+			void logger.error('lifecycle', 'Error cleaning up whale integration:', error);
 		}
 
 		try {
 			// Clean up audio engine
-			logger.debug('lifecycle', 'Disposing audio engine...');
+			void logger.debug('lifecycle', 'Disposing audio engine...');
 			if (this.audioEngine) {
 				this.audioEngine.dispose();
 				this.audioEngine = null;
 			}
-			logger.debug('lifecycle', 'Audio engine disposed');
+			void logger.debug('lifecycle', 'Audio engine disposed');
 		} catch (error) {
-			logger.error('lifecycle', 'Error disposing audio engine:', error);
+			void logger.error('lifecycle', 'Error disposing audio engine:', error);
 		}
 
 		// Clean up other components
@@ -144,7 +144,7 @@ export default class SonigraphPlugin extends Plugin {
 		this.musicalMapper = null;
 		this.currentGraphData = null;
 
-		logger.info('lifecycle', 'Sonigraph plugin unloaded successfully');
+		void logger.info('lifecycle', 'Sonigraph plugin unloaded successfully');
 	}
 
 	/**
@@ -152,14 +152,14 @@ export default class SonigraphPlugin extends Plugin {
 	 */
 	private initializeLoggingLevel(): void {
 		if (this.settings.logLevel) {
-			LoggerFactory.setLogLevel(this.settings.logLevel);
+			void LoggerFactory.setLogLevel(this.settings.logLevel);
 			logger.info('initialization', 'Logging level initialized from settings', {
 				level: this.settings.logLevel
 			});
 		} else {
 			// Use default level if not set
 			const defaultLevel = 'warn';
-			LoggerFactory.setLogLevel(defaultLevel);
+			void LoggerFactory.setLogLevel(defaultLevel);
 			logger.info('initialization', 'Using default logging level', {
 				level: defaultLevel
 			});
@@ -167,7 +167,7 @@ export default class SonigraphPlugin extends Plugin {
 	}
 
 	private initializeComponents(): void {
-		logger.debug('initialization', 'Initializing plugin components');
+		void logger.debug('initialization', 'Initializing plugin components');
 
 		// Initialize audio engine with app reference for temporal chord fusion
 		this.audioEngine = new AudioEngine(this.settings, this.app);
@@ -178,7 +178,7 @@ export default class SonigraphPlugin extends Plugin {
 		// Initialize musical mapper
 		this.musicalMapper = new MusicalMapper(this.settings);
 
-		logger.debug('initialization', 'All components initialized');
+		void logger.debug('initialization', 'All components initialized');
 	}
 
 	/**
@@ -210,22 +210,22 @@ export default class SonigraphPlugin extends Plugin {
 				whaleEnabled: this.settings.instruments.whaleHumpback?.enabled
 			});
 		} catch (error) {
-			logger.warn('whale-integration', 'Failed to initialize whale integration', error);
+			void logger.warn('whale-integration', 'Failed to initialize whale integration', error);
 		}
 	}
 
 	public openControlPanel(): void {
-		logger.info('ui', 'Opening Sonigraph Control Center');
+		void logger.info('ui', 'Opening Sonigraph Control Center');
 
 		const modal = new MaterialControlPanelModal(this.app, this);
-		modal.open();
+		void modal.open();
 	}
 
 	/**
 	 * Activate Sonic Graph view (new default method)
 	 */
 	async activateSonicGraphView(): Promise<void> {
-		logger.info('ui', 'Activating Sonic Graph view');
+		void logger.info('ui', 'Activating Sonic Graph view');
 
 		const { workspace } = this.app;
 
@@ -236,7 +236,7 @@ export default class SonigraphPlugin extends Plugin {
 		if (leaves.length > 0) {
 			// View already exists, use it
 			leaf = leaves[0];
-			logger.debug('ui', 'Sonic Graph view already exists, revealing it');
+			void logger.debug('ui', 'Sonic Graph view already exists, revealing it');
 		} else {
 			// Create new leaf in main area (center)
 			leaf = workspace.getLeaf(false);
@@ -245,14 +245,14 @@ export default class SonigraphPlugin extends Plugin {
 					type: VIEW_TYPE_SONIC_GRAPH,
 					active: true
 				});
-				logger.debug('ui', 'Created new Sonic Graph view in main area');
+				void logger.debug('ui', 'Created new Sonic Graph view in main area');
 			}
 		}
 
 		// Reveal the leaf
 		if (leaf) {
-			workspace.revealLeaf(leaf);
-			logger.info('ui', 'Sonic Graph view activated and revealed');
+			void workspace.revealLeaf(leaf);
+			void logger.info('ui', 'Sonic Graph view activated and revealed');
 		}
 	}
 
@@ -260,13 +260,13 @@ export default class SonigraphPlugin extends Plugin {
 	 * Activate Local Soundscape view for active file
 	 */
 	async activateLocalSoundscapeView(): Promise<void> {
-		logger.info('ui', 'Activating Local Soundscape view');
+		void logger.info('ui', 'Activating Local Soundscape view');
 
 		const { workspace } = this.app;
 		const activeFile = workspace.getActiveFile();
 
 		if (!activeFile) {
-			logger.warn('ui', 'No active file to open in Local Soundscape');
+			void logger.warn('ui', 'No active file to open in Local Soundscape');
 			return;
 		}
 
@@ -277,7 +277,7 @@ export default class SonigraphPlugin extends Plugin {
 		if (leaves.length > 0) {
 			// View already exists, use it and update center file
 			leaf = leaves[0];
-			logger.debug('ui', 'Local Soundscape view already exists, updating center file');
+			void logger.debug('ui', 'Local Soundscape view already exists, updating center file');
 
 			const view = leaf.view;
 			if (view instanceof LocalSoundscapeView) {
@@ -291,7 +291,7 @@ export default class SonigraphPlugin extends Plugin {
 					type: VIEW_TYPE_LOCAL_SOUNDSCAPE,
 					active: true
 				});
-				logger.debug('ui', 'Created new Local Soundscape view in right sidebar');
+				void logger.debug('ui', 'Created new Local Soundscape view in right sidebar');
 
 				// Set the center file
 				const view = leaf.view;
@@ -309,8 +309,8 @@ export default class SonigraphPlugin extends Plugin {
 				workspace.rightSplit.expand();
 			}
 
-			workspace.revealLeaf(leaf);
-			logger.info('ui', 'Local Soundscape view activated and revealed');
+			void workspace.revealLeaf(leaf);
+			void logger.info('ui', 'Local Soundscape view activated and revealed');
 		}
 	}
 
@@ -329,7 +329,7 @@ export default class SonigraphPlugin extends Plugin {
 		if (leaves.length > 0) {
 			// View already exists, use it and update center file
 			leaf = leaves[0];
-			logger.debug('ui', 'Local Soundscape view already exists, updating center file');
+			void logger.debug('ui', 'Local Soundscape view already exists, updating center file');
 
 			const view = leaf.view;
 			if (view instanceof LocalSoundscapeView) {
@@ -343,7 +343,7 @@ export default class SonigraphPlugin extends Plugin {
 					type: VIEW_TYPE_LOCAL_SOUNDSCAPE,
 					active: true
 				});
-				logger.debug('ui', 'Created new Local Soundscape view in right sidebar');
+				void logger.debug('ui', 'Created new Local Soundscape view in right sidebar');
 
 				// Set the center file
 				const view = leaf.view;
@@ -361,7 +361,7 @@ export default class SonigraphPlugin extends Plugin {
 				workspace.rightSplit.expand();
 			}
 
-			workspace.revealLeaf(leaf);
+			void workspace.revealLeaf(leaf);
 			logger.info('ui', 'Local Soundscape view activated and revealed for file', { file: file.path });
 		}
 	}
@@ -371,11 +371,11 @@ export default class SonigraphPlugin extends Plugin {
 	 */
 	async processVault(): Promise<void> {
 		if (!this.graphParser || !this.musicalMapper) {
-			logger.error('processing', 'Components not initialized');
+			void logger.error('processing', 'Components not initialized');
 			throw new Error('Plugin components not initialized');
 		}
 
-		logger.info('processing', 'Starting vault processing');
+		void logger.info('processing', 'Starting vault processing');
 
 		try {
 			// Parse vault to get graph data
@@ -406,7 +406,7 @@ export default class SonigraphPlugin extends Plugin {
 			});
 
 		} catch (error) {
-			logger.error('processing', 'Failed to process vault', error);
+			void logger.error('processing', 'Failed to process vault', error);
 			throw error;
 		}
 	}
@@ -416,17 +416,17 @@ export default class SonigraphPlugin extends Plugin {
 	 */
 	async playSequence(): Promise<void> {
 		if (!this.audioEngine) {
-			logger.error('playback', 'Audio engine not initialized');
+			void logger.error('playback', 'Audio engine not initialized');
 			throw new Error('Audio engine not initialized');
 		}
 
 		if (!this.currentGraphData?.sequence) {
-			logger.info('playback', 'No sequence available, processing vault first');
+			void logger.info('playback', 'No sequence available, processing vault first');
 			await this.processVault();
 		}
 
 		if (!this.currentGraphData?.sequence) {
-			logger.error('playback', 'Failed to generate sequence');
+			void logger.error('playback', 'Failed to generate sequence');
 			throw new Error('No musical sequence available');
 		}
 
@@ -452,12 +452,12 @@ export default class SonigraphPlugin extends Plugin {
 
 		// Update audio engine with current settings before playing
 		this.audioEngine.updateSettings(this.settings);
-		logger.debug('playback', 'Audio engine settings updated before playback');
+		void logger.debug('playback', 'Audio engine settings updated before playback');
 
 		try {
 			await this.audioEngine.playSequence(this.currentGraphData.sequence);
 		} catch (error) {
-			logger.error('playback', 'Failed to play sequence', error);
+			void logger.error('playback', 'Failed to play sequence', error);
 			throw error;
 		}
 	}
@@ -468,7 +468,7 @@ export default class SonigraphPlugin extends Plugin {
 	stopPlayback(): void {
 		if (this.audioEngine) {
 			this.audioEngine.stop();
-			logger.info('playback', 'Playback stopped');
+			void logger.info('playback', 'Playback stopped');
 		}
 	}
 
@@ -513,7 +513,7 @@ export default class SonigraphPlugin extends Plugin {
 	 * Update settings and refresh components
 	 */
 	async updateSettings(newSettings: Partial<SonigraphSettings>): Promise<void> {
-		logger.debug('settings', 'Updating plugin settings', newSettings);
+		void logger.debug('settings', 'Updating plugin settings', newSettings);
 
 		// Merge with existing settings
 		this.settings = { ...this.settings, ...newSettings };
@@ -530,7 +530,7 @@ export default class SonigraphPlugin extends Plugin {
 		// Update whale integration if high-quality settings or whale instrument settings changed
 		if ('useHighQualitySamples' in newSettings ||
 			(newSettings.instruments && 'whaleHumpback' in newSettings.instruments)) {
-			this.updateWhaleIntegration();
+			void this.updateWhaleIntegration();
 		}
 
 		// Save settings
@@ -562,7 +562,7 @@ export default class SonigraphPlugin extends Plugin {
 					maxSamples: 50
 				};
 
-				whaleIntegration.updateSettings(whaleSettings);
+				void whaleIntegration.updateSettings(whaleSettings);
 
 				logger.info('whale-integration', 'Whale integration settings updated', {
 					enabled: whaleSettings.useWhaleExternal,
@@ -571,7 +571,7 @@ export default class SonigraphPlugin extends Plugin {
 				});
 			}
 		} catch (error) {
-			logger.warn('whale-integration', 'Failed to update whale integration settings', error);
+			void logger.warn('whale-integration', 'Failed to update whale integration settings', error);
 		}
 	}
 
@@ -582,7 +582,7 @@ export default class SonigraphPlugin extends Plugin {
 		this.settings = this.deepMergeSettings(DEFAULT_SETTINGS, data);
 		
 		// Migrate old settings structure if needed
-		this.migrateSettings();
+		void this.migrateSettings();
 		
 		logger.debug('settings', 'Settings loaded', { settings: this.settings });
 	}
@@ -645,7 +645,7 @@ export default class SonigraphPlugin extends Plugin {
 		const settingsRecord = this.settings as Record<string, unknown>;
 		const effects = settingsRecord.effects as Record<string, unknown> | undefined;
 		if ('effects' in this.settings && !effects?.piano) {
-			logger.info('settings', 'Migrating old effects structure to per-instrument structure');
+			void logger.info('settings', 'Migrating old effects structure to per-instrument structure');
 			migrationNeeded = true;
 
 			const oldEffects = (settingsRecord.effects as Record<string, unknown>) || {};
@@ -744,7 +744,7 @@ export default class SonigraphPlugin extends Plugin {
 		
 		// Ensure woodwind instruments exist (for users upgrading from 6 to 9 instruments)
 		if (!this.settings.instruments.flute) {
-			logger.info('settings', 'Adding missing Flute instrument');
+			void logger.info('settings', 'Adding missing Flute instrument');
 			migrationNeeded = true;
 			this.settings.instruments.flute = {
 				enabled: true, 
@@ -759,7 +759,7 @@ export default class SonigraphPlugin extends Plugin {
 		}
 		
 		if (!this.settings.instruments.clarinet) {
-			logger.info('settings', 'Adding missing Clarinet instrument');
+			void logger.info('settings', 'Adding missing Clarinet instrument');
 			migrationNeeded = true;
 			this.settings.instruments.clarinet = {
 				enabled: true, 
@@ -774,7 +774,7 @@ export default class SonigraphPlugin extends Plugin {
 		}
 		
 		if (!this.settings.instruments.saxophone) {
-			logger.info('settings', 'Adding missing Saxophone instrument');
+			void logger.info('settings', 'Adding missing Saxophone instrument');
 			migrationNeeded = true;
 			this.settings.instruments.saxophone = {
 				enabled: true, 
@@ -874,8 +874,8 @@ export default class SonigraphPlugin extends Plugin {
 		
 		// Migrate from genre-based to flat sample array (Option 3 refactor)
 		if (this.settings.freesoundSamples && typeof this.settings.freesoundSamples === 'object' && !Array.isArray(this.settings.freesoundSamples)) {
-			logger.info('migration', 'Migrating from genre-based samples to flat array');
-			this.flattenGenreBasedSamples();
+			void logger.info('migration', 'Migrating from genre-based samples to flat array');
+			void this.flattenGenreBasedSamples();
 			migrationNeeded = true;
 		}
 
@@ -889,7 +889,7 @@ export default class SonigraphPlugin extends Plugin {
 
 		// Import curated Freesound samples if user has no samples yet
 		if (!this.settings.freesoundSamples || this.settings.freesoundSamples.length === 0) {
-			logger.info('settings', 'No Freesound samples found - importing curated library');
+			void logger.info('settings', 'No Freesound samples found - importing curated library');
 			migrationNeeded = true;
 			this.settings.freesoundSamples = this.getCuratedSamples();
 			logger.info('settings', `Imported ${this.settings.freesoundSamples.length} curated samples`);
@@ -898,7 +898,7 @@ export default class SonigraphPlugin extends Plugin {
 		// Save migrated settings if any changes were made
 		if (migrationNeeded) {
 			void this.saveSettings();
-			logger.info('settings', 'Settings migration completed');
+			void logger.info('settings', 'Settings migration completed');
 		}
 	}
 
@@ -914,7 +914,7 @@ export default class SonigraphPlugin extends Plugin {
 		Object.keys(oldFormat).forEach(genre => {
 			const samples = oldFormat[genre];
 			if (Array.isArray(samples)) {
-				flatArray.push(...samples);
+				void flatArray.push(...samples);
 			}
 		});
 
@@ -1009,7 +1009,7 @@ export default class SonigraphPlugin extends Plugin {
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
-		logger.debug('settings', 'Settings saved');
+		void logger.debug('settings', 'Settings saved');
 	}
 
 	getLogs(): import('./logging').LogEntry[] {

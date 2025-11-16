@@ -174,8 +174,8 @@ export class MusicalTheoryEngine {
         for (const interval of chordDefinition.intervals) {
             const freq = this.generateHarmonicInterval(rootFrequency, interval);
             const note = getClosestNoteName(freq);
-            frequencies.push(freq);
-            notes.push(note.note);
+            void frequencies.push(freq);
+            void notes.push(note.note);
         }
 
         return {
@@ -235,7 +235,7 @@ export class MusicalTheoryEngine {
             // Generate voice below by going down an octave then up by interval
             const harmonyFreq = melodyFrequency * 0.5 * Math.pow(2, interval / 12);
             const quantized = this.constrainPitchToScale(harmonyFreq);
-            voices.push(quantized);
+            void voices.push(quantized);
         }
 
         return voices;
@@ -293,7 +293,7 @@ export class MusicalTheoryEngine {
 
         // Check for scale modulation
         if (this.config.dynamicScaleModulation) {
-            this.checkScaleModulation();
+            void this.checkScaleModulation();
         }
     }
 
@@ -370,7 +370,7 @@ export class MusicalTheoryEngine {
             };
         }
 
-        logger.debug('config-update', 'Configuration updated');
+        void logger.debug('config-update', 'Configuration updated');
     }
 
     /**
@@ -398,7 +398,7 @@ export class MusicalTheoryEngine {
             );
 
             if (Math.abs(closest - expectedHarmonic) < expectedHarmonic * 0.1) {
-                harmonics.push(closest);
+                void harmonics.push(closest);
             }
         }
 
@@ -475,7 +475,7 @@ export class MusicalTheoryEngine {
             harmonicTension: 0,
             timeInProgression: 0
         };
-        logger.info('reset', 'Musical Theory Engine reset');
+        void logger.info('reset', 'Musical Theory Engine reset');
     }
 
     /**
@@ -484,6 +484,6 @@ export class MusicalTheoryEngine {
     public dispose(): void {
         this.scaleModulationRules = [];
         this.currentContext.recentNotes = [];
-        logger.info('dispose', 'Musical Theory Engine disposed');
+        void logger.info('dispose', 'Musical Theory Engine disposed');
     }
 }
