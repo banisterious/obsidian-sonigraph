@@ -5,7 +5,6 @@
  */
 
 import { GraphNode } from '../../graph/GraphDataExtractor';
-import { Cluster } from '../../graph/SmartClusteringAlgorithms';
 
 /**
  * Audio theme configuration for each cluster type

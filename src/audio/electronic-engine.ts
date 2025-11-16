@@ -1,4 +1,4 @@
-import { Synth, PolySynth, Filter, LFO, Envelope, Volume, Oscillator, AMSynth, FMSynth, now, Sampler } from 'tone';
+import { Synth, PolySynth, Filter, LFO, Envelope, Volume, now } from 'tone';
 import { getLogger } from '../logging';
 
 const logger = getLogger('electronic-engine');

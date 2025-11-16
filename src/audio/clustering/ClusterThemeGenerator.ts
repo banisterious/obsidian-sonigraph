@@ -7,9 +7,7 @@
 import { getLogger } from '../../logging';
 import {
   ClusterAudioTheme,
-  ClusterType,
-  TimbreProfile,
-  DynamicsRange
+  ClusterType
 } from './types';
 
 const logger = getLogger('cluster-themes');

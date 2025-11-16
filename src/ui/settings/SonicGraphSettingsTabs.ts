@@ -5,15 +5,12 @@
  * in the Control Center.
  */
 
-import { App, Setting } from 'obsidian';
+import { App } from 'obsidian';
 import type SonigraphPlugin from '../../main';
 import { createLucideIcon, LucideIconName } from '../lucide-icons';
 import { getLogger } from '../../logging';
-import { MaterialCard } from '../material-components';
 import { SonicGraphCoreSettings } from './SonicGraphCoreSettings';
-import { SonicGraphLayersSettings } from './SonicGraphLayersSettings';
 import { SonicGraphAdvancedSettings } from './SonicGraphAdvancedSettings';
-import { SonicGraphFreesoundSettings } from './SonicGraphFreesoundSettings';
 import { SonicGraphVisualDisplaySettings } from './SonicGraphVisualDisplaySettings';
 
 const logger = getLogger('SonicGraphSettingsTabs');
