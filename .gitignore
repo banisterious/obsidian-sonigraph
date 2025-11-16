@@ -63,9 +63,10 @@ Thumbs.db
 *.mdZone.Identifier
 *.m4a
 
-# PR review files
+# PR review files (working documents)
 obsidian-pr-review*.md
 pr-review-*.md
+docs/pr-reviews/
 
 # Session continuation files
 session-continue*.md
