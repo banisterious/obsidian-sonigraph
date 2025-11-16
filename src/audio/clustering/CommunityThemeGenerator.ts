@@ -9,10 +9,7 @@ import { getLogger } from '../../logging';
 import {
   Community,
   CommunityType,
-  CommunityAudioTheme,
-  TimbreProfile,
-  DynamicsRange,
-  OrchestrationProfile
+  CommunityAudioTheme
 } from './types';
 
 const logger = getLogger('community-themes');

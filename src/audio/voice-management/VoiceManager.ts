@@ -182,8 +182,7 @@ export class VoiceManager {
         }
 
         const availableIndices = this.availableVoiceIndices.get(instrumentName);
-        const nextIndex = this.nextAvailableIndex.get(instrumentName) || 0;
-        
+
         if (!availableIndices || availableIndices.size === 0) {
             // No available voices - try voice stealing
             return this.stealVoiceOptimized(instrumentName, nodeId);
@@ -364,7 +363,7 @@ export class VoiceManager {
         const now = Date.now();
         const cleanupThreshold = 30000; // 30 seconds
 
-        for (const [instrumentName, pool] of this.voicePool.entries()) {
+        for (const pool of this.voicePool.values()) {
             for (const voice of pool) {
                 if (voice.lastUsed && (now - voice.lastUsed) > cleanupThreshold) {
                     voice.available = true;
@@ -381,7 +380,7 @@ export class VoiceManager {
     setQualityLevel(level: QualityLevel): void {
         this.currentQualityLevel = level;
         
-        for (const [instrumentName, pool] of this.voicePool.entries()) {
+        for (const instrumentName of this.voicePool.keys()) {
             const config = this.voiceConfigs.get(instrumentName) || this.voiceConfigs.get('default');
             let maxVoices = config.maxVoices;
             

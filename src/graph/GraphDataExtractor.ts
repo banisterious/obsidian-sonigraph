@@ -1,4 +1,4 @@
-import { TFile, TFolder, Vault, MetadataCache, CachedMetadata } from 'obsidian';
+import { TFile, Vault, MetadataCache, CachedMetadata } from 'obsidian';
 import { getLogger } from '../logging';
 import { EnhancedGraphNode } from './types';
 import { HubCentralityAnalyzer } from '../audio/orchestration/HubCentralityAnalyzer';
@@ -113,7 +113,7 @@ export class GraphDataExtractor {
   /**
    * Extract complete graph data from the vault
    */
-  async extractGraphData(forceRefresh: boolean = false): Promise<GraphData> {
+  extractGraphData(forceRefresh: boolean = false): GraphData {
     const now = Date.now();
     
     // Return cached data if still valid and not forcing refresh
@@ -296,7 +296,7 @@ export class GraphDataExtractor {
   /**
    * Create a node from a TFile (legacy method)
    */
-  private async createNodeFromFile(file: TFile): Promise<GraphNode | null> {
+  private createNodeFromFile(file: TFile): GraphNode | null {
     const metadata = this.metadataCache.getFileCache(file);
     const stat = file.stat;
 
@@ -515,7 +515,7 @@ export class GraphDataExtractor {
     let tagLinksCreated = 0;
     const MAX_TAG_LINKS = 500; // Prevent excessive tag links
     
-    for (const [tag, taggedNodes] of tagIndex) {
+    for (const taggedNodes of tagIndex.values()) {
       if (taggedNodes.length < 2) continue; // Need at least 2 nodes to create links
       if (tagLinksCreated >= MAX_TAG_LINKS) break;
       
@@ -565,7 +565,7 @@ export class GraphDataExtractor {
     let folderLinksCreated = 0;
     const MAX_FOLDER_LINKS = 200;
     
-    for (const [folderPath, folderNodes] of folderIndex) {
+    for (const folderNodes of folderIndex.values()) {
       if (folderNodes.length < 2) continue; // Need at least 2 nodes
       if (folderLinksCreated >= MAX_FOLDER_LINKS) break;
       

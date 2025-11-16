@@ -1,15 +1,11 @@
-import { Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3, getDestination } from 'tone';
-import { 
-    EffectNode, 
-    SendBus, 
-    ReturnBus, 
-    EffectChain, 
-    MasterEffectsConfig, 
+import { Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
+import {
+    EffectNode,
+    SendBus,
+    ReturnBus,
     EffectParameters,
-    EffectInstance,
     EffectBusMetrics,
-    EffectType,
-    EffectConfig
+    EffectType
 } from './types';
 import { getLogger } from '../../logging';
 

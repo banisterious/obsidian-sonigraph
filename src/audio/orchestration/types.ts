@@ -6,7 +6,6 @@
  */
 
 import { GraphNode } from '../../graph/GraphDataExtractor';
-import { Cluster, ClusterType } from '../../graph/SmartClusteringAlgorithms';
 
 /**
  * Hub centrality metrics for a node

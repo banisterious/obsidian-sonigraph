@@ -91,7 +91,7 @@ export class FileCollisionModal extends Modal {
         const radioGroup = optionsContainer.createDiv('collision-radio-group');
 
         // Option 1: Cancel (default)
-        const cancelOption = this.createRadioOption(
+        this.createRadioOption(
             radioGroup,
             'cancel',
             'Cancel export',
@@ -100,7 +100,7 @@ export class FileCollisionModal extends Modal {
         );
 
         // Option 2: Overwrite
-        const overwriteOption = this.createRadioOption(
+        this.createRadioOption(
             radioGroup,
             'overwrite',
             'Overwrite existing file',
@@ -112,7 +112,7 @@ export class FileCollisionModal extends Modal {
         const renameRadio = renameContainer.createEl('input', {
             type: 'radio',
             attr: { name: 'collision-action', value: 'rename' }
-        }) as HTMLInputElement;
+        });
         renameRadio.id = 'collision-rename';
 
         const renameLabel = renameContainer.createEl('label', {
@@ -126,7 +126,7 @@ export class FileCollisionModal extends Modal {
             type: 'text',
             value: this.getFileNameWithoutExtension(this.suggestedName),
             cls: 'collision-rename-input'
-        }) as HTMLInputElement;
+        });
 
         const extension = this.getFileExtension(this.filePath);
         renameInputContainer.createEl('span', {
@@ -225,7 +225,7 @@ export class FileCollisionModal extends Modal {
                 value,
                 ...(defaultChecked && { checked: '' })
             }
-        }) as HTMLInputElement;
+        });
         radio.id = `collision-${value}`;
 
         const labelEl = optionDiv.createEl('label', {

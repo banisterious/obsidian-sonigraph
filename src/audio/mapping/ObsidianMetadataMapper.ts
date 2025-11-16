@@ -6,7 +6,7 @@
  */
 
 import { TFile, CachedMetadata, App } from 'obsidian';
-import { EnhancedGraphNode, InstrumentMapping, AudioMappingConfig } from '../../graph/types';
+import { InstrumentMapping, AudioMappingConfig } from '../../graph/types';
 import { getLogger } from '../../logging';
 
 const logger = getLogger('obsidian-metadata-mapper');
@@ -234,7 +234,6 @@ export class ObsidianMetadataMapper {
     private mapAgeToInstrument(ctime: number, mtime: number): InstrumentSuggestion {
         const now = Date.now();
         const age = (now - mtime) / (1000 * 60 * 60 * 24); // Days since modification
-        const totalAge = (now - ctime) / (1000 * 60 * 60 * 24); // Days since creation
 
         // Recently modified files (within week) - energetic instruments
         if (age <= 7) {

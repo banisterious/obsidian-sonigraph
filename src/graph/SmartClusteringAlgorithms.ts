@@ -72,7 +72,7 @@ export class SmartClusteringAlgorithms {
   /**
    * Main clustering interface - processes graph data and returns clusters
    */
-  public async clusterGraph(nodes: GraphNode[], links: GraphLink[]): Promise<ClusteringResult> {
+  public clusterGraph(nodes: GraphNode[], links: GraphLink[]): ClusteringResult {
     this.nodes = [...nodes];
     this.links = [...links];
 
@@ -159,7 +159,6 @@ export class SmartClusteringAlgorithms {
       edges: this.getClusterEdges([node.id])
     }));
 
-    let bestModularity = this.calculateModularity(clusters);
     let improved = true;
 
     // Iteratively merge clusters to maximize modularity
@@ -185,7 +184,6 @@ export class SmartClusteringAlgorithms {
         const [i, j] = bestMergeIndices;
         void this.mergeClusters(clusters, i, j);
         improved = true;
-        bestModularity += bestMergeGain;
       }
     }
 

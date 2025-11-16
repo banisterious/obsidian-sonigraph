@@ -6,7 +6,6 @@
  */
 
 import { CachedMetadata } from 'obsidian';
-import { InstrumentMapping } from '../../graph/types';
 import { getLogger } from '../../logging';
 
 const logger = getLogger('metadata-mapping-rules');
@@ -380,7 +379,7 @@ export class MetadataMappingRules {
                     const regex = new RegExp(condition.value, condition.caseSensitive ? '' : 'i');
                     const matches = regex.test(filePath);
                     return { matched: matches, reason: matches ? `Path matches pattern ${condition.value}` : `Path does not match pattern ${condition.value}` };
-                } catch (error) {
+                } catch {
                     return { matched: false, reason: `Invalid regex pattern: ${condition.value}` };
                 }
             }

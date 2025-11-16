@@ -6,16 +6,13 @@
  * instrument selection and musical parameters with complexity analysis.
  */
 
-import { App, TFile } from 'obsidian';
+import { App } from 'obsidian';
 import { EnhancedGraphNode, MusicalContext } from '../../graph/types';
 import { InstrumentConfig, getAllInstruments } from '../configs';
-import { 
-    TagMappingConfig, 
-    TagSemanticAnalysis, 
-    DEFAULT_TAG_MAPPINGS,
-    EmotionalMapping,
-    FunctionalMapping,
-    TopicalMapping
+import {
+    TagMappingConfig,
+    TagSemanticAnalysis,
+    DEFAULT_TAG_MAPPINGS
 } from './SemanticMappingConfig';
 import { MusicalProperties, ContentAwareMappingConfig } from './ContentAwareMapper';
 import { getLogger } from '../../logging';
@@ -92,7 +89,7 @@ export class TagSemanticMapper {
     /**
      * Perform complete semantic analysis of tags and generate musical mapping
      */
-    async performSemanticMapping(node: EnhancedGraphNode, context?: MusicalContext): Promise<SemanticMappingResult> {
+    performSemanticMapping(node: EnhancedGraphNode, context?: MusicalContext): SemanticMappingResult {
         if (!this.config.tagSemantics.enabled) {
             return this.createFallbackMapping(node);
         }

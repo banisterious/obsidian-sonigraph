@@ -6,7 +6,7 @@
  * and topical tag mappings with complexity analysis.
  */
 
-import { InstrumentConfig } from '../configs';
+// import { InstrumentConfig } from '../configs';
 
 /**
  * Emotional mapping from tags to musical characteristics

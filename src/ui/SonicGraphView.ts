@@ -275,7 +275,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         return state;
     }
 
-    async onOpen() {
+    onOpen(): void {
         logger.info('sonic-graph-init', 'View onOpen() started');
 
         try {
@@ -800,7 +800,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         void logger.info('visual-display', 'Audio engine integration setup complete');
     }
 
-    async onClose() {
+    onClose(): void {
         void logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
 
         try {
@@ -1028,7 +1028,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Resizable divider
         this.visualDivider = splitContainer.createDiv({ cls: 'sonic-graph-visual-divider' });
-        const dividerHandle = this.visualDivider.createDiv({ cls: 'sonic-graph-visual-divider-handle' });
+        this.visualDivider.createDiv({ cls: 'sonic-graph-visual-divider-handle' });
 
         // Setup divider drag handlers
         void this.setupDividerDrag();
@@ -1130,10 +1130,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Single unified timeline track
         const timelineTrack = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-track-unified' });
-        const timelineLine = timelineTrack.createDiv({ cls: 'sonic-graph-timeline-line-unified' });
+        timelineTrack.createDiv({ cls: 'sonic-graph-timeline-line-unified' });
         
         // Unified markers container that spans the timeline
-        const markersContainer = this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-markers' });
+        this.timelineInfo.createDiv({ cls: 'sonic-graph-timeline-markers' });
         // Markers will be populated dynamically
         
         // Current position indicator (spans both tracks) - hidden by default
@@ -1608,7 +1608,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Show all nodes
             if (this.graphRenderer) {
                 // Get all node IDs to show them all
-                this.graphDataExtractor.extractGraphData().then(graphData => {
+                void this.graphDataExtractor.extractGraphData().then(graphData => {
                     const allNodeIds = new Set(graphData.nodes.map(node => node.id));
                     this.graphRenderer?.updateVisibleNodes(allNodeIds);
                 });
@@ -1645,9 +1645,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private openControlCenter(): void {
         // Note: Views don't need to be closed when opening other UI elements
-        
+
         // Open Control Center
-        import('./control-panel').then(({ MaterialControlPanelModal }) => {
+        void import('./control-panel').then(({ MaterialControlPanelModal }) => {
             const controlCenter = new MaterialControlPanelModal(this.app, this.plugin);
             void controlCenter.open();
         });
@@ -1670,7 +1670,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     private createSettingsContent(): void {
         // Settings header
         const settingsHeader = this.settingsPanel.createDiv({ cls: 'sonic-graph-settings-header' });
-        const headerTitle = settingsHeader.createEl('h3', {
+        settingsHeader.createEl('h3', {
             text: '⚙️ Timeline Settings',
             cls: 'sonic-graph-settings-title'
         });
@@ -1771,7 +1771,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Status indicator
         const statusItem = section.createDiv({ cls: 'sonic-graph-setting-item adaptive-detail-status' });
         statusItem.createEl('label', { text: 'Current mode', cls: 'sonic-graph-setting-label' });
-        const statusText = statusItem.createEl('div', { 
+        statusItem.createEl('div', { 
             text: `${adaptiveSettings.mode} (${adaptiveSettings.enabled ? 'enabled' : 'disabled'})`, 
             cls: 'sonic-graph-setting-status' 
         });
@@ -2013,7 +2013,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (settings.debugVisualization) {
             void debugSwitch.addClass('active');
         }
-        const debugHandle = debugSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        debugSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
 
         // Add tooltip to debug visualization toggle
         setTooltip(debugSwitch, 'Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.', {
@@ -2252,7 +2252,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Create collapsible header
         const header = section.createDiv({ cls: 'sonic-graph-collapsible-header' });
 
-        const headerTitle = header.createEl('div', {
+        header.createEl('div', {
             text: 'CONNECTION TYPE AUDIO DIFFERENTIATION (Phase 4.4)',
             cls: 'sonic-graph-settings-section-title'
         });
@@ -2448,7 +2448,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = settings;
-        this.plugin.saveSettings();
+        void this.plugin.saveSettings();
 
         logger.debug('connection-type-mapping', `Updated config: ${key} = ${value}`);
     }
@@ -2465,7 +2465,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = settings;
-        this.plugin.saveSettings();
+        void this.plugin.saveSettings();
 
         logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${value}`);
     }
@@ -2484,7 +2484,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = settings;
-        this.plugin.saveSettings();
+        void this.plugin.saveSettings();
 
         logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${value}`);
     }
@@ -2641,7 +2641,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (this.getSonicGraphSettings().timeline.loop) {
             void toggleSwitch.addClass('active');
         }
-        const toggleHandle = toggleSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        toggleSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         toggleSwitch.addEventListener('click', () => {
             const isActive = toggleSwitch.hasClass('active');
@@ -2656,8 +2656,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Time Window Setting
         const timeWindowItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
-        const timeWindowLabel = timeWindowItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Time window' });
-        const timeWindowDesc = timeWindowItem.createDiv({ 
+        timeWindowItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Time window' });
+        timeWindowItem.createDiv({ 
             cls: 'sonic-graph-setting-description', 
             text: 'Choose which files to include in the timeline'
         });
@@ -2696,8 +2696,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Timeline Granularity Setting
         const granularityItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
-        const granularityLabel = granularityItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Timeline granularity' });
-        const granularityDesc = granularityItem.createDiv({ 
+        granularityItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Timeline granularity' });
+        granularityItem.createDiv({ 
             cls: 'sonic-graph-setting-description', 
             text: 'Choose the time range for timeline animation'
         });
@@ -2739,11 +2739,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-setting-item sonic-graph-custom-range',
             attr: { style: this.getSonicGraphSettings().timeline.granularity === 'custom' ? '' : 'display: none;' }
         });
-        const customRangeLabel = customRangeItem.createDiv({ 
+        customRangeItem.createDiv({ 
             cls: 'sonic-graph-setting-label', 
             text: 'Custom range' 
         });
-        const customRangeDesc = customRangeItem.createDiv({ 
+        customRangeItem.createDiv({ 
             cls: 'sonic-graph-setting-description', 
             text: 'Specify custom time range value and unit'
         });
@@ -2798,8 +2798,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Event Spreading Mode Setting
         const spreadingItem = section.createDiv({ cls: 'sonic-graph-setting-item' });
-        const spreadingLabel = spreadingItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Event spreading' });
-        const spreadingDesc = spreadingItem.createDiv({ 
+        spreadingItem.createDiv({ cls: 'sonic-graph-setting-label', text: 'Event spreading' });
+        spreadingItem.createDiv({ 
             cls: 'sonic-graph-setting-description', 
             text: 'How to handle clustered events to prevent audio crackling'
         });
@@ -5192,7 +5192,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (this.getSonicGraphSettings().visual.timelineMarkersEnabled) {
             void markersSwitch.addClass('active');
         }
-        const _markersHandle = markersSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        markersSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         markersSwitch.addEventListener('click', () => {
             const isActive = markersSwitch.hasClass('active');
@@ -5249,7 +5249,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (this.getSonicGraphSettings().visual.loopAnimation) {
             void loopSwitch.addClass('active');
         }
-        const _loopHandle = loopSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        loopSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         loopSwitch.addEventListener('click', () => {
             const isActive = loopSwitch.hasClass('active');
@@ -5271,7 +5271,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (this.getSonicGraphSettings().visual.showFileNames) {
             void fileNamesSwitch.addClass('active');
         }
-        const _fileNamesHandle = fileNamesSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
+        fileNamesSwitch.createDiv({ cls: 'sonic-graph-toggle-handle' });
         
         // Add tooltip to show file names toggle
         setTooltip(fileNamesSwitch, 'Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.', {
@@ -5574,15 +5574,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
             this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
         }
-        
+
         logger.debug('filter-setting', `Updated filter setting: ${String(key)} = ${value}`);
     }
 
@@ -5866,13 +5866,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         currentSettings.layout.pathBasedGrouping.groups.push(newGroup);
         this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
         }
-        
+
         void logger.debug('path-grouping', 'Added new group from search:', newGroup);
     }
     
@@ -5893,15 +5893,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         (currentSettings.layout.pathBasedGrouping.groups[groupIndex] as DynamicSettings)[property] = value;
 
         this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
             this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
         }
-        
+
         logger.debug('path-grouping', `Updated group ${groupIndex} ${property}:`, value);
     }
 
@@ -5914,8 +5914,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         currentSettings.layout.pathBasedGrouping.groups.splice(groupIndex, 1);
         
         this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
@@ -6182,13 +6182,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Save setting
         this.plugin.settings.sonicGraphAnimationSpeed = speed;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Update animator if it exists
         if (this.temporalAnimator) {
             this.temporalAnimator.setSpeed(speed);
         }
-        
+
         logger.debug('ui', 'Animation speed changed', { speed });
     }
 
@@ -7253,8 +7253,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.audio.density = density;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated audio density', { density });
     }
 
@@ -7268,8 +7268,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.audio.noteDuration = duration;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated note duration', { duration });
     }
 
@@ -7283,8 +7283,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.visual.showFileNames = show;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated show file names', { show });
         
         // Refresh the graph to show/hide file names
@@ -7303,8 +7303,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.visual.timelineMarkersEnabled = show;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated timeline markers visibility', { show });
         
         // Update the timeline markers display
@@ -7328,8 +7328,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.visual.animationStyle = style;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated animation style', { style });
         
         // Update the renderer's animation style if it exists
@@ -7348,8 +7348,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.visual.loopAnimation = enabled;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated loop animation', { enabled });
         
         // Update the animator's loop setting if it exists
@@ -7364,8 +7364,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     private updateAnimationDuration(duration: number): void {
         // Save to plugin settings
         this.plugin.settings.sonicGraphAnimationDuration = duration;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated animation duration', { duration });
         
         // The animator will pick up the new duration from settings when it runs
@@ -7380,8 +7380,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.timeline.timeWindow = timeWindow;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated time window', { timeWindow });
         
         // Update temporal animator with new time window
@@ -7399,8 +7399,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.timeline.granularity = granularity;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated timeline granularity', { granularity });
         
         // Show/hide custom range controls based on selection
@@ -7428,8 +7428,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.timeline.customRange = { value, unit };
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated custom range', { value, unit });
         
         // Update temporal animator if using custom granularity
@@ -7447,8 +7447,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.timeline.eventSpreadingMode = mode;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated event spreading mode', { mode });
         
         // Update temporal animator with new spreading mode
@@ -7942,8 +7942,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         
         // Single save operation
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Single renderer update if needed
         if (needsRendererUpdate && this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);

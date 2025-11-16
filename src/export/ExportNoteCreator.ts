@@ -5,7 +5,7 @@
  * and links to the exported audio file.
  */
 
-import { App, TFile } from 'obsidian';
+import { App } from 'obsidian';
 import { ExportConfig, ExportResult } from './types';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { getLogger } from '../logging';
@@ -67,7 +67,7 @@ export class ExportNoteCreator {
                 try {
                     await this.app.vault.createFolder(noteFolder);
                     logger.info('export-note', `Created folder: ${noteFolder}`);
-                } catch (error) {
+                } catch {
                     // Folder might already exist due to race condition
                     logger.debug('export-note', `Folder creation failed (may already exist): ${noteFolder}`);
                 }
@@ -82,7 +82,7 @@ export class ExportNoteCreator {
             }
 
             // Create the note
-            const file = await this.app.vault.create(finalPath, noteContent);
+            await this.app.vault.create(finalPath, noteContent);
 
             logger.info('export-note', 'Export note created', { path: finalPath });
             return finalPath;

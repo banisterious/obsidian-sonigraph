@@ -5,7 +5,7 @@
 
 import { getLogger } from '../../logging';
 import { MusicalGenre } from './FreesoundSampleManager';
-import { CachedSample, CacheStatistics } from './SampleCache';
+import { CacheStatistics } from './SampleCache';
 
 export type CacheEvictionStrategy = 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive';
 export type CachePriority = 'critical' | 'high' | 'medium' | 'low';

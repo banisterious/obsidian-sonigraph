@@ -1,4 +1,4 @@
-import { Synth, PolySynth, Filter, LFO, Envelope, Volume, Oscillator, AMSynth, FMSynth, now, Sampler } from 'tone';
+import { Synth, PolySynth, Filter, LFO, Envelope, Volume, now } from 'tone';
 import { getLogger } from '../logging';
 
 const logger = getLogger('electronic-engine');
@@ -67,9 +67,9 @@ export class ElectronicEngine {
 		void logger.debug('initialization', 'ElectronicEngine created');
 	}
 
-	async initializeElectronic(): Promise<void> {
+	initializeElectronic(): void {
 		void logger.info('initialization', 'Initializing advanced electronic synthesis');
-		
+
 		try {
 			void this.initializeLeadSynth();
 			void this.initializeBassSynth();
@@ -372,9 +372,9 @@ export class ElectronicEngine {
 		];
 
 		for (const synthMap of synthMaps) {
-			for (const [key, synth] of synthMap) {
+			for (const synth of synthMap.values()) {
 				if (synth.volume) {
-					const baseVolume = instrument === 'leadSynth' ? -12 : 
+					const baseVolume = instrument === 'leadSynth' ? -12 :
 									  instrument === 'bassSynth' ? -8 : -10;
 					synth.volume.value = baseVolume + (dynamics * 12); // Up to 0dB
 				}
@@ -387,21 +387,21 @@ export class ElectronicEngine {
 	dispose(): void {
 		// Clean up all electronic resources
 		[this.leadSynths, this.bassSynths, this.arpSynths].forEach(map => {
-			for (const [key, synth] of map) {
+			for (const synth of map.values()) {
 				void synth.dispose();
 			}
 			void map.clear();
 		});
 
 		[this.filterLFOs, this.modulationEnvelopes, this.filterInstances].forEach(map => {
-			for (const [key, processor] of map) {
+			for (const processor of map.values()) {
 				if (processor.dispose) processor.dispose();
 			}
 			void map.clear();
 		});
 
 		// Clear arpeggiator timers
-		for (const [key, timer] of this.arpSequencers) {
+		for (const timer of this.arpSequencers.values()) {
 			clearTimeout(timer);
 		}
 		this.arpSequencers.clear();

@@ -254,7 +254,7 @@ export class FileTypeAnalyzer {
     /**
      * Calculate overall complexity score for the file
      */
-    private async calculateComplexity(file: TFile, node: EnhancedGraphNode, fileType: FileCharacteristics['fileType']): Promise<number> {
+    private calculateComplexity(file: TFile, node: EnhancedGraphNode, fileType: FileCharacteristics['fileType']): number {
         let complexity = 0.5; // Base complexity
         
         try {
@@ -325,12 +325,12 @@ export class FileTypeAnalyzer {
     /**
      * Analyze metadata based on file type
      */
-    private async analyzeMetadata(
-        file: TFile, 
-        node: EnhancedGraphNode, 
-        fileType: FileCharacteristics['fileType'], 
+    private analyzeMetadata(
+        file: TFile,
+        node: EnhancedGraphNode,
+        fileType: FileCharacteristics['fileType'],
         cache: CachedMetadata | null
-    ): Promise<FileCharacteristics['metadata']> {
+    ): FileCharacteristics['metadata'] {
         const metadata: FileCharacteristics['metadata'] = {
             hasAdvancedMetadata: false
         };

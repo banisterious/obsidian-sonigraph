@@ -4,7 +4,7 @@
  * Maps note properties to drum selection for intelligent percussion accents
  */
 
-import { DrumType, NoteEvent, AccentMode, PercussionConfig } from './types';
+import { DrumType, NoteEvent, PercussionConfig } from './types';
 
 /**
  * Select which drum to trigger based on note properties and accent mode

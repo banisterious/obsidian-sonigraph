@@ -167,9 +167,6 @@ export class OfflineRenderer {
                     return;
                 }
 
-                // Access animator config duration through public interface
-                const animDuration = duration;
-
                 // Check if animation completed by watching for pause
                 // The animator will auto-pause when complete
                 const animatorWithState = this.animator as unknown as { isPlaying: boolean };

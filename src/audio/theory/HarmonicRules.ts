@@ -9,8 +9,6 @@ import {
     VoiceLeadingRule,
     HarmonicConstraints,
     IntervalType,
-    ChordDefinition,
-    ChordQuality,
     HarmonicFunction
 } from './types';
 import { INTERVAL_DEFINITIONS } from './ScaleDefinitions';
@@ -110,9 +108,6 @@ function hasParallelInterval(voices: number[][], intervalSemitones: number): boo
             const voice2 = voices[j];
 
             for (let t = 0; t < voice1.length - 1; t++) {
-                const interval1 = Math.abs(voice1[t] - voice2[t]);
-                const interval2 = Math.abs(voice1[t + 1] - voice2[t + 1]);
-
                 const semitones1 = frequencyToSemitones(voice1[t], voice2[t]);
                 const semitones2 = frequencyToSemitones(voice1[t + 1], voice2[t + 1]);
 

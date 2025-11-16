@@ -107,7 +107,7 @@ export class ConnectionTypePresetManager {
     /**
      * Load a preset into the current configuration
      */
-    public async loadPreset(presetName: string): Promise<PresetOperationResult> {
+    public loadPreset(presetName: string): PresetOperationResult {
         try {
             const preset = this.getPreset(presetName);
             if (!preset) {
@@ -165,7 +165,7 @@ export class ConnectionTypePresetManager {
     /**
      * Save current configuration as a custom preset
      */
-    public async savePreset(name: string, description: string, author?: string): Promise<PresetOperationResult> {
+    public savePreset(name: string, description: string, author?: string): PresetOperationResult {
         try {
             // Check if preset name already exists
             if (this.builtInPresets.has(name)) {
@@ -230,7 +230,7 @@ export class ConnectionTypePresetManager {
     /**
      * Delete a custom preset
      */
-    public async deletePreset(name: string): Promise<PresetOperationResult> {
+    public deletePreset(name: string): PresetOperationResult {
         try {
             // Can't delete built-in presets
             if (this.builtInPresets.has(name)) {
@@ -434,7 +434,7 @@ export class ConnectionTypePresetManager {
     /**
      * Import preset from JSON string
      */
-    public async importPreset(jsonString: string, overwriteExisting: boolean = false): Promise<PresetOperationResult> {
+    public importPreset(jsonString: string, overwriteExisting: boolean = false): PresetOperationResult {
         try {
             const preset: ConnectionTypePreset = JSON.parse(jsonString);
 
@@ -488,7 +488,7 @@ export class ConnectionTypePresetManager {
     /**
      * Reset to default configuration
      */
-    public async resetToDefaults(): Promise<PresetOperationResult> {
+    public resetToDefaults(): PresetOperationResult {
         try {
             // Load default preset
             const defaultPreset = this.builtInPresets.get('Default');

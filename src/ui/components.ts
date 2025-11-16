@@ -84,47 +84,50 @@ export function createObsidianToggle(
 	}
 	
 	// Handle state changes
-	checkbox.addEventListener('change', async (event) => {
+	checkbox.addEventListener('change', () => {
 		const originalDisabled = checkbox.disabled;
 		const checkboxId = Math.random().toString(36).substring(2, 11); // Generate unique ID for tracking
-		
-		try {
-			const newValue = checkbox.checked;
-			logger.debug('ui', 'Checkbox change event fired', { 
-				checkboxId, 
-				newValue, 
-				disabled: checkbox.disabled,
-				containerElement: checkboxContainer 
-			});
-			
-			// Temporarily disable to prevent multiple rapid clicks
-			checkbox.disabled = true;
-			
-			// Update visual state immediately
-			if (newValue) {
-				void checkboxContainer.addClass('is-enabled');
-			} else {
-				void checkboxContainer.removeClass('is-enabled');
+
+		// Use void to explicitly ignore the promise
+		void (async () => {
+			try {
+				const newValue = checkbox.checked;
+				logger.debug('ui', 'Checkbox change event fired', {
+					checkboxId,
+					newValue,
+					disabled: checkbox.disabled,
+					containerElement: checkboxContainer
+				});
+
+				// Temporarily disable to prevent multiple rapid clicks
+				checkbox.disabled = true;
+
+				// Update visual state immediately
+				if (newValue) {
+					void checkboxContainer.addClass('is-enabled');
+				} else {
+					void checkboxContainer.removeClass('is-enabled');
+				}
+
+				// Call the onChange callback
+				logger.debug('ui', 'Calling onChange callback', { checkboxId });
+				await onChange(newValue);
+				logger.debug('ui', 'Checkbox onChange callback completed', { checkboxId, newValue });
+			} catch (error) {
+				logger.error('ui', 'Error in checkbox change handler', { checkboxId, error });
+				// Revert the checkbox state if the callback failed
+				checkbox.checked = !checkbox.checked;
+				if (checkbox.checked) {
+					void checkboxContainer.addClass('is-enabled');
+				} else {
+					void checkboxContainer.removeClass('is-enabled');
+				}
+			} finally {
+				// Re-enable the checkbox
+				checkbox.disabled = originalDisabled;
+				logger.debug('ui', 'Checkbox re-enabled', { checkboxId, disabled: checkbox.disabled });
 			}
-			
-			// Call the onChange callback
-			logger.debug('ui', 'Calling onChange callback', { checkboxId });
-			await onChange(newValue);
-			logger.debug('ui', 'Checkbox onChange callback completed', { checkboxId, newValue });
-		} catch (error) {
-			logger.error('ui', 'Error in checkbox change handler', { checkboxId, error });
-			// Revert the checkbox state if the callback failed
-			checkbox.checked = !checkbox.checked;
-			if (checkbox.checked) {
-				void checkboxContainer.addClass('is-enabled');
-			} else {
-				void checkboxContainer.removeClass('is-enabled');
-			}
-		} finally {
-			// Re-enable the checkbox
-			checkbox.disabled = originalDisabled;
-			logger.debug('ui', 'Checkbox re-enabled', { checkboxId, disabled: checkbox.disabled });
-		}
+		})();
 	});
 
 	// CRITICAL FIX: Add click handler to container to ensure clicks reach the checkbox

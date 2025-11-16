@@ -5,7 +5,7 @@
  * Freesound samples with sortable columns, search, and tag filtering.
  */
 
-import { App, Notice, requestUrl, Modal, Setting, setIcon } from 'obsidian';
+import { App, Notice, requestUrl, Modal, setIcon } from 'obsidian';
 import SonigraphPlugin from '../main';
 import { getLogger } from '../logging';
 import { FreesoundSample } from '../audio/layers/types';

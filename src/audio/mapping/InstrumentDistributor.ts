@@ -6,7 +6,7 @@
  */
 
 import { TFile } from 'obsidian';
-import { VaultMappingAnalysis, InstrumentDistribution } from './VaultMappingOptimizer';
+import { VaultMappingAnalysis } from './VaultMappingOptimizer';
 import { MetadataAnalysisResult } from './ObsidianMetadataMapper';
 import { getLogger } from '../../logging';
 
@@ -231,8 +231,7 @@ export class InstrumentDistributor {
             }
             
             // We'd need file path to get position - simplified for now
-            const positions = instrumentPositions.get(instrument);
-            // positions.push(filePosition); // Would need to match with file
+            // Would need to match with file to push positions
         }
 
         // Analyze clusters for each instrument
@@ -411,9 +410,8 @@ export class InstrumentDistributor {
         count: number
     ): string[] {
         // Find analysis results for these files (simplified - would need better matching)
-        const fileAnalyses = analysisResults
-            .filter(a => a.confidence < 0.7) // Lower confidence files are better candidates
-            .slice(0, count);
+        // Lower confidence files are better candidates
+        // analysisResults.filter(a => a.confidence < 0.7).slice(0, count);
 
         return filePaths.slice(0, Math.min(count, filePaths.length));
     }
@@ -421,7 +419,7 @@ export class InstrumentDistributor {
     /**
      * Find analysis result for a specific file
      */
-    private findAnalysisForFile(filePath: string, analysisResults: MetadataAnalysisResult[]): MetadataAnalysisResult | null {
+    private findAnalysisForFile(_filePath: string, analysisResults: MetadataAnalysisResult[]): MetadataAnalysisResult | null {
         // This would need better matching logic based on actual file identification
         return analysisResults[0] || null;
     }
@@ -536,10 +534,9 @@ export class InstrumentDistributor {
      * Calculate clustering reduction percentage
      */
     private calculateClusteringReduction(
-        currentClusters: Map<string, ClusterAnalysis[]>, 
+        currentClusters: Map<string, ClusterAnalysis[]>,
         adjustments: DistributionResult[]
     ): number {
-        const totalClusters = Array.from(currentClusters.values()).flat().length;
         const problematicClusters = Array.from(currentClusters.values())
             .flat()
             .filter(c => c.isProblematic).length;

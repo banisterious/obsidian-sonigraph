@@ -376,7 +376,7 @@ export class GraphDemoModal extends Modal {
 			
 			void oscillator.start(audioContext.currentTime);
 			void oscillator.stop(audioContext.currentTime + 0.3);
-		} catch (error) {
+		} catch {
 			// Fallback if audio context fails
 			logger.info('audio-fallback', `♪ ${node.name} (${node.type})`);
 		}

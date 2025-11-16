@@ -3,8 +3,7 @@
  * Reusable UI components following Material Design 3 principles
  */
 
-import { setIcon } from 'obsidian';
-import { setLucideIcon, createLucideIcon, LucideIconName } from './lucide-icons';
+import { createLucideIcon, LucideIconName } from './lucide-icons';
 import { getLogger } from '../logging';
 
 const logger = getLogger('material-components');
@@ -326,10 +325,10 @@ export class InstrumentCard {
 			switchContainer.setAttribute('data-tooltip', `Toggle ${this.options.displayName || this.capitalizeWords(this.options.instrumentName)} on/off`);
 			switchContainer.setAttribute('title', `Toggle ${this.options.displayName || this.capitalizeWords(this.options.instrumentName)} on/off`);
 
-			this.enableSwitch = switchContainer.createEl('input', { 
-				type: 'checkbox', 
-				cls: 'ospcc-switch__input' 
-			}) as HTMLInputElement;
+			this.enableSwitch = switchContainer.createEl('input', {
+				type: 'checkbox',
+				cls: 'ospcc-switch__input'
+			});
 			this.enableSwitch.checked = this.options.enabled;
 			
 			// Add event listener with debugging
@@ -339,7 +338,7 @@ export class InstrumentCard {
 			});
 
 			const track = switchContainer.createDiv({ cls: 'ospcc-switch__track' });
-			const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+			track.createDiv({ cls: 'ospcc-switch__thumb' });
 			
 			// Make the entire switch container clickable
 			switchContainer.addEventListener('click', (e) => {
@@ -523,14 +522,14 @@ export class EffectSection {
 		this.enableSwitch = toggleContainer.createEl('input', {
 			type: 'checkbox',
 			cls: 'ospcc-switch__input'
-		}) as HTMLInputElement;
+		});
 		this.enableSwitch.checked = this.options.enabled;
 		this.enableSwitch.addEventListener('change', () => {
 			void this.updateEnabledState(this.enableSwitch.checked);
 		});
 
 		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
-		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
@@ -678,7 +677,7 @@ export class MaterialSlider {
 		this.slider = sliderContainer.createDiv({ cls: 'ospcc-slider' });
 		const trackContainer = this.slider.createDiv({ cls: 'ospcc-slider__track-container' });
 		this.track = trackContainer.createDiv({ cls: 'ospcc-slider__track' });
-		const activeTrack = this.track.createDiv({ cls: 'ospcc-slider__track-active' });
+		this.track.createDiv({ cls: 'ospcc-slider__track-active' });
 		this.thumb = this.slider.createDiv({ cls: 'ospcc-slider__thumb' });
 
 		// Value display

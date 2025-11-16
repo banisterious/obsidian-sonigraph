@@ -21,7 +21,6 @@ import {
   HarmonicLayerConfig,
   VaultState,
   ClusterInfo,
-  ChordProgression,
   MusicalScale,
   ContinuousLayerError,
   LayerState

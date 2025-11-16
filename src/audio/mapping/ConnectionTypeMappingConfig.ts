@@ -7,7 +7,7 @@
  * intensity and advanced audio parameters.
  */
 
-import { InstrumentConfig } from '../configs';
+// import { InstrumentConfig } from '../configs';
 
 /**
  * Types of connections that can be mapped to different audio characteristics

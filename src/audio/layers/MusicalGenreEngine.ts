@@ -21,7 +21,6 @@ import {
   Distortion,
   PingPongDelay,
   BitCrusher,
-  AutoFilter,
   Phaser,
   start
 } from 'tone';
@@ -1363,18 +1362,18 @@ export class MusicalGenreEngine {
     });
   }
   
-  private async cleanup(): Promise<void> {
+  private cleanup(): void {
     // Stop and dispose all synths
     if (this.primarySynth) {
       this.primarySynth.dispose();
       this.primarySynth = null;
     }
-    
+
     this.supportingSynths.forEach(synth => {
       synth.dispose();
     });
     this.supportingSynths.clear();
-    
+
     // Dispose effects
     this.effects.forEach(effect => {
       effect.dispose();

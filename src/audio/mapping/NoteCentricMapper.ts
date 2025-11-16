@@ -326,7 +326,6 @@ export class NoteCentricMapper {
 		let currentPitch = 0;
 
 		for (let phraseIdx = 0; phraseIdx < numPhrases; phraseIdx++) {
-			const phrasePosition = phraseIdx / numPhrases;
 			const notesInPhrase = Math.min(phraseSize, length - phraseIdx * phraseSize);
 
 			// Determine phrase contour (arc shape)
@@ -1128,8 +1127,6 @@ export class NoteCentricMapper {
 				melody.push(chordToneOptions[toneIndex] - 12);
 			} else {
 				// On weak beats: MORE chromatic and unexpected approaches
-				const interval = nextChord - chordRoot;
-
 				// Start with default chromatic approach
 				let approach = (seed + i) % 2 === 0 ? nextChord - 1 : nextChord + 1;
 

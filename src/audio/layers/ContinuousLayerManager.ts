@@ -5,12 +5,11 @@
  * Manages ambient, rhythmic, and harmonic background layers with dynamic modulation.
  */
 
-import { PolySynth, Volume, Filter, Reverb, Delay, LFO, start, getContext } from 'tone';
-import { 
-  ContinuousLayerConfig, 
-  VaultState, 
-  MusicalContext, 
-  LayerState, 
+import { Volume, Filter, Reverb, Delay, LFO, start } from 'tone';
+import {
+  ContinuousLayerConfig,
+  VaultState,
+  LayerState,
   MusicalGenre,
   ContinuousLayerError,
   LayerPerformanceMetrics

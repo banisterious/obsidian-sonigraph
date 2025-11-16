@@ -5,8 +5,6 @@
  * that exist at runtime but are not documented in the official API.
  */
 
-import { App } from 'obsidian';
-
 /**
  * Extended App interface with undocumented properties
  */

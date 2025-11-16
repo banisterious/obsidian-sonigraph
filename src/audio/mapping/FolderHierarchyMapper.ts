@@ -263,8 +263,8 @@ export class FolderHierarchyMapper {
         pathAnalysis: PathAnalysis,
         folderMetrics: FolderMetrics
     ): FolderCharacteristics['musicalProperties'] {
-        const depthInfluence = this.calculateDepthInfluence(pathAnalysis.depth);
-        
+        // const depthInfluence = this.calculateDepthInfluence(pathAnalysis.depth);
+
         // Pitch modifier: deeper = lower (-1 to 1)
         const pitchModifier = 1 - (Math.min(6, pathAnalysis.depth) / 3);
         

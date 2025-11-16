@@ -506,11 +506,11 @@ export class WhaleAudioManager {
     /**
      * Get cache statistics
      */
-    async getCacheStats(): Promise<{
+    getCacheStats(): {
         totalFiles: number;
         totalSizeGB: number;
         filesBySpecies: Record<WhaleSpecies, number>;
-    }> {
+    } {
         if (!this.vault) {
             return { totalFiles: 0, totalSizeGB: 0, filesBySpecies: {} as Record<WhaleSpecies, number> };
         }
@@ -544,7 +544,7 @@ export class WhaleAudioManager {
         } else {
             void logger.info('manual-download', 'Download already in progress or completed');
         }
-        return this.initializationPromise;
+        return await this.initializationPromise;
     }
 
     /**
@@ -1175,7 +1175,7 @@ export class WhaleAudioManager {
     /**
      * Add approved samples to collection (Phase 2)
      */
-    async addApprovedSamples(species: WhaleSpecies, samples: FreesoundSample[]): Promise<void> {
+    addApprovedSamples(species: WhaleSpecies, samples: FreesoundSample[]): void {
         const currentUrls = this.sampleUrls.get(species) || [];
         const maxSamples = this.settings.maxSamples || 50;
         

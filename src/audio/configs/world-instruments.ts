@@ -1,4 +1,4 @@
-import { InstrumentFamily, FORMAT_PLACEHOLDER } from './types';
+import { InstrumentFamily } from './types';
 
 export const worldInstruments: InstrumentFamily = {
     name: 'World & Environmental Instruments',
