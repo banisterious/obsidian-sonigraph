@@ -100547,9 +100547,10 @@ var AudioEngine = class {
     const cdnStatus = {
       // Working CDN sources (confirmed in external-sample-sources-guide.md)
       availableInstruments: {
-        // Keyboard Family (5/6 available)
+        // Keyboard Family (6/7 available)
         piano: { status: "AVAILABLE", samples: 86, path: "piano/", format: "ogg" },
-        organ: { status: "AVAILABLE", samples: 33, path: "harmonium/", format: "ogg" },
+        organ: { status: "AVAILABLE", samples: 12, path: "organ/", format: "ogg" },
+        harmonium: { status: "AVAILABLE", samples: 33, path: "harmonium/", format: "ogg" },
         electricPiano: { status: "AVAILABLE", samples: 15, path: "electric-piano/", format: "ogg" },
         harpsichord: { status: "AVAILABLE", samples: 18, path: "harpsichord/", format: "ogg" },
         accordion: { status: "AVAILABLE", samples: 18, path: "accordion/", format: "ogg" },
