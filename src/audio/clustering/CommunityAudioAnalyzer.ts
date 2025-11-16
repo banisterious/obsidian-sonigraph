@@ -81,7 +81,7 @@ export class CommunityAudioAnalyzer {
 
     try {
       // Use SmartClusteringAlgorithms' Louvain implementation
-      const clusteringResult = await this.clusteringAlgorithms.clusterGraph(nodes, links);
+      const clusteringResult = this.clusteringAlgorithms.clusterGraph(nodes, links);
 
       // Filter for community-type clusters
       const communityClusters = clusteringResult.clusters.filter(

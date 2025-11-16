@@ -455,7 +455,7 @@ export class ContinuousLayerManager {
       
       // Dispose engines
       await this.genreEngine.dispose();
-      await this.sampleLoader.dispose();
+      this.sampleLoader.dispose();
       await this.rhythmicLayer.dispose();
       await this.harmonicLayer.dispose();
       

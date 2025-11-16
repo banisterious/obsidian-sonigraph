@@ -382,7 +382,7 @@ export class MusicalMapper {
 	public async processClustersForAudio(clusters: Cluster[]): Promise<void> {
 		if (!this.isClusterAudioEnabled || !this.clusterAudioMapper) return;
 
-		await this.clusterAudioMapper.processClusters(clusters);
+		this.clusterAudioMapper.processClusters(clusters);
 	}
 
 	/**

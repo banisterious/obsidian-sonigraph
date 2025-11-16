@@ -1273,7 +1273,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Stop any playing audio when switching to a new center file
 		if (this.isPlaying) {
-			await this.stopPlayback();
+			this.stopPlayback();
 		}
 
 		this.centerFile = file;
@@ -1419,7 +1419,7 @@ export class LocalSoundscapeView extends ItemView {
 		const wasPlaying = this.isPlaying;
 		if (this.isPlaying) {
 			void logger.info('set-depth', 'Stopping playback for depth change');
-			await this.stopPlayback();
+			this.stopPlayback();
 		}
 
 		this.currentDepth = depth;
@@ -1454,7 +1454,7 @@ export class LocalSoundscapeView extends ItemView {
 		if (this.centerFile) {
 			// Stop audio if playing
 			if (this.isPlaying) {
-				await this.stopPlayback();
+				this.stopPlayback();
 			}
 
 			try {
@@ -2230,7 +2230,7 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		if (this.isPlaying) {
-			await this.pausePlayback();
+			this.pausePlayback();
 		} else {
 			await this.startPlayback();
 		}

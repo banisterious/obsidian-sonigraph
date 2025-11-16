@@ -233,7 +233,7 @@ export class MusicalGenreEngine {
       }
       
       // Clean up current synths and effects
-      await this.cleanup();
+      this.cleanup();
       
       // Update genre
       this.currentGenre = genre;
@@ -348,7 +348,7 @@ export class MusicalGenreEngine {
     
     try {
       await this.stop();
-      await this.cleanup();
+      this.cleanup();
       
       this.synthVolume.dispose();
       
@@ -555,7 +555,7 @@ export class MusicalGenreEngine {
     
     try {
       for (const category of categories) {
-        const samples = await this.sampleLoader.getSamplesForCategory(category);
+        const samples = this.sampleLoader.getSamplesForCategory(category);
         if (samples.length > 0) {
           // Create sampler with first sample (simplified)
           const sampleUrl = samples[0].previewUrl;

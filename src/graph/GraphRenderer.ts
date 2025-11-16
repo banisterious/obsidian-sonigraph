@@ -1531,7 +1531,7 @@ export class GraphRenderer {
     
     try {
       // Run clustering algorithm
-      this.clusteringResult = await this.smartClustering.clusterGraph(this.nodes, this.links);
+      this.clusteringResult = this.smartClustering.clusterGraph(this.nodes, this.links);
       
       logger.debug('smart-clustering', 'Clustering completed', {
         clusterCount: this.clusteringResult.clusters.length,

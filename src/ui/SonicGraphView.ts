@@ -1176,7 +1176,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             });
             
             const graphData = await this.executeWhenIdle(async () => {
-                return await this.graphDataExtractor.extractGraphData();
+                return this.graphDataExtractor.extractGraphData();
             });
             logger.info('sonic-graph-data', `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
             
@@ -6102,7 +6102,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             void logger.debug('ui', 'Initializing temporal animator');
             
             // Extract graph data if not already done
-            const graphData = await this.graphDataExtractor.extractGraphData();
+            const graphData = this.graphDataExtractor.extractGraphData();
             
             // Get spacing configuration based on user selection
             const spacingConfig = this.getSpacingConfiguration();

@@ -477,7 +477,7 @@ export class AudioEngine {
 			if (this.volume && hasPercussionEnabled) {
 				void logger.debug('percussion', 'Percussion instruments enabled, initializing percussion engine');
 				this.percussionEngine = new PercussionEngine(this.volume, 'ogg');
-				await this.percussionEngine.initializePercussion();
+				this.percussionEngine.initializePercussion();
 				void logger.debug('percussion', 'Advanced percussion synthesis initialized');
 			} else {
 				logger.info('percussion', '🚀 ISSUE #010 FIX: Skipping percussion engine initialization (no percussion instruments enabled)');
@@ -488,7 +488,7 @@ export class AudioEngine {
 			if (this.volume && hasElectronicEnabled) {
 				void logger.debug('electronic', 'Electronic instruments enabled, initializing electronic engine');
 				this.electronicEngine = new ElectronicEngine(this.volume);
-				await this.electronicEngine.initializeElectronic();
+				this.electronicEngine.initializeElectronic();
 				void logger.debug('electronic', 'Advanced electronic synthesis initialized');
 			} else {
 				logger.info('electronic', 'Skipping electronic engine initialization (no electronic instruments enabled)');

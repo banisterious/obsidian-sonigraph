@@ -2464,7 +2464,7 @@ export class MaterialControlPanelModal extends Modal {
 				excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
 				excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
 			});
-			const graphData = await extractor.extractGraphData();
+			const graphData = extractor.extractGraphData();
 			
 			// Remove loading indicator
 			void loadingDiv.remove();
@@ -2495,7 +2495,7 @@ export class MaterialControlPanelModal extends Modal {
 				excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
 				excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
 			});
-			const graphData = await extractor.extractGraphData();
+			const graphData = extractor.extractGraphData();
 			
 			const filesValue = filesEl.querySelector('.osp-stat-value');
 			const linksValue = linksEl.querySelector('.osp-stat-value');

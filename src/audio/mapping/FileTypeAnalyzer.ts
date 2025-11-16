@@ -163,13 +163,13 @@ export class FileTypeAnalyzer {
         try {
             // Basic file analysis
             const fileType = this.determineFileType(file);
-            const complexity = await this.calculateComplexity(file, node, fileType);
+            const complexity = this.calculateComplexity(file, node, fileType);
             
             // Get Obsidian metadata cache
             const cache = this.app.metadataCache.getFileCache(file);
             
             // Analyze metadata based on file type
-            const metadata = await this.analyzeMetadata(file, node, fileType, cache);
+            const metadata = this.analyzeMetadata(file, node, fileType, cache);
             
             // Analyze structure
             const structure = this.analyzeStructure(file, node, cache);
