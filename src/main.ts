@@ -361,6 +361,8 @@ export default class SonigraphPlugin extends Plugin {
 				workspace.rightSplit.expand();
 			}
 
+			// Make the leaf active (bring it to front in the sidebar)
+			workspace.setActiveLeaf(leaf, { focus: true });
 			void workspace.revealLeaf(leaf);
 			logger.info('ui', 'Local Soundscape view activated and revealed for file', { file: file.path });
 		}
