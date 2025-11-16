@@ -1,8 +1,8 @@
-# Sample Expansion Plan: Synthesis-Only Instruments
+# Sample Expansion Plan: Synthesis-Only Instruments & New Voices
 
 **Status**: Planning Phase
 **Last Updated**: 2025-11-16
-**Target**: Replace synthesis with real samples for 6 instruments
+**Target**: Replace synthesis with real samples for 6 instruments + add human voice instruments
 
 ---
 
@@ -14,6 +14,11 @@
 4. **Accordion** (keyboard)
 5. **Celesta** (keyboard)
 6. **Strings** (string ensemble)
+
+## New Instrument Category: Human Voices
+
+7. **Choir/Vocal Ensemble** (new family)
+8. **Solo Voice** - male/female variants (new family)
 
 ---
 
@@ -259,14 +264,162 @@ samples/
 
 ---
 
+## Phase 7: Human Voices - Choir (PRIORITY: MEDIUM, EFFORT: HIGH)
+
+### Challenge
+Adding human voice instruments is complex due to:
+- Need for chromatic samples across vocal range
+- Multiple vowel sounds (ah, oh, ee, oo, etc.)
+- Male/female voice differences
+- Ensemble vs solo considerations
+- Licensing requirements for voice samples
+
+### Potential Sources
+
+#### Option A: Freesound.org Curation (RECOMMENDED FOR NOW)
+- **URL**: https://freesound.org/
+- **Already integrated**: You have Freesound API integration
+- **Format**: Various (WAV, OGG, MP3)
+- **License**: Creative Commons (varies by sample)
+- **Approach**: Curate specific vocal samples
+- **Effort**: MEDIUM - Requires manual curation
+
+**Search Terms:**
+- "choir sustain C4" (or other specific notes)
+- "vocal ah chromatic"
+- "male voice sustained"
+- "female voice drone"
+- "choir single note"
+
+**Implementation:**
+1. Use existing Freesound integration
+2. Create curated list of voice samples by pitch
+3. Download and organize by note
+4. Create new "Voices" instrument family
+5. Configure multiple voice instruments:
+   - Choir (mixed)
+   - Male Choir
+   - Female Choir
+   - Solo Male
+   - Solo Female
+
+#### Option B: LABS Choir by Spitfire Audio
+- **URL**: https://labs.spitfireaudio.com/packs/choir
+- **Quality**: Professional, recorded with Eric Whitacre Singers
+- **Format**: Kontakt/VST (not web-ready)
+- **License**: May have redistribution restrictions
+- **Effort**: HIGH - Requires VST sampling and conversion
+
+**Challenges:**
+1. Need to sample each note from VST
+2. Record output manually or use MIDI routing
+3. Convert to web format
+4. Potential licensing issues for redistribution
+
+#### Option C: SoundFont Conversion
+- **Sources**: Musical Artifacts, various free choir SF2s
+- **Format**: SF2 soundfonts
+- **Effort**: HIGH - SF2 extraction + potential quality issues
+
+**Available Soundfonts:**
+- Chamber choir samples (uair01 on Freesound)
+- Choir of Voices single chords
+- Various Creative Commons choir recordings
+
+#### Option D: Create Your Own Sample Set
+- **Approach**: Record or commission vocal samples
+- **Effort**: VERY HIGH
+- **Quality**: Can be tailored exactly to needs
+- **License**: Full control
+
+**Requirements:**
+- Multiple vocalists or one vocalist with range
+- Professional recording equipment
+- Multiple vowel sounds per pitch
+- Full chromatic range (typically C3-C5 for choir)
+
+### Recommended Approach: Phased Implementation
+
+**Phase 7A: Proof of Concept (Freesound)**
+1. Curate 12 chromatic samples (1 octave) from Freesound
+2. Create single "Choir" instrument
+3. Test with one vowel sound (probably "ah")
+4. Implement in experimental family first
+5. Gather user feedback
+
+**Phase 7B: Expansion**
+1. Extend to 2-3 octaves if Phase 7A successful
+2. Add multiple vowel sounds
+3. Consider male/female variants
+4. Move to permanent instrument family
+
+### Implementation Checklist
+
+#### Phase 7A: Choir Proof of Concept
+- [ ] Research Freesound for chromatic vocal samples
+- [ ] Curate 12-24 samples (C3-C4 or C4-C5)
+- [ ] Download and organize by pitch
+- [ ] Convert to consistent format (OGG)
+- [ ] Normalize volume levels
+- [ ] Create new "voices" instrument family config
+- [ ] Add "choir" instrument configuration
+- [ ] Test in Control Center
+- [ ] Document in experimental features
+- [ ] Gather user feedback
+
+#### Phase 7B: Expansion (if successful)
+- [ ] Extend chromatic range
+- [ ] Add vowel variations (ah, oh, ee)
+- [ ] Create male/female choir variants
+- [ ] Add solo voice instruments
+- [ ] Move from experimental to main family
+- [ ] Update documentation
+
+### Technical Considerations
+
+**Voice Range Targets:**
+- **Soprano**: C4 to C6
+- **Alto**: G3 to G5
+- **Tenor**: C3 to C5
+- **Bass**: E2 to E4
+- **Mixed Choir**: C3 to C5 (practical range)
+
+**Vowel Priorities:**
+1. "Ah" (most versatile)
+2. "Oh" (warm, rich)
+3. "Ee" (bright)
+4. "Oo" (dark)
+
+**Sample Requirements per Instrument:**
+- Minimum: 12 samples (1 octave)
+- Good: 24 samples (2 octaves)
+- Ideal: 36+ samples (3 octaves)
+
+### Licensing Notes
+- Freesound: Check individual sample licenses (CC0, CC-BY, CC-BY-NC)
+- Always attribute properly in documentation
+- Keep licensing info with samples
+- Document usage terms for each source
+
+---
+
 ## Success Criteria
 
+### Synthesis-Only Replacement
 - [ ] All 5 target instruments have real samples (oboe, e-piano, harpsichord, accordion, celesta)
 - [ ] Samples load correctly in Control Center
 - [ ] Audio quality is acceptable
 - [ ] No licensing issues
 - [ ] Documentation updated
 - [ ] Total added download size is reasonable (<50MB compressed)
+
+### Human Voices (Phase 7A - Proof of Concept)
+- [ ] Choir instrument with 12-24 chromatic samples implemented
+- [ ] Samples are Creative Commons licensed with proper attribution
+- [ ] Voice quality is acceptable for musical use
+- [ ] Instrument appears in experimental family
+- [ ] User feedback collected
+- [ ] Decision made on Phase 7B expansion
 
 ---
 
@@ -277,6 +430,8 @@ samples/
 - Musical Artifacts: https://musical-artifacts.com/
 - HEDSound: https://www.hedsound.com/
 - Polyphone Soundfonts: https://www.polyphone-soundfonts.com/
+- Freesound: https://freesound.org/
+- LABS Choir: https://labs.spitfireaudio.com/packs/choir
 
 ### Tools
 - Polyphone SF2 Editor: https://www.polyphone-soundfonts.com/
