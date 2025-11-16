@@ -24,10 +24,8 @@ interface DemoLink {
 }
 
 export class GraphDemoModal extends Modal {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private svg: any | null = null;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private simulation: any | null = null;
+	private svg: unknown | null = null;
+	private simulation: unknown | null = null;
 	private nodes: DemoNode[] = [];
 	private links: DemoLink[] = [];
 	private showLabels: boolean = false;
@@ -148,12 +146,10 @@ export class GraphDemoModal extends Modal {
 		// Create force simulation
 		 
 		this.simulation = d3.forceSimulation(this.nodes)
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			.force('link', d3.forceLink(this.links).id((d: any) => d.id).distance(80))
+			.force('link', d3.forceLink(this.links).id((d: unknown) => d.id).distance(80))
 			.force('charge', d3.forceManyBody().strength(-300))
 			.force('center', d3.forceCenter(width / 2, height / 2))
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			.force('collision', d3.forceCollide().radius((d: any) => d.radius + 5));
+			.force('collision', d3.forceCollide().radius((d: unknown) => d.radius + 5));
 
 		// Create links
 		const linkGroup = this.svg.append('g')
@@ -192,13 +188,11 @@ export class GraphDemoModal extends Modal {
 		// Add hover effects
 		 
 		nodeGroup
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			.on('mouseenter', function(event: any, d: DemoNode) {
+			.on('mouseenter', function(event: unknown, d: DemoNode) {
 				d3.select(this).select('text').style('opacity', 1);
 				d3.select(this).select('circle').style('stroke-width', 3);
 			})
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			.on('mouseleave', function(event: any, d: DemoNode) {
+			.on('mouseleave', function(event: unknown, d: DemoNode) {
 				if (!this.showLabels) {
 					d3.select(this).select('text').style('opacity', 0);
 				}
@@ -208,19 +202,16 @@ export class GraphDemoModal extends Modal {
 		// Add drag behavior
 		 
 		const drag = d3.drag<SVGGElement, DemoNode>()
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			.on('start', (event: any, d: DemoNode) => {
+			.on('start', (event: unknown, d: DemoNode) => {
 				if (!event.active && this.simulation) this.simulation.alphaTarget(0.3).restart();
 				d.fx = d.x;
 				d.fy = d.y;
 			})
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			.on('drag', (event: any, d: DemoNode) => {
+			.on('drag', (event: unknown, d: DemoNode) => {
 				d.fx = event.x;
 				d.fy = event.y;
 			})
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			.on('end', (event: any, d: DemoNode) => {
+			.on('end', (event: unknown, d: DemoNode) => {
 				if (!event.active && this.simulation) this.simulation.alphaTarget(0);
 				d.fx = null;
 				d.fy = null;
@@ -232,14 +223,10 @@ export class GraphDemoModal extends Modal {
 		this.simulation.on('tick', () => {
 			 
 			linkGroup
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-				.attr('x1', (d: any) => (d.source).x)
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-				.attr('y1', (d: any) => (d.source).y)
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-				.attr('x2', (d: any) => (d.target).x)
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-				.attr('y2', (d: any) => (d.target).y);
+				.attr('x1', (d: unknown) => (d.source).x)
+				.attr('y1', (d: unknown) => (d.source).y)
+				.attr('x2', (d: unknown) => (d.target).x)
+				.attr('y2', (d: unknown) => (d.target).y);
 
 			nodeGroup
 				.attr('transform', (d: DemoNode) => `translate(${d.x},${d.y})`);
@@ -301,8 +288,7 @@ export class GraphDemoModal extends Modal {
 				if (!this.svg) return;
 				 
 				this.svg.selectAll('.node')
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-					.filter((d: any) => d.id === node.id)
+					.filter((d: unknown) => d.id === node.id)
 					.transition()
 					.duration(500)
 					.style('opacity', 1);
@@ -335,8 +321,7 @@ export class GraphDemoModal extends Modal {
 					if (!this.svg) return;
 					 
 					this.svg.selectAll('.links line')
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-						.filter((d: any) => {
+						.filter((d: unknown) => {
 							const dSourceId = typeof d.source === 'string' ? d.source : d.source.id;
 							const dTargetId = typeof d.target === 'string' ? d.target : d.target.id;
 							return (dSourceId === sourceId && dTargetId === targetId) ||

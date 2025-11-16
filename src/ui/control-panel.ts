@@ -42,14 +42,11 @@ type EffectsMap = Record<string, EffectConfig>;
  */
 interface PluginWithOptionalIntegrations extends SonigraphPlugin {
 	continuousLayerManager?: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		sampleLoader?: any;
+		sampleLoader?: unknown;
 	};
 	whaleIntegration?: {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		whaleManager?: any;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		updateSettings?: (settings: any) => void;
+		whaleManager?: unknown;
+		updateSettings?: (settings: unknown) => void;
 		cleanup?: () => void;
 	};
 }
@@ -63,8 +60,7 @@ type PolyphonicDensity = 'sparse' | 'moderate' | 'maximum';
 type VoiceLeadingStyle = 'smooth' | 'chromatic' | 'parallel';
 type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): any | undefined {
+function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): unknown | undefined {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
 		return instruments[instrumentKey as InstrumentKey];
@@ -72,21 +68,18 @@ function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): 
 	return undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-function setInstrumentSetting<K extends keyof any>(
+function setInstrumentSetting<K extends keyof unknown>(
 	plugin: SonigraphPlugin,
 	instrumentKey: string,
 	settingKey: K,
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	value: any
+	value: unknown
 ): boolean {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
 		const instrument = instruments[instrumentKey as InstrumentKey];
 		if (instrument && typeof instrument === 'object') {
 			// Dynamic property assignment on known instrument settings object
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-			(instrument as Record<string, any>)[settingKey as string] = value;
+			(instrument as Record<string, unknown>)[settingKey as string] = value;
 			return true;
 		}
 	}
@@ -186,7 +179,6 @@ export class MaterialControlPanelModal extends Modal {
 			this.sonicGraphSettingsTabs = null;
 		}
 	}
-
 
 	/**
 	 * Create contained modal structure with sticky header
@@ -735,8 +727,6 @@ export class MaterialControlPanelModal extends Modal {
 		this.contentContainer.appendChild(card.getElement());
 	}
 
-
-
 	private getEnabledInstrumentsList(): Array<{name: string, activeVoices: number, maxVoices: number}> {
 		const enabled: Array<{name: string, activeVoices: number, maxVoices: number}> = [];
 
@@ -806,7 +796,6 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Performance settings card
 			void this.createLocalSoundscapePerformanceCard();
-
 
 			// Note-centric musicality settings card
 			void this.createNoteCentricMusicalityCard();
@@ -1052,8 +1041,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Render the sample browser UI with table layout
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private renderSampleBrowser(container: HTMLElement, sampleLoader: any): void {
+	private renderSampleBrowser(container: HTMLElement, sampleLoader: unknown): void {
 		// Use the new table-based browser
 		const tableBrowser = new SampleTableBrowser(this.app, this.plugin, container);
 		void tableBrowser.render();
@@ -1064,8 +1052,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private renderSampleItem(
 		container: HTMLElement,
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-		sample: any,
+		sample: unknown,
 		number: number,
 		isUserSample: boolean
 	): void {
@@ -1165,8 +1152,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Preview a Freesound sample
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private async previewSample(sample: any, button: HTMLButtonElement): Promise<void> {
+	private async previewSample(sample: unknown, button: HTMLButtonElement): Promise<void> {
 		// If already playing this sample, stop it
 		if (button.textContent === 'Stop') {
 			void this.stopPreview();
@@ -2233,12 +2219,10 @@ export class MaterialControlPanelModal extends Modal {
 		this.contentContainer.appendChild(performanceCard.getElement());
 	}
 
-
 	/**
 	 * Create horizontal effect section for Master Effects
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: any[]): void {
+	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: unknown[]): void {
 		const section = container.createDiv({ cls: 'osp-effect-section-horizontal' });
 		
 		// Header with effect name and toggle
@@ -2807,8 +2791,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family overview card with stats and bulk actions
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private createFamilyOverviewCard(familyId: string, tabConfig: any): void {
+	private createFamilyOverviewCard(familyId: string, tabConfig: unknown): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} family overview`,
 			iconName: getFamilyIcon(familyId),
@@ -2860,8 +2843,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create instruments card for family
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private createInstrumentsCard(familyId: string, tabConfig: any): void {
+	private createInstrumentsCard(familyId: string, tabConfig: unknown): void {
 		const card = new MaterialCard({
 			title: 'Individual instruments',
 			iconName: 'list',
@@ -3118,8 +3100,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family effects card
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private createFamilyEffectsCard(familyId: string, tabConfig: any): void {
+	private createFamilyEffectsCard(familyId: string, tabConfig: unknown): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} effects`,
 			iconName: 'sliders-horizontal',
@@ -3252,7 +3233,6 @@ export class MaterialControlPanelModal extends Modal {
 		
 		return card.getElement();
 	}
-
 
 	// Utility methods
 	private getEnabledCount(familyId: string): number {
@@ -3455,7 +3435,6 @@ export class MaterialControlPanelModal extends Modal {
 			// TODO: Show user notification about the error
 		}
 	}
-
 
 	private handleMasterVolumeChange(volume: number): void {
 		logger.info('ui', `Master volume changed to ${volume}`);
@@ -3881,8 +3860,7 @@ export class MaterialControlPanelModal extends Modal {
 		void this.plugin.saveSettings();
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
-	private getDefaultEffectParams(effectType: string): any {
+	private getDefaultEffectParams(effectType: string): unknown {
 		switch (effectType) {
 			case 'reverb':
 				return { decay: 2.0, preDelay: 0.1, wet: 0.3 };

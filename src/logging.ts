@@ -176,8 +176,7 @@ class LoggerFactory {
 	}
 
 	// For future configuration
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Config structure varies by environment
-	initialize(config?: any): void {
+	initialize(config?: Record<string, unknown>): void {
 		// Future: Add configuration support
 		if (config && config.logLevel) {
 			void LoggerFactory.setLogLevel(config.logLevel);
