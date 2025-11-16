@@ -96492,6 +96492,7 @@ var AudioEngine = class {
         });
         break;
       case "organ":
+      case "harmonium":
         synth = new PolySynth({
           voice: FMSynth,
           maxPolyphony: maxVoices,
