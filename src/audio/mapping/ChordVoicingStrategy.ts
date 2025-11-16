@@ -12,7 +12,7 @@
  */
 
 import { MusicalTheoryEngine } from '../theory/MusicalTheoryEngine';
-import { ChordDefinition, ChordQuality } from '../theory/types';
+import { ChordQuality } from '../theory/types';
 import { getLogger } from '../../logging';
 
 const logger = getLogger('ChordVoicingStrategy');

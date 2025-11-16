@@ -11,7 +11,6 @@ import {
   HubTransitionEvent,
   HubTransitionType,
   HubTransitionAudioConfig,
-  HubTransitionEffectType,
   HubMetrics
 } from './types';
 

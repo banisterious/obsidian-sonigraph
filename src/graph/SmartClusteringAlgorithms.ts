@@ -159,7 +159,6 @@ export class SmartClusteringAlgorithms {
       edges: this.getClusterEdges([node.id])
     }));
 
-    let bestModularity = this.calculateModularity(clusters);
     let improved = true;
 
     // Iteratively merge clusters to maximize modularity
@@ -185,7 +184,6 @@ export class SmartClusteringAlgorithms {
         const [i, j] = bestMergeIndices;
         void this.mergeClusters(clusters, i, j);
         improved = true;
-        bestModularity += bestMergeGain;
       }
     }
 

@@ -4,16 +4,17 @@ import { getLogger } from '../logging';
 const logger = getLogger('harmonic-engine');
 
 // Musical intervals in semitones (from root)
-const CONSONANT_INTERVALS = {
-	unison: 0,
-	octave: 12,
-	perfectFifth: 7,
-	perfectFourth: 5,
-	majorThird: 4,
-	minorThird: 3,
-	majorSixth: 9,
-	minorSixth: 8
-};
+// Preserved for future harmonic analysis features
+// const CONSONANT_INTERVALS = {
+// 	unison: 0,
+// 	octave: 12,
+// 	perfectFifth: 7,
+// 	perfectFourth: 5,
+// 	majorThird: 4,
+// 	minorThird: 3,
+// 	majorSixth: 9,
+// 	minorSixth: 8
+// };
 
 // Chord types with their interval patterns
 const CHORD_PATTERNS = {
@@ -243,7 +244,7 @@ export class HarmonicEngine {
 		let bestChord = CHORD_PATTERNS.major;
 		let bestScore = -1;
 
-		for (const [chordName, pattern] of Object.entries(CHORD_PATTERNS)) {
+		for (const pattern of Object.values(CHORD_PATTERNS)) {
 			const score = this.scoreChordFit(midiNotes, rootMidi, pattern);
 			if (score > bestScore) {
 				bestScore = score;

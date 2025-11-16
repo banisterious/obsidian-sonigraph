@@ -8,7 +8,7 @@
 import { App, TFile } from 'obsidian';
 import { ObsidianMetadataMapper, MetadataAnalysisResult } from './ObsidianMetadataMapper';
 import { MetadataMappingRules } from './MetadataMappingRules';
-import { EnhancedGraphNode, AudioMappingConfig } from '../../graph/types';
+import { AudioMappingConfig } from '../../graph/types';
 import { getLogger } from '../../logging';
 
 const logger = getLogger('vault-mapping-optimizer');
@@ -495,8 +495,8 @@ export class VaultMappingOptimizer {
         
         // Group instruments by family for neighborhood creation
         const familyGroups = new Map<string, string[]>();
-        
-        for (const [instrument, distribution] of analysis.instrumentDistribution) {
+
+        for (const instrument of analysis.instrumentDistribution.keys()) {
             const family = this.getInstrumentFamily(instrument);
             if (!familyGroups.has(family)) {
                 familyGroups.set(family, []);

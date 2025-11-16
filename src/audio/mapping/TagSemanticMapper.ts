@@ -6,16 +6,13 @@
  * instrument selection and musical parameters with complexity analysis.
  */
 
-import { App, TFile } from 'obsidian';
+import { App } from 'obsidian';
 import { EnhancedGraphNode, MusicalContext } from '../../graph/types';
 import { InstrumentConfig, getAllInstruments } from '../configs';
-import { 
-    TagMappingConfig, 
-    TagSemanticAnalysis, 
-    DEFAULT_TAG_MAPPINGS,
-    EmotionalMapping,
-    FunctionalMapping,
-    TopicalMapping
+import {
+    TagMappingConfig,
+    TagSemanticAnalysis,
+    DEFAULT_TAG_MAPPINGS
 } from './SemanticMappingConfig';
 import { MusicalProperties, ContentAwareMappingConfig } from './ContentAwareMapper';
 import { getLogger } from '../../logging';

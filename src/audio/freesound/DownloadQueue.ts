@@ -4,7 +4,7 @@
  */
 
 import { getLogger } from '../../logging';
-import { FreesoundAPI, FreesoundSound } from './FreesoundAPI';
+import { FreesoundAPI } from './FreesoundAPI';
 
 export interface DownloadTask {
     soundId: number;
@@ -313,7 +313,7 @@ export class DownloadQueue {
                     try {
                         const audioBuffer = await this.audioContext.decodeAudioData(xhr.response);
                         resolve(audioBuffer);
-                    } catch (error) {
+                    } catch {
                         reject(new Error('Failed to decode audio data'));
                     }
                 } else {

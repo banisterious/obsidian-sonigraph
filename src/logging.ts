@@ -114,7 +114,7 @@ class Logger implements ILogger {
 					void console.debug(logMessage);
 					break;
 				case 'info':
-					void console.info(logMessage);
+					void console.warn(logMessage);
 					break;
 				case 'warn':
 					void console.warn(logMessage);

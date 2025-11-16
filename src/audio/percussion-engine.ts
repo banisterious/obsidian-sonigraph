@@ -1,4 +1,4 @@
-import { Sampler, Filter, Volume, LFO, Envelope, PitchShift, Reverb, Delay, Oscillator, now, PolySynth, AMSynth } from 'tone';
+import { Sampler, Filter, Volume, LFO, Envelope, PitchShift, Reverb, Delay, now, PolySynth, AMSynth } from 'tone';
 import { getLogger } from '../logging';
 
 const logger = getLogger('percussion-engine');
@@ -277,9 +277,9 @@ export class PercussionEngine {
 			return;
 		}
 
-		// Adjust attack based on mallet hardness
-		const attackTime = hardness ? (1 - hardness) * 0.01 + 0.001 : 0.001;
-		
+		// Adjust attack based on mallet hardness (not currently used)
+		// const attackTime = hardness ? (1 - hardness) * 0.01 + 0.001 : 0.001;
+
 		// Modify velocity for mallet character
 		const malletVelocity = instrument === 'xylophone' ? 
 			Math.min(velocity * 1.5, 1.0) : // Xylophone - brighter
@@ -342,7 +342,7 @@ export class PercussionEngine {
 		];
 
 		for (const samplerMap of samplerMaps) {
-			for (const [key, sampler] of samplerMap) {
+			for (const sampler of samplerMap.values()) {
 				if (sampler.volume) {
 					sampler.volume.value = -20 + (dynamics * 20); // -20dB to 0dB range
 				}
@@ -369,7 +369,7 @@ export class PercussionEngine {
 		// Dispose existing samplers
 		[this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers]
 			.forEach(map => {
-				for (const [key, sampler] of map) {
+				for (const sampler of map.values()) {
 					void sampler.dispose();
 				}
 				void map.clear();
@@ -378,7 +378,7 @@ export class PercussionEngine {
 		// Clear processors that depend on samplers
 		[this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators]
 			.forEach(map => {
-				for (const [key, processor] of map) {
+				for (const processor of map.values()) {
 					if (processor.dispose) processor.dispose();
 				}
 				void map.clear();
@@ -402,7 +402,7 @@ export class PercussionEngine {
 		// Clean up all percussion resources
 		[this.timpaniSamplers, this.xylophoneSamplers, this.vibraphoneSamplers, this.gongSamplers]
 			.forEach(map => {
-				for (const [key, sampler] of map) {
+				for (const sampler of map.values()) {
 					void sampler.dispose();
 				}
 				void map.clear();
@@ -410,7 +410,7 @@ export class PercussionEngine {
 
 		[this.timpaniPitchShifters, this.vibraphoneMotors, this.malletEnvelopes, this.gongResonators]
 			.forEach(map => {
-				for (const [key, processor] of map) {
+				for (const processor of map.values()) {
 					if (processor.dispose) processor.dispose();
 				}
 				void map.clear();

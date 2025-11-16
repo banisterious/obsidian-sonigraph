@@ -2,12 +2,11 @@ import { App, Modal, Setting, Notice, requestUrl } from 'obsidian';
 import SonigraphPlugin from '../main';
 import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
-import { HarmonicSettings } from '../audio/harmonic-engine';
-import { EFFECT_PRESETS, ReverbSettings, ChorusSettings, FilterSettings, getSmartRanges, getParameterRange, INSTRUMENT_INFO } from '../utils/constants';
-import { TAB_CONFIGS, setLucideIcon, createLucideIcon, getFamilyIcon, getInstrumentIcon, getEffectIcon, LucideIconName } from './lucide-icons';
-import { MaterialCard, StatCard, InstrumentCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
+import { INSTRUMENT_INFO } from '../utils/constants';
+import { TAB_CONFIGS, createLucideIcon, getFamilyIcon, getInstrumentIcon, LucideIconName } from './lucide-icons';
+import { MaterialCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
 import { PlayButtonManager, PlayButtonState } from './play-button-manager';
-import { PlaybackEventType, PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from '../audio/playback-events';
+import { PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from '../audio/playback-events';
 import { GraphDemoModal } from './GraphDemoModal';
 import { GraphDataExtractor } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
@@ -17,7 +16,7 @@ import { SonicGraphSettingsTabs } from './settings/SonicGraphSettingsTabs';
 import { getWhaleIntegration } from '../external/whale-integration';
 import { FreesoundSearchModal } from './FreesoundSearchModal';
 import { SampleTableBrowser } from './SampleTableBrowser';
-import { MusicalGenre, FreesoundSample } from '../audio/layers/types';
+import { FreesoundSample } from '../audio/layers/types';
 import { AudioMappingConfig } from '../graph/types';
 
 const logger = getLogger('control-panel');
@@ -63,12 +62,6 @@ type DynamicRange = 'minimal' | 'moderate' | 'extreme';
 type PolyphonicDensity = 'sparse' | 'moderate' | 'maximum';
 type VoiceLeadingStyle = 'smooth' | 'chromatic' | 'parallel';
 type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
-
-/**
- * Type-safe partial initialization of AudioMappingConfig
- * Used when initializing empty audioEnhancement settings
- */
-type PartialAudioEnhancement = Partial<AudioMappingConfig>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Dynamic type required for flexible API
 function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): any | undefined {
@@ -354,7 +347,7 @@ export class MaterialControlPanelModal extends Modal {
 			
 			// Add divider after master tab
 			if (tabConfig.id === 'master') {
-				const divider = container.createDiv({ cls: 'osp-nav-divider' });
+				container.createDiv({ cls: 'osp-nav-divider' });
 			}
 			
 			// Click handler
@@ -2013,10 +2006,10 @@ export class MaterialControlPanelModal extends Modal {
 		const switchContainer = controlWrapper.createDiv({ cls: 'ospcc-switch' });
 		void switchContainer.setAttribute('title', 'Toggle microtuning precision on/off');
 		
-		const microtuningToggle = switchContainer.createEl('input', { 
-			type: 'checkbox', 
-			cls: 'ospcc-switch__input' 
-		}) as HTMLInputElement;
+		const microtuningToggle = switchContainer.createEl('input', {
+			type: 'checkbox',
+			cls: 'ospcc-switch__input'
+		});
 		microtuningToggle.checked = this.plugin.settings.microtuning ?? false;
 		microtuningToggle.addEventListener('change', () => {
 			logger.debug('ui', 'Microtuning toggle changed', { enabled: microtuningToggle.checked });
@@ -2024,7 +2017,7 @@ export class MaterialControlPanelModal extends Modal {
 		});
 		
 		const track = switchContainer.createDiv({ cls: 'ospcc-switch__track' });
-		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		switchContainer.addEventListener('click', (e) => {
@@ -2259,11 +2252,11 @@ export class MaterialControlPanelModal extends Modal {
 		// Toggle switch
 		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
 		toggleContainer.setAttribute('title', `Toggle ${effectName} on/off`);
-		
-		const toggleInput = toggleContainer.createEl('input', { 
-			type: 'checkbox', 
-			cls: 'ospcc-switch__input' 
-		}) as HTMLInputElement;
+
+		const toggleInput = toggleContainer.createEl('input', {
+			type: 'checkbox',
+			cls: 'ospcc-switch__input'
+		});
 		toggleInput.checked = enabled;
 		toggleInput.addEventListener('change', () => {
 			logger.debug('ui', 'Master effect toggle changed', { effectName, enabled: toggleInput.checked });
@@ -2271,7 +2264,7 @@ export class MaterialControlPanelModal extends Modal {
 		});
 		
 		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
-		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
@@ -2907,7 +2900,7 @@ export class MaterialControlPanelModal extends Modal {
 		const content = card.getContent();
 
 		// Enable/disable toggle
-		const enabledSetting = new Setting(content)
+		new Setting(content)
 			.setName('Enable drum accents')
 			.setDesc('Trigger percussion sounds alongside regular notes')
 			.addToggle(toggle => toggle
@@ -2934,7 +2927,7 @@ export class MaterialControlPanelModal extends Modal {
 			);
 
 		// Density slider
-		const densitySetting = new Setting(content)
+		new Setting(content)
 			.setName('Density')
 			.setDesc('Probability of percussion triggering (0-100%)')
 			.addSlider(slider => slider
@@ -2988,7 +2981,7 @@ export class MaterialControlPanelModal extends Modal {
 		});
 
 		// Accent mode dropdown
-		const modeSetting = new Setting(content)
+		new Setting(content)
 			.setName('Accent mode')
 			.setDesc('How drums are selected based on note properties')
 			.addDropdown(dropdown => dropdown
@@ -3010,7 +3003,7 @@ export class MaterialControlPanelModal extends Modal {
 			);
 
 		// Volume slider
-		const volumeSetting = new Setting(content)
+		new Setting(content)
 			.setName('Volume')
 			.setDesc('Percussion volume in dB (-12 to 0)')
 			.addSlider(slider => slider
@@ -3066,7 +3059,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Sample collection status
 		const collectionRow = statusSection.createDiv({ cls: 'osp-info-row' });
 		collectionRow.createSpan({ text: 'Sample collection:', cls: 'osp-info-label' });
-		const collectionStatus = collectionRow.createSpan({ 
+		collectionRow.createSpan({ 
 			text: whaleIntegration.collectionStatus,
 			cls: 'osp-info-value' 
 		});
@@ -3939,11 +3932,11 @@ export class MaterialControlPanelModal extends Modal {
 		toggleContainer.setAttribute('data-tooltip', `Toggle ${instrumentInfo.name} on/off`);
 		toggleContainer.setAttribute('title', `Toggle ${instrumentInfo.name} on/off`);
 		
-		const toggleInput = toggleContainer.createEl('input', { 
-			type: 'checkbox', 
-			cls: 'ospcc-switch__input' 
-		}) as HTMLInputElement;
-		
+		const toggleInput = toggleContainer.createEl('input', {
+			type: 'checkbox',
+			cls: 'ospcc-switch__input'
+		});
+
 		// Check if instrument can be toggled (synthesis instruments always can, HQ instruments only if downloaded)
 		const canToggle = !this.instrumentRequiresHighQuality(instrumentName) || this.checkIfSampleDownloaded(instrumentName);
 		const isEnabled = options.enabled && canToggle;
@@ -3967,7 +3960,7 @@ export class MaterialControlPanelModal extends Modal {
 		});
 		
 		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
-		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable (only if can toggle)
 		if (canToggle) {
@@ -4110,17 +4103,17 @@ export class MaterialControlPanelModal extends Modal {
 		toggleContainer.setAttribute('data-tooltip', `Toggle ${effectName} for ${instrumentInfo.name}`);
 		toggleContainer.setAttribute('title', `Toggle ${effectName} for ${instrumentInfo.name}`);
 		
-		const toggleInput = toggleContainer.createEl('input', { 
-			type: 'checkbox', 
-			cls: 'ospcc-switch__input' 
-		}) as HTMLInputElement;
+		const toggleInput = toggleContainer.createEl('input', {
+			type: 'checkbox',
+			cls: 'ospcc-switch__input'
+		});
 		toggleInput.checked = enabled;
 		toggleInput.addEventListener('change', (e) => {
 			void this.handleInstrumentEffectChange(instrumentName, effectKey, toggleInput.checked);
 		});
 		
 		const track = toggleContainer.createDiv({ cls: 'ospcc-switch__track' });
-		const thumb = track.createDiv({ cls: 'ospcc-switch__thumb' });
+		track.createDiv({ cls: 'ospcc-switch__thumb' });
 		
 		// Make the entire switch container clickable
 		toggleContainer.addEventListener('click', (e) => {
@@ -4276,7 +4269,7 @@ export class MaterialControlPanelModal extends Modal {
 			// Check cache status
 			const cacheStatus = whaleIntegration.whaleManager.getCacheStatus();
 			return (cacheStatus.cacheBySpecies[species] || 0) > 0;
-		} catch (error) {
+		} catch {
 			return false;
 		}
 	}
@@ -4855,7 +4848,7 @@ All whale samples are authentic recordings from marine research institutions and
 		});
 
 		// Max nodes per depth slider
-		const sliderSetting = new Setting(content)
+		new Setting(content)
 			.setName('Max nodes per depth')
 			.setDesc(isUnlimited ? 'Unlimited (all nodes)' : `${numericValue} nodes`)
 			.addSlider(slider => {

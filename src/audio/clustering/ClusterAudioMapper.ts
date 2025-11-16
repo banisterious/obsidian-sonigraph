@@ -951,7 +951,6 @@ export class ClusterAudioMapper {
    */
   public getClusterAnalysis(cluster: Cluster): ClusterAudioAnalysis {
     const theme = this.themeGenerator.getThemeForClusterType(cluster.type);
-    const activeCluster = this.state.activeClusters.get(cluster.id);
 
     return {
       clusterId: cluster.id,

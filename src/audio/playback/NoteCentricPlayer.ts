@@ -154,9 +154,6 @@ export class NoteCentricPlayer {
 
 		let currentTime = startDelay;
 
-		// Pre-bind this reference for setTimeout callbacks
-		const isPlayingRef = () => this.isPlaying;
-
 		// Schedule all notes in the phrase
 		for (let i = 0; i < phrase.melody.length; i++) {
 			if (!this.isPlaying) {

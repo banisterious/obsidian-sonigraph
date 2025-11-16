@@ -1,4 +1,4 @@
-import { GraphData, GraphNode, MusicalMapping, GraphStats, EnhancedGraphNode, AudioMappingConfig } from './types';
+import { GraphData, GraphNode, MusicalMapping, GraphStats, AudioMappingConfig } from './types';
 import { GraphNode as GDEGraphNode, GraphLink } from './GraphDataExtractor';
 import { SonigraphSettings } from '../utils/constants';
 import { MUSICAL_SCALES } from '../utils/constants';
@@ -14,7 +14,7 @@ import {
     VaultMappingAnalysis
 } from '../audio/mapping';
 import { ClusterAudioMapper, ClusterAudioSettings } from '../audio/clustering';
-import { Cluster, SmartClusteringAlgorithms } from './SmartClusteringAlgorithms';
+import { Cluster } from './SmartClusteringAlgorithms';
 import {
 	DynamicOrchestrationManager,
 	DynamicOrchestrationSettings

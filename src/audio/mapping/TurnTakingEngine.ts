@@ -137,8 +137,6 @@ export class TurnTakingEngine {
 		const turnDuration = this.config.turnLength; // In beats (assuming 1 beat = 1 second for simplicity)
 		const totalDuration = this.getTotalDuration(mappings);
 
-		let currentTurnIndex = 0;
-
 		mappings.forEach(mapping => {
 			// Determine which turn this mapping falls into
 			const turnIndex = Math.floor((mapping.timing || 0) / turnDuration);

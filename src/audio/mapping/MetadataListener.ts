@@ -9,7 +9,6 @@ import { App, TFile, EventRef } from 'obsidian';
 import { ObsidianMetadataMapper } from './ObsidianMetadataMapper';
 import { MetadataMappingRules } from './MetadataMappingRules';
 import { VaultMappingOptimizer } from './VaultMappingOptimizer';
-import { AudioMappingConfig } from '../../graph/types';
 import { getLogger } from '../../logging';
 
 const logger = getLogger('metadata-listener');

@@ -5,7 +5,6 @@
 
 import { getLogger } from '../../logging';
 import { FreesoundSampleManager, MusicalGenre } from './FreesoundSampleManager';
-import { CacheStatistics } from './SampleCache';
 
 export interface PreloadStrategy {
     type: 'immediate' | 'progressive' | 'idle' | 'manual';

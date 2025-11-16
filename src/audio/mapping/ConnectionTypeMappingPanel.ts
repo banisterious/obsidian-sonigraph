@@ -6,7 +6,7 @@
  * preset management, and real-time preview capabilities.
  */
 
-import { Setting, DropdownComponent, SliderComponent, ToggleComponent } from 'obsidian';
+import { Setting, DropdownComponent, ToggleComponent } from 'obsidian';
 import {
     ConnectionType,
     ConnectionTypeMappingConfig,
@@ -125,7 +125,7 @@ export class ConnectionTypeMappingPanel {
         });
 
         // Status indicator
-        const statusIndicator = titleContainer.createEl('span', {
+        titleContainer.createEl('span', {
             cls: `connection-type-mapping-status ${this.config.enabled ? 'enabled' : 'disabled'}`,
             text: this.config.enabled ? 'ENABLED' : 'DISABLED'
         });
@@ -137,7 +137,7 @@ export class ConnectionTypeMappingPanel {
         });
 
         // Phase 4.4 identifier
-        const phaseTag = headerContainer.createEl('div', {
+        headerContainer.createEl('div', {
             text: 'Phase 4.4',
             cls: 'connection-type-mapping-phase-tag'
         });

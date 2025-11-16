@@ -12,7 +12,7 @@
  * 4. Update CSS class prefixes if needed
  */
 
-import { App, Modal, Setting, ButtonComponent, DropdownComponent, TextAreaComponent, Notice } from 'obsidian';
+import { App, Modal, Setting, Notice } from 'obsidian';
 import { getLogger } from '../../logging';
 
 // Example interfaces - replace with your actual types
@@ -206,9 +206,9 @@ export class TemplateTabsModal extends Modal {
     // Helper to create a group of tabs
     private createTabGroup(groupName: string, items: TemplateItem[]) {
         // Create group header
-        const groupHeader = this.tabsContainer.createDiv({ 
+        this.tabsContainer.createDiv({
             text: groupName,
-            cls: 'vertical-tab-header-group-title template-tab-group-title' 
+            cls: 'vertical-tab-header-group-title template-tab-group-title'
         });
         
         // Create tabs for items in this group

@@ -21,7 +21,6 @@ import {
   Distortion,
   PingPongDelay,
   BitCrusher,
-  AutoFilter,
   Phaser,
   start
 } from 'tone';

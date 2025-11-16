@@ -14,7 +14,6 @@ import {
     QuantizedPitch,
     Chord,
     ChordDefinition,
-    ChordProgression,
     MusicalContext,
     HarmonicConstraints,
     ScaleModulationRule,
@@ -24,9 +23,6 @@ import {
 
 import {
     SCALE_DEFINITIONS,
-    NOTE_FREQUENCIES,
-    NOTE_NAMES,
-    CHORD_DEFINITIONS,
     CHORD_PROGRESSIONS,
     calculateFrequency,
     generateScaleFrequencies,
@@ -36,11 +32,8 @@ import {
 
 import {
     DEFAULT_HARMONIC_CONSTRAINTS,
-    VOICE_LEADING_RULES,
     calculateDissonance,
     calculateHarmonicTension,
-    validateVoiceLeading,
-    applyHarmonicConstraints,
     getSuggestedIntervals
 } from './HarmonicRules';
 

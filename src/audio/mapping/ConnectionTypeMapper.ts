@@ -6,7 +6,7 @@
  * markdown links, tag connections, and more with configurable instrument assignments.
  */
 
-import { TFile, CachedMetadata, App, LinkCache, EmbedCache } from 'obsidian';
+import { TFile, CachedMetadata, App } from 'obsidian';
 import {
     ConnectionType,
     ConnectionTypeMappingConfig,
@@ -639,7 +639,7 @@ export class ConnectionTypeMapper {
             const union = new Set([...sourceWords, ...targetWords]);
 
             return intersection.size / union.size;
-        } catch (error) {
+        } catch {
             return 0.0;
         }
     }

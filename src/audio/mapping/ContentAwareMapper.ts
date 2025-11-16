@@ -6,8 +6,8 @@
  * and maps these characteristics to musical properties.
  */
 
-import { TFile, CachedMetadata, App } from 'obsidian';
-import { EnhancedGraphNode, InstrumentMapping, AudioMappingConfig, MusicalContext } from '../../graph/types';
+import { TFile, App } from 'obsidian';
+import { EnhancedGraphNode, AudioMappingConfig, MusicalContext } from '../../graph/types';
 import { InstrumentConfig, getAllInstruments, getInstrumentsByCategory } from '../configs';
 import { FileTypeAnalyzer, FileCharacteristics } from './FileTypeAnalyzer';
 import { InstrumentSelector, InstrumentSelectionCriteria } from './InstrumentSelector';
@@ -1722,7 +1722,7 @@ export class ContentAwareMapper {
 
         // Detailed results table
         void logger.info('test', '--- Detailed Test Results ---');
-        console.table(testResults.map(r => ({
+        void logger.warn('test-results', JSON.stringify(testResults.map(r => ({
             'Node ID': r.nodeId,
             Status: r.passed ? '✅ PASS' : '❌ FAIL',
             Instrument: r.details.selectedInstrument || 'N/A',
@@ -1731,7 +1731,7 @@ export class ContentAwareMapper {
             'Analysis Time': r.details.analysisTime || 'N/A',
             'Fallbacks': r.details.fallbackCount || 'N/A',
             Error: r.error || 'None'
-        })));
+        }))));
         
         return;
     }

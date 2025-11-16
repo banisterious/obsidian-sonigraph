@@ -12,8 +12,7 @@ import { ItemView, WorkspaceLeaf, TFile, Notice, Setting } from 'obsidian';
 import { getLogger } from '../logging';
 import {
 	LocalSoundscapeExtractor,
-	LocalSoundscapeData,
-	LocalSoundscapeFilters as ExtractorFilters
+	LocalSoundscapeData
 } from '../graph/LocalSoundscapeExtractor';
 import { LocalSoundscapeRenderer, RendererConfig } from '../graph/LocalSoundscapeRenderer';
 import { ForceDirectedLayout } from '../graph/ForceDirectedLayout';
@@ -258,13 +257,13 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Title section
 		const titleSection = header.createDiv({ cls: 'header-title-section' });
-		const title = titleSection.createEl('h3', {
+		titleSection.createEl('h3', {
 			text: 'Local Soundscape',
 			cls: 'header-title'
 		});
 
 		// Center note name (will be updated dynamically)
-		const centerNoteName = titleSection.createDiv({
+		titleSection.createDiv({
 			cls: 'center-note-name',
 			text: 'No note selected'
 		});
@@ -436,7 +435,7 @@ export class LocalSoundscapeView extends ItemView {
 		});
 
 		// Graph statistics (will be populated by displayGraphStats)
-		const statsContainer = graphContent.createDiv({ cls: 'sidebar-stats-container' });
+		graphContent.createDiv({ cls: 'sidebar-stats-container' });
 
 		// Toggle collapse/expand
 		graphHeader.addEventListener('click', (e) => {
@@ -459,13 +458,13 @@ export class LocalSoundscapeView extends ItemView {
 		// Tab navigation
 		const tabsContainer = sidebar.createDiv({ cls: 'sidebar-tabs' });
 
-		const playbackTab = tabsContainer.createEl('button', {
+		tabsContainer.createEl('button', {
 			text: 'Playback',
 			cls: 'sidebar-tab active',
 			attr: { 'data-tab': 'playback' }
 		});
 
-		const settingsTab = tabsContainer.createEl('button', {
+		tabsContainer.createEl('button', {
 			text: 'Settings',
 			cls: 'sidebar-tab',
 			attr: { 'data-tab': 'settings' }
@@ -890,7 +889,7 @@ export class LocalSoundscapeView extends ItemView {
 			void this.toggleAdaptivePitch(adaptivePitchCheckbox.checked);
 		});
 
-		const adaptivePitchDesc = container.createDiv({
+		container.createDiv({
 			cls: 'musical-setting-description',
 			text: 'Pitch ranges adapt to selected key for better harmonic integration'
 		});
@@ -908,7 +907,7 @@ export class LocalSoundscapeView extends ItemView {
 			void this.toggleChordVoicing(chordVoicingCheckbox.checked);
 		});
 
-		const chordVoicingDesc = container.createDiv({
+		container.createDiv({
 			cls: 'musical-setting-description',
 			text: 'Add harmonic richness with depth-based polyphonic voicing'
 		});
@@ -2414,7 +2413,7 @@ export class LocalSoundscapeView extends ItemView {
 		void this.updatePlaybackUI();
 
 		// Start visualization and time tracking
-		const playbackStartTime = Date.now();
+		Date.now();
 		if (this.visualizationManager) {
 			// Start visualization at time 0 - playback time will be updated in the polling loop
 			this.visualizationManager.start(0);

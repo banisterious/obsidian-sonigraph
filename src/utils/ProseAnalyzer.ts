@@ -330,7 +330,7 @@ export class ProseAnalyzer {
 		entries.sort((a, b) => b[1] - a[1]);
 
 		const [topType, topScore] = entries[0];
-		const [secondType, secondScore] = entries[1];
+		const secondScore = entries[1][1];
 
 		// If top score is weak or similar to second, classify as mixed
 		if (topScore < 0.3 || topScore - secondScore < 0.1) {

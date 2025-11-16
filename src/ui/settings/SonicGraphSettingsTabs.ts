@@ -103,7 +103,7 @@ export class SonicGraphSettingsTabs {
 			void tabButton.appendChild(icon);
 
 			// Tab label
-			const label = tabButton.createSpan({
+			tabButton.createSpan({
 				cls: 'osp-sonic-tab-label',
 				text: tab.label
 			});

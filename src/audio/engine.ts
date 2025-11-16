@@ -1672,44 +1672,13 @@ export class AudioEngine {
 					action: 'synth-reinit-success'
 				});
 				
-				// Alternative: Sample-based instrument (if needed in future)
-				if (false && configs[instrumentName]) {
-					// Sample-based instrument
-					logger.info('issue-006-debug', `Re-creating sampler for ${instrumentName}`, {
-						instrumentName,
-						mode: 'samples',
-						action: 'sampler-reinit-start'
-					});
-					
-					const sampler = new Sampler(configs[instrumentName]);
-					const volume = new Volume(-6);
-					
-					// Connect sampler to volume
-					void sampler.connect(volume);
-					
-					// Connect to master volume
-					void volume.connect(this.volume);
-					
-					// Store references
-					this.instruments.set(instrumentName, sampler);
-					this.instrumentVolumes.set(instrumentName, volume);
-					
-					logger.info('issue-006-debug', `Successfully re-initialized sampler for ${instrumentName}`, {
-						instrumentName,
-						finalVolumeValue: volume.volume.value,
-						finalVolumeMuted: volume.mute,
-						instrumentExists: this.instruments.has(instrumentName),
-						volumeNodeExists: this.instrumentVolumes.has(instrumentName),
-						action: 'sampler-reinit-success'
-					});
-				} else {
-					logger.error('issue-006-debug', `No valid initialization method for ${instrumentName}`, {
-						instrumentName,
-						hasSamplerConfig: !!configs[instrumentName],
-						perInstrumentQuality: 'Individual instrument control',
-						action: 'no-valid-init-method'
-					});
-				}
+				// Sample-based instrument initialization not currently supported
+				logger.error('issue-006-debug', `No valid initialization method for ${instrumentName}`, {
+					instrumentName,
+					hasSamplerConfig: !!configs[instrumentName],
+					perInstrumentQuality: 'Individual instrument control',
+					action: 'no-valid-init-method'
+				});
 			} catch (error) {
 				logger.error('issue-006-debug', `Failed to re-initialize ${instrumentName}`, {
 					instrumentName,
@@ -2841,7 +2810,7 @@ export class AudioEngine {
 			// For filters, we can't use wet/dry, so we bypass by setting frequency very high or very low
 			if (enabled) {
 				const instrumentSettings = this.settings.instruments[instrument as keyof typeof this.settings.instruments];
-				const cutoffFreq = instrumentSettings?.effects?.filter?.params?.frequency as number || 3500;
+				const cutoffFreq = instrumentSettings?.effects?.filter?.params?.frequency || 3500;
 				filter.frequency.value = cutoffFreq; // Restore saved cutoff
 			} else {
 				filter.frequency.value = 20000; // Effectively bypass (above audible range)
@@ -2968,7 +2937,7 @@ export class AudioEngine {
 				
 				instrumentVolume.mute = false;
 				
-				const instrumentSettings = this.settings.instruments[instrumentKey as keyof SonigraphSettings['instruments']];
+				const instrumentSettings = this.settings.instruments[instrumentKey];
 				if (instrumentSettings) {
 					void this.updateInstrumentVolume(instrumentKey, instrumentSettings.volume);
 					logger.info('issue-006-debug', `${instrumentKey} re-enabled successfully`, {
@@ -4709,13 +4678,13 @@ export class AudioEngine {
 				if (reverbSettings) {
 					void this.setReverbEnabled(reverbSettings.enabled, instrumentName);
 					if (reverbSettings.params.decay) {
-						this.updateReverbSettings({ decay: reverbSettings.params.decay as number }, instrumentName);
+						this.updateReverbSettings({ decay: reverbSettings.params.decay }, instrumentName);
 					}
 					if (reverbSettings.params.preDelay) {
-						this.updateReverbSettings({ preDelay: reverbSettings.params.preDelay as number }, instrumentName);
+						this.updateReverbSettings({ preDelay: reverbSettings.params.preDelay }, instrumentName);
 					}
 					if (reverbSettings.params.wet) {
-						this.updateReverbSettings({ wet: reverbSettings.params.wet as number }, instrumentName);
+						this.updateReverbSettings({ wet: reverbSettings.params.wet }, instrumentName);
 					}
 				}
 
@@ -4724,16 +4693,16 @@ export class AudioEngine {
 				if (chorusSettings) {
 					void this.setChorusEnabled(chorusSettings.enabled, instrumentName);
 					if (chorusSettings.params.frequency) {
-						this.updateChorusSettings({ frequency: chorusSettings.params.frequency as number }, instrumentName);
+						this.updateChorusSettings({ frequency: chorusSettings.params.frequency }, instrumentName);
 					}
 					if (chorusSettings.params.depth) {
-						this.updateChorusSettings({ depth: chorusSettings.params.depth as number }, instrumentName);
+						this.updateChorusSettings({ depth: chorusSettings.params.depth }, instrumentName);
 					}
 					if (chorusSettings.params.delayTime) {
-						this.updateChorusSettings({ delayTime: chorusSettings.params.delayTime as number }, instrumentName);
+						this.updateChorusSettings({ delayTime: chorusSettings.params.delayTime }, instrumentName);
 					}
 					if (chorusSettings.params.feedback) {
-						this.updateChorusSettings({ feedback: chorusSettings.params.feedback as number }, instrumentName);
+						this.updateChorusSettings({ feedback: chorusSettings.params.feedback }, instrumentName);
 					}
 				}
 
@@ -4742,13 +4711,13 @@ export class AudioEngine {
 				if (filterSettings) {
 					void this.setFilterEnabled(filterSettings.enabled, instrumentName);
 					if (filterSettings.params.frequency) {
-						this.updateFilterSettings({ frequency: filterSettings.params.frequency as number }, instrumentName);
+						this.updateFilterSettings({ frequency: filterSettings.params.frequency }, instrumentName);
 					}
 					if (filterSettings.params.Q) {
-						this.updateFilterSettings({ Q: filterSettings.params.Q as number }, instrumentName);
+						this.updateFilterSettings({ Q: filterSettings.params.Q }, instrumentName);
 					}
 					if (filterSettings.params.type) {
-						this.updateFilterSettings({ type: filterSettings.params.type as 'lowpass' | 'highpass' | 'bandpass' }, instrumentName);
+						this.updateFilterSettings({ type: filterSettings.params.type }, instrumentName);
 					}
 				}
 			});
@@ -5073,7 +5042,7 @@ export class AudioEngine {
 					if (instrumentSettings?.effects[effectType as keyof typeof instrumentSettings.effects]) {
 						const effectSettings = instrumentSettings.effects[effectType as keyof typeof instrumentSettings.effects];
 						if ('wet' in effectSettings.params) {
-							effect.wet.value = effectSettings.params.wet as number;
+							effect.wet.value = effectSettings.params.wet;
 						}
 					}
 				}
@@ -5084,7 +5053,7 @@ export class AudioEngine {
 				} else {
 					const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
 					if (instrumentSettings?.effects.filter) {
-						effect.frequency.value = instrumentSettings.effects.filter.params.frequency as number;
+						effect.frequency.value = instrumentSettings.effects.filter.params.frequency;
 					}
 				}
 			}

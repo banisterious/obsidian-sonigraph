@@ -426,7 +426,7 @@ export class LocalSoundscapeExtractor {
 			// Incoming links (backlinks)
 			const backlinks = this.app.metadataCache.getBacklinksForFile(file);
 			if (backlinks) {
-				for (const [backlinkPath, backlinkData] of backlinks.entries()) {
+				for (const backlinkPath of backlinks.keys()) {
 					const backlinkFile = this.app.vault.getAbstractFileByPath(backlinkPath);
 					if (backlinkFile instanceof TFile) {
 						// Get link text from backlink file cache

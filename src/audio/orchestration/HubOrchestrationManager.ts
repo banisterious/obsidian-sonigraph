@@ -13,10 +13,8 @@ import {
   HubMetrics,
   HubOrchestrationSettings,
   OrchestrationDecisions,
-  OrchestrationMode,
   HubRoleAssignment,
   HubProminenceTier,
-  DistanceScaling,
   ClusterHubAnalysis
 } from './types';
 

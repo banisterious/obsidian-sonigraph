@@ -196,7 +196,7 @@ export class TemporalGraphAnimator {
 
     const dates = this.nodes
       .map(n => n.creationDate)
-      .filter(d => d !== undefined) as Date[];
+      .filter(d => d !== undefined);
     
     if (dates.length === 0) {
       // No valid dates, fall back to default range

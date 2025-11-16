@@ -3,7 +3,7 @@ import { GraphNode, GraphLink } from './GraphDataExtractor';
 import { getLogger } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
 import { ContentAwarePositioning } from './ContentAwarePositioning';
-import { SmartClusteringAlgorithms, Cluster, ClusteringResult } from './SmartClusteringAlgorithms';
+import { SmartClusteringAlgorithms, ClusteringResult } from './SmartClusteringAlgorithms';
 
 const logger = getLogger('GraphRenderer');
 
@@ -369,7 +369,7 @@ export class GraphRenderer {
       .nodes(visibleNodes);
     
     (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)
-      .links(visibleLinks);
+      ?.links(visibleLinks);
 
     this.simulation.alpha(1).restart();
   }
@@ -978,7 +978,7 @@ export class GraphRenderer {
     
     if (this.simulation.force('link')) {
       (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)
-        .strength(this.forceConfig.linkStrength);
+        ?.strength(this.forceConfig.linkStrength);
     }
     
     this.simulation.alpha(0.3).restart();
@@ -1017,7 +1017,7 @@ export class GraphRenderer {
   /**
    * Public method to set zoom transform (called by SonicGraphView)
    */
-  setZoomTransform(transform: any): void {
+  setZoomTransform(transform: d3.ZoomTransform): void {
     if (this.config.enableZoom && this.zoom) {
       this.svg.call(this.zoom.transform, transform);
       logger.info('zoom-set', `Zoom transform set externally: scale=${transform.k}, translate=(${transform.x}, ${transform.y})`);

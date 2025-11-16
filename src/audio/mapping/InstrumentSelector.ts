@@ -8,7 +8,6 @@
 
 import { AudioMappingConfig } from '../../graph/types';
 import { InstrumentConfig, getAllInstruments, getInstrumentsByCategory } from '../configs';
-import { FileCharacteristics } from './FileTypeAnalyzer';
 import { getLogger } from '../../logging';
 
 const logger = getLogger('instrument-selector');

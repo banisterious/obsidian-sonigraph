@@ -21,7 +21,6 @@ import {
   InstrumentLayer,
   TemporalInfluence as TemporalInfluenceData
 } from './types';
-import * as Tone from 'tone';
 
 export class DynamicOrchestrationManager {
   private settings: DynamicOrchestrationSettings;

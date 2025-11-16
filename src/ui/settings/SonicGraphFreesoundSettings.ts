@@ -292,7 +292,7 @@ export class SonicGraphFreesoundSettings {
 		presetP.appendText(` ${customPresetCount} saved`);
 
 		// Action buttons section
-		const actionsDiv = content.createDiv({ cls: 'osp-settings-actions' });
+		content.createDiv({ cls: 'osp-settings-actions' });
 
 		// Note about preset management
 		const noteDiv = content.createDiv({ cls: 'osp-settings-note' });
