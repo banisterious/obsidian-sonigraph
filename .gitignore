@@ -67,6 +67,9 @@ Thumbs.db
 obsidian-pr-review*.md
 pr-review-*.md
 
+# Session continuation files
+session-continue*.md
+
 # Wiki staging area and upload script
 wiki-content/
 upload-wiki.sh
