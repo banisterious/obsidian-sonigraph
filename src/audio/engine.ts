@@ -218,7 +218,7 @@ export class AudioEngine {
 
 	set enhancedRouting(value: boolean) {
 		if (value) {
-			this.effectBusManager.enableEnhancedRouting();
+			void this.effectBusManager.enableEnhancedRouting();
 		} else {
 			this.effectBusManager.disableEnhancedRouting();
 		}

@@ -1834,7 +1834,7 @@ export class LocalSoundscapeView extends ItemView {
 	 * Open Control Center
 	 */
 	private openControlCenter(): void {
-		import('./control-panel').then(({ MaterialControlPanelModal }) => {
+		void import('./control-panel').then(({ MaterialControlPanelModal }) => {
 			const controlCenter = new MaterialControlPanelModal(this.app, this.plugin);
 			void controlCenter.open();
 		});
@@ -2012,7 +2012,7 @@ export class LocalSoundscapeView extends ItemView {
 		// Open the note in a new leaf
 		const file = this.app.vault.getAbstractFileByPath(node.path);
 		if (file instanceof TFile) {
-			this.app.workspace.getLeaf(false).openFile(file);
+			void this.app.workspace.getLeaf(false).openFile(file);
 		}
 	}
 

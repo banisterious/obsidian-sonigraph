@@ -787,7 +787,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createLocalSoundscapeTab(): void {
 		// Import and render LocalSoundscapeSettings class (auto-play, key, context-aware, musical enhancements)
-		import('./settings/LocalSoundscapeSettings').then(({ LocalSoundscapeSettings }) => {
+		void import('./settings/LocalSoundscapeSettings').then(({ LocalSoundscapeSettings }) => {
 			const lsSettings = new LocalSoundscapeSettings(this.app, this.plugin);
 			void lsSettings.render(this.contentContainer);
 
@@ -799,7 +799,7 @@ export class MaterialControlPanelModal extends Modal {
 			void this.createDepthVolumeAndPanningCard();
 
 			// Continuous layers settings
-			import('./settings/LocalSoundscapeLayersSettings').then(({ LocalSoundscapeLayersSettings }) => {
+			void import('./settings/LocalSoundscapeLayersSettings').then(({ LocalSoundscapeLayersSettings }) => {
 				const layersSettings = new LocalSoundscapeLayersSettings(this.app, this.plugin);
 				void layersSettings.render(this.contentContainer);
 			});
@@ -820,7 +820,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createLayersTab(): void {
 		// Import layers settings class - renders continuous layers card first
-		import('./settings/SonicGraphLayersSettings').then(({ SonicGraphLayersSettings }) => {
+		void import('./settings/SonicGraphLayersSettings').then(({ SonicGraphLayersSettings }) => {
 			// Callback to re-render entire tab when toggle changes
 			const onToggle = () => {
 				this.contentContainer.empty();
@@ -1039,7 +1039,7 @@ export class MaterialControlPanelModal extends Modal {
 		} else {
 			// Create temporary sample loader just for browsing
 			// Import FreesoundSampleLoader dynamically
-			import('../audio/layers/FreesoundSampleLoader').then(({ FreesoundSampleLoader }) => {
+			void import('../audio/layers/FreesoundSampleLoader').then(({ FreesoundSampleLoader }) => {
 				const tempLoader = new FreesoundSampleLoader(this.plugin.settings.freesoundApiKey);
 				void this.renderSampleBrowser(this.sampleBrowserContainer, tempLoader);
 			});

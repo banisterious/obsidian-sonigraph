@@ -387,7 +387,7 @@ export class DownloadQueue {
         void this.clearQueue();
         this.activeDownloads.clear();
         if (this.audioContext.state !== 'closed') {
-            this.audioContext.close();
+            void this.audioContext.close();
         }
     }
 }

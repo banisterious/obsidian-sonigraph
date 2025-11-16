@@ -1608,7 +1608,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Show all nodes
             if (this.graphRenderer) {
                 // Get all node IDs to show them all
-                this.graphDataExtractor.extractGraphData().then(graphData => {
+                void this.graphDataExtractor.extractGraphData().then(graphData => {
                     const allNodeIds = new Set(graphData.nodes.map(node => node.id));
                     this.graphRenderer?.updateVisibleNodes(allNodeIds);
                 });
@@ -1645,9 +1645,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      */
     private openControlCenter(): void {
         // Note: Views don't need to be closed when opening other UI elements
-        
+
         // Open Control Center
-        import('./control-panel').then(({ MaterialControlPanelModal }) => {
+        void import('./control-panel').then(({ MaterialControlPanelModal }) => {
             const controlCenter = new MaterialControlPanelModal(this.app, this.plugin);
             void controlCenter.open();
         });
@@ -2448,7 +2448,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = settings;
-        this.plugin.saveSettings();
+        void this.plugin.saveSettings();
 
         logger.debug('connection-type-mapping', `Updated config: ${key} = ${value}`);
     }
@@ -2465,7 +2465,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = settings;
-        this.plugin.saveSettings();
+        void this.plugin.saveSettings();
 
         logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${value}`);
     }
@@ -2484,7 +2484,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = settings;
-        this.plugin.saveSettings();
+        void this.plugin.saveSettings();
 
         logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${value}`);
     }
@@ -5574,15 +5574,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Save to plugin settings
         this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
             this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
         }
-        
+
         logger.debug('filter-setting', `Updated filter setting: ${String(key)} = ${value}`);
     }
 
@@ -5866,13 +5866,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         currentSettings.layout.pathBasedGrouping.groups.push(newGroup);
         this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
         }
-        
+
         void logger.debug('path-grouping', 'Added new group from search:', newGroup);
     }
     
@@ -5893,15 +5893,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         (currentSettings.layout.pathBasedGrouping.groups[groupIndex] as DynamicSettings)[property] = value;
 
         this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
             this.graphRenderer.updateContentAwareSettings(currentSettings.contentAwarePositioning);
             this.graphRenderer.updateSmartClusteringSettings(currentSettings.smartClustering);
         }
-        
+
         logger.debug('path-grouping', `Updated group ${groupIndex} ${property}:`, value);
     }
 
@@ -5914,8 +5914,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         currentSettings.layout.pathBasedGrouping.groups.splice(groupIndex, 1);
         
         this.plugin.settings.sonicGraphSettings = currentSettings;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Apply to renderer if available
         if (this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);
@@ -6182,13 +6182,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Save setting
         this.plugin.settings.sonicGraphAnimationSpeed = speed;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Update animator if it exists
         if (this.temporalAnimator) {
             this.temporalAnimator.setSpeed(speed);
         }
-        
+
         logger.debug('ui', 'Animation speed changed', { speed });
     }
 
@@ -7253,8 +7253,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.audio.density = density;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated audio density', { density });
     }
 
@@ -7268,8 +7268,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.audio.noteDuration = duration;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated note duration', { duration });
     }
 
@@ -7283,8 +7283,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.visual.showFileNames = show;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated show file names', { show });
         
         // Refresh the graph to show/hide file names
@@ -7303,8 +7303,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.visual.timelineMarkersEnabled = show;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated timeline markers visibility', { show });
         
         // Update the timeline markers display
@@ -7328,8 +7328,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.visual.animationStyle = style;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated animation style', { style });
         
         // Update the renderer's animation style if it exists
@@ -7348,8 +7348,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.visual.loopAnimation = enabled;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated loop animation', { enabled });
         
         // Update the animator's loop setting if it exists
@@ -7364,8 +7364,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     private updateAnimationDuration(duration: number): void {
         // Save to plugin settings
         this.plugin.settings.sonicGraphAnimationDuration = duration;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated animation duration', { duration });
         
         // The animator will pick up the new duration from settings when it runs
@@ -7380,8 +7380,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.timeline.timeWindow = timeWindow;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated time window', { timeWindow });
         
         // Update temporal animator with new time window
@@ -7399,8 +7399,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.timeline.granularity = granularity;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated timeline granularity', { granularity });
         
         // Show/hide custom range controls based on selection
@@ -7428,8 +7428,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.timeline.customRange = { value, unit };
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated custom range', { value, unit });
         
         // Update temporal animator if using custom granularity
@@ -7447,8 +7447,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
         
         this.plugin.settings.sonicGraphSettings.timeline.eventSpreadingMode = mode;
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         logger.debug('settings', 'Updated event spreading mode', { mode });
         
         // Update temporal animator with new spreading mode
@@ -7942,8 +7942,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         
         // Single save operation
-        this.plugin.saveSettings();
-        
+        void this.plugin.saveSettings();
+
         // Single renderer update if needed
         if (needsRendererUpdate && this.graphRenderer) {
             this.graphRenderer.updateLayoutSettings(currentSettings.layout);

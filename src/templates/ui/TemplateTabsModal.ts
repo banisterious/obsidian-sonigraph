@@ -651,7 +651,7 @@ The template uses consistent CSS class naming:
     
     private handleExportItems() {
         const data = JSON.stringify(this.items, null, 2);
-        navigator.clipboard.writeText(data);
+        void navigator.clipboard.writeText(data);
         new Notice('Items exported to clipboard!');
     }
     

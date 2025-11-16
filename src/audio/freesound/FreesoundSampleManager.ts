@@ -539,7 +539,7 @@ export class FreesoundSampleManager {
         this.cacheStrategy.clear();
         this.genreCollections.clear();
         if (this.audioContext.state !== 'closed') {
-            this.audioContext.close();
+            void this.audioContext.close();
         }
         this.logger.info('sample-manager', 'FreesoundSampleManager disposed');
     }

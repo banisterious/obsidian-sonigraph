@@ -451,7 +451,7 @@ export default class SonigraphPlugin extends Plugin {
 		});
 
 		// Update audio engine with current settings before playing
-		this.audioEngine.updateSettings(this.settings);
+		void this.audioEngine.updateSettings(this.settings);
 		void logger.debug('playback', 'Audio engine settings updated before playback');
 
 		try {
@@ -520,7 +520,7 @@ export default class SonigraphPlugin extends Plugin {
 
 		// Update components
 		if (this.audioEngine) {
-			this.audioEngine.updateSettings(this.settings);
+			void this.audioEngine.updateSettings(this.settings);
 		}
 
 		if (this.musicalMapper) {

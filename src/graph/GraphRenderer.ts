@@ -1230,7 +1230,7 @@ export class GraphRenderer {
     
     // Re-apply clustering if simulation exists and clustering is enabled
     if (this.simulation && settings.enabled && this.nodes.length > 0) {
-      this.applySmartClustering(); // Async call, no need to await here
+      void this.applySmartClustering(); // Async call, no need to await here
     } else if (!settings.enabled) {
       void this.clearClusterVisualization();
     }
