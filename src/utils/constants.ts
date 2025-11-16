@@ -551,6 +551,7 @@ export interface SonigraphSettings {
 	instruments: {
 		piano: InstrumentSettings;
 		organ: InstrumentSettings;
+		harmonium: InstrumentSettings;
 		strings: InstrumentSettings;
 		flute: InstrumentSettings;
 		clarinet: InstrumentSettings;
@@ -1414,13 +1415,46 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 						feedback: 0.05 
 					} 
 				},
-				filter: { 
-					enabled: false, 
-					params: { 
-						frequency: 4000, 
-						Q: 0.6, 
-						type: 'lowpass' 
-					} 
+				filter: {
+					enabled: false,
+					params: {
+						frequency: 4000,
+						Q: 0.6,
+						type: 'lowpass'
+					}
+				}
+			}
+		},
+		harmonium: {
+			enabled: false,
+			volume: 0.7,
+			maxVoices: 4,
+			useHighQuality: true,
+			effects: {
+				reverb: {
+					enabled: true,
+					params: {
+						decay: 2.5,
+						preDelay: 0.04,
+						wet: 0.40
+					}
+				},
+				chorus: {
+					enabled: true,
+					params: {
+						frequency: 0.6,
+						depth: 0.4,
+						delayTime: 3.5,
+						feedback: 0.08
+					}
+				},
+				filter: {
+					enabled: false,
+					params: {
+						frequency: 3500,
+						Q: 0.7,
+						type: 'lowpass'
+					}
 				}
 			}
 		},
@@ -3117,9 +3151,15 @@ export const INSTRUMENT_INFO = {
 		defaultFrequencyRange: 'Very High (>1400Hz)'
 	},
 	organ: {
-		name: 'Organ', 
+		name: 'Organ',
 		icon: '🎛️',
 		description: 'FM synthesis with chorus effect for rich, sustained tones',
+		defaultFrequencyRange: 'Medium (400-800Hz)'
+	},
+	harmonium: {
+		name: 'Harmonium',
+		icon: '🎹',
+		description: 'Reed organ with rich overtones and droning sustain',
 		defaultFrequencyRange: 'Medium (400-800Hz)'
 	},
 	strings: {

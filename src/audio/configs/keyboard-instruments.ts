@@ -40,6 +40,30 @@ export const keyboardInstruments: InstrumentFamily = {
             category: 'keyboard'
         },
 
+        harmonium: {
+            urls: {
+                "C2": `C2.${FORMAT_PLACEHOLDER}`, "C#2": `Cs2.${FORMAT_PLACEHOLDER}`, "D2": `D2.${FORMAT_PLACEHOLDER}`,
+                "D#2": `Ds2.${FORMAT_PLACEHOLDER}`, "E2": `E2.${FORMAT_PLACEHOLDER}`, "F2": `F2.${FORMAT_PLACEHOLDER}`,
+                "F#2": `Fs2.${FORMAT_PLACEHOLDER}`, "G2": `G2.${FORMAT_PLACEHOLDER}`, "G#2": `Gs2.${FORMAT_PLACEHOLDER}`,
+                "A2": `A2.${FORMAT_PLACEHOLDER}`, "A#2": `As2.${FORMAT_PLACEHOLDER}`, "B2": `B2.${FORMAT_PLACEHOLDER}`,
+                "C3": `C3.${FORMAT_PLACEHOLDER}`, "C#3": `Cs3.${FORMAT_PLACEHOLDER}`, "D3": `D3.${FORMAT_PLACEHOLDER}`,
+                "D#3": `Ds3.${FORMAT_PLACEHOLDER}`, "E3": `E3.${FORMAT_PLACEHOLDER}`, "F3": `F3.${FORMAT_PLACEHOLDER}`,
+                "F#3": `Fs3.${FORMAT_PLACEHOLDER}`, "G3": `G3.${FORMAT_PLACEHOLDER}`, "G#3": `Gs3.${FORMAT_PLACEHOLDER}`,
+                "A3": `A3.${FORMAT_PLACEHOLDER}`, "A#3": `As3.${FORMAT_PLACEHOLDER}`, "B3": `B3.${FORMAT_PLACEHOLDER}`,
+                "C4": `C4.${FORMAT_PLACEHOLDER}`, "C#4": `Cs4.${FORMAT_PLACEHOLDER}`, "D4": `D4.${FORMAT_PLACEHOLDER}`,
+                "D#4": `Ds4.${FORMAT_PLACEHOLDER}`, "E4": `E4.${FORMAT_PLACEHOLDER}`, "F4": `F4.${FORMAT_PLACEHOLDER}`,
+                "F#4": `Fs4.${FORMAT_PLACEHOLDER}`, "G4": `G4.${FORMAT_PLACEHOLDER}`, "G#4": `Gs4.${FORMAT_PLACEHOLDER}`,
+                "A4": `A4.${FORMAT_PLACEHOLDER}`, "A#4": `As4.${FORMAT_PLACEHOLDER}`, "B4": `B4.${FORMAT_PLACEHOLDER}`,
+                "C5": `C5.${FORMAT_PLACEHOLDER}`, "C#5": `Cs5.${FORMAT_PLACEHOLDER}`
+            },
+            release: 1.2,
+            baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/harmonium/",
+            effects: ['reverb', 'chorus'],
+            maxVoices: 6,
+            priority: 'medium',
+            category: 'keyboard'
+        },
+
         electricPiano: {
             // Note: No samples available - synthesis only
             urls: {},
