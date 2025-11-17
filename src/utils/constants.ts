@@ -2182,7 +2182,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		timpani: {
-			enabled: true,
+			enabled: false,
 			volume: 0.9,
 			maxVoices: 2,
 			useHighQuality: false, // Synth-only - no samples available
@@ -2215,7 +2215,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		xylophone: {
-			enabled: true,
+			enabled: false,
 			volume: 0.8,
 			maxVoices: 4,
 			useHighQuality: false, // Default to synthesis (user can switch to recordings)
@@ -2314,7 +2314,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		leadSynth: {
-			enabled: true,
+			enabled: false,
 			volume: 0.6,
 			maxVoices: 4,
 			effects: {
@@ -2346,7 +2346,7 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		bassSynth: {
-			enabled: true,
+			enabled: false,
 			volume: 0.8,
 			maxVoices: 2,
 			effects: {
