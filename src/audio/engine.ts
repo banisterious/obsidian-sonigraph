@@ -4449,12 +4449,13 @@ export class AudioEngine {
 				this.instruments.set('timpani', timpaniPoly);
 			}
 
-			if (this.settings.instruments.xylophone?.enabled) {
+			if (this.settings.instruments.xylophone?.enabled && !this.instruments.has('xylophone')) {
 				const xylophoneVolume = new Volume(this.settings.instruments.xylophone.volume);
 				this.instrumentVolumes.set('xylophone', xylophoneVolume);
 				void xylophonePoly.connect(xylophoneVolume);
 				void xylophoneVolume.connect(this.volume);
 				this.instruments.set('xylophone', xylophonePoly);
+				logger.debug('audio', 'Using synthesis for xylophone (samples not loaded)');
 			}
 
 			if (this.settings.instruments.strings?.enabled) {
@@ -4465,36 +4466,40 @@ export class AudioEngine {
 				this.instruments.set('strings', stringsPoly);
 			}
 
-			if (this.settings.instruments.flute?.enabled) {
+			if (this.settings.instruments.flute?.enabled && !this.instruments.has('flute')) {
 				const fluteVolume = new Volume(this.settings.instruments.flute.volume);
 				this.instrumentVolumes.set('flute', fluteVolume);
 				void flutePoly.connect(fluteVolume);
 				void fluteVolume.connect(this.volume);
 				this.instruments.set('flute', flutePoly);
+				logger.debug('audio', 'Using synthesis for flute (samples not loaded)');
 			}
 
-			if (this.settings.instruments.clarinet?.enabled) {
+			if (this.settings.instruments.clarinet?.enabled && !this.instruments.has('clarinet')) {
 				const clarinetVolume = new Volume(this.settings.instruments.clarinet.volume);
 				this.instrumentVolumes.set('clarinet', clarinetVolume);
 				void clarinetPoly.connect(clarinetVolume);
 				void clarinetVolume.connect(this.volume);
 				this.instruments.set('clarinet', clarinetPoly);
+				logger.debug('audio', 'Using synthesis for clarinet (samples not loaded)');
 			}
 
-			if (this.settings.instruments.trumpet?.enabled) {
+			if (this.settings.instruments.trumpet?.enabled && !this.instruments.has('trumpet')) {
 				const trumpetVolume = new Volume(this.settings.instruments.trumpet.volume);
 				this.instrumentVolumes.set('trumpet', trumpetVolume);
 				void trumpetPoly.connect(trumpetVolume);
 				void trumpetVolume.connect(this.volume);
 				this.instruments.set('trumpet', trumpetPoly);
+				logger.debug('audio', 'Using synthesis for trumpet (samples not loaded)');
 			}
 
-			if (this.settings.instruments.saxophone?.enabled) {
+			if (this.settings.instruments.saxophone?.enabled && !this.instruments.has('saxophone')) {
 				const saxophoneVolume = new Volume(this.settings.instruments.saxophone.volume);
 				this.instrumentVolumes.set('saxophone', saxophoneVolume);
 				void saxophonePoly.connect(saxophoneVolume);
 				void saxophoneVolume.connect(this.volume);
 				this.instruments.set('saxophone', saxophonePoly);
+				logger.debug('audio', 'Using synthesis for saxophone (samples not loaded)');
 			}
 
 			if (this.settings.instruments.tuba?.enabled && !this.instruments.has('tuba')) {
@@ -4506,20 +4511,22 @@ export class AudioEngine {
 				logger.debug('audio', 'Using synthesis for tuba (samples not loaded)');
 			}
 
-			if (this.settings.instruments.bassoon?.enabled) {
+			if (this.settings.instruments.bassoon?.enabled && !this.instruments.has('bassoon')) {
 				const bassoonVolume = new Volume(this.settings.instruments.bassoon.volume);
 				this.instrumentVolumes.set('bassoon', bassoonVolume);
 				void bassoonPoly.connect(bassoonVolume);
 				void bassoonVolume.connect(this.volume);
 				this.instruments.set('bassoon', bassoonPoly);
+				logger.debug('audio', 'Using synthesis for bassoon (samples not loaded)');
 			}
 
-			if (this.settings.instruments.guitarNylon?.enabled) {
+			if (this.settings.instruments.guitarNylon?.enabled && !this.instruments.has('guitarNylon')) {
 				const guitarNylonVolume = new Volume(this.settings.instruments.guitarNylon.volume);
 				this.instrumentVolumes.set('guitarNylon', guitarNylonVolume);
 				void guitarNylonPoly.connect(guitarNylonVolume);
 				void guitarNylonVolume.connect(this.volume);
 				this.instruments.set('guitarNylon', guitarNylonPoly);
+				logger.debug('audio', 'Using synthesis for guitarNylon (samples not loaded)');
 			}
 			
 			logger.debug('audio', 'Lightweight synthesis initialized', {
