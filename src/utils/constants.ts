@@ -1819,10 +1819,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		guitar: {
-			enabled: true,
+			enabled: false,
 			volume: 0.6,
 			maxVoices: 4,
-			useHighQuality: true, // Use high-quality recordings
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1885,10 +1885,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		guitarNylon: { 
-			enabled: false,
-			volume: 0.6, 
+			enabled: true,
+			volume: 0.6,
 			maxVoices: 4,
-			useHighQuality: false, // Default to synthesis (user can switch to recordings)
+			useHighQuality: true, // Use high-quality recordings
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -1918,10 +1918,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		bassElectric: {
-			enabled: true,
+			enabled: false,
 			volume: 0.8,
 			maxVoices: 2,
-			useHighQuality: true, // Use high-quality recordings
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -2017,10 +2017,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 			}
 		},
 		frenchHorn: {
-			enabled: true,
+			enabled: false,
 			volume: 0.6,
 			maxVoices: 4,
-			useHighQuality: true, // Use high-quality recordings
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: { 
 					enabled: true, 
@@ -2117,10 +2117,10 @@ export const DEFAULT_SETTINGS: SonigraphSettings = {
 		},
 		// Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
 		bassoon: {
-			enabled: true,
+			enabled: false,
 			volume: 0.7,
 			maxVoices: 4,
-			useHighQuality: true, // Use high-quality recordings
+			useHighQuality: false, // Default to synthesis (user can switch to recordings)
 			effects: {
 				reverb: {
 					enabled: true,
