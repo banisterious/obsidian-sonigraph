@@ -3764,24 +3764,24 @@ export class MaterialControlPanelModal extends Modal {
 		this.showTab(familyId); // Refresh the current tab
 	}
 
-	private handleInstrumentEnabledChange(instrument: string, enabled: boolean): void {
+	private async handleInstrumentEnabledChange(instrument: string, enabled: boolean): Promise<void> {
 		logger.info('ui', `Instrument ${instrument} enabled changed`, { enabled });
-		
+
 		const instrumentKey = instrument as keyof typeof this.plugin.settings.instruments;
 		if (this.plugin.settings.instruments[instrumentKey]) {
 			this.plugin.settings.instruments[instrumentKey].enabled = enabled;
-			void this.plugin.saveSettings();
+			await this.plugin.saveSettings();
 		}
-		
+
 		// Update navigation counts immediately
 		void this.updateNavigationCounts();
-		
+
 		// Update audio engine if available
 		if (this.plugin.audioEngine) {
-			void this.plugin.audioEngine.updateSettings(this.plugin.settings);
-			logger.debug('ui', 'Audio engine settings updated after instrument enable/disable', { 
-				instrument, 
-				enabled 
+			await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+			logger.debug('ui', 'Audio engine settings updated after instrument enable/disable', {
+				instrument,
+				enabled
 			});
 		}
 	}
