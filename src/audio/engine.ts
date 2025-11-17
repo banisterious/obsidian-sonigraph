@@ -4497,12 +4497,13 @@ export class AudioEngine {
 				this.instruments.set('saxophone', saxophonePoly);
 			}
 
-			if (this.settings.instruments.tuba?.enabled) {
+			if (this.settings.instruments.tuba?.enabled && !this.instruments.has('tuba')) {
 				const tubaVolume = new Volume(this.settings.instruments.tuba.volume);
 				this.instrumentVolumes.set('tuba', tubaVolume);
 				void tubaPoly.connect(tubaVolume);
 				void tubaVolume.connect(this.volume);
 				this.instruments.set('tuba', tubaPoly);
+				logger.debug('audio', 'Using synthesis for tuba (samples not loaded)');
 			}
 
 			if (this.settings.instruments.bassoon?.enabled) {
