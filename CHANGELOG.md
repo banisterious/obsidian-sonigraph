@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.12] - 2025-11-16
+
+### Added
+- **Harmonium Instrument**: Added harmonium to keyboard family (35 total instruments)
+  - Sample-based playback with 30 samples from CDN (C2-D5 range)
+  - Synthesis fallback with FM-based harmonium modeling
+  - Reverb and chorus effects chain
+
+### Fixed
+- **Code Quality**: Resolved 441 issues from Obsidian automated PR review (round 5)
+  - Removed all eslint-disable-line directives (441 instances)
+  - Replaced explicit any types with proper TypeScript types across codebase
+  - Enhanced type safety while maintaining runtime behavior
+- **Piano Roll Visualization**: Fixed timeline display and note rendering
+  - Corrected scroll position calculations
+  - Fixed playhead synchronization with audio timeline
+  - Improved visual accuracy for note events
+- **Local Soundscape Performance**: Optimized view initialization
+  - Split UI creation from async background initialization
+  - Eliminated 5+ second delay when opening Local Soundscape
+  - Improved user experience with immediate visual feedback
+
 ## [0.17.9] - 2025-11-15
 
 ### Fixed

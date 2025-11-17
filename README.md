@@ -9,7 +9,7 @@ Sonigraph is an Obsidian plugin that maps your vault's structure to music. Notes
 <td align="center" width="50%">
 <img src="docs/images/Obsidian-Sonigraph-Control-Center-v0.16.0.gif" alt="Animated demonstration of the Sonigraph Control Center" width="100%" style="max-width: 600px;"/>
 <br/>
-<em>Control Center: 34-Instrument Orchestra Management</em>
+<em>Control Center: 35-Instrument Orchestra Management</em>
 </td>
 <td align="center" width="50%">
 <img src="docs/images/Obsidian-Sonigraph-Sonic-Graph-v0.16.0.gif" alt="Sonic Graph visualization showing Smart Clustering and enhanced graph features" width="100%" style="max-width: 600px;"/>
@@ -39,7 +39,7 @@ Sonigraph turns your Obsidian vault into an interactive musical instrument. The 
 
 [![Sonigraph Demo - Local Soundscape with Staff Notation](https://img.youtube.com/vi/LMd5SdYptYE/maxresdefault.jpg)](https://youtu.be/LMd5SdYptYE)
 
-*See Local Soundscape's depth-based exploration, real-time staff notation visualization, and the 34-instrument orchestral engine. Click to watch on YouTube.*
+*See Local Soundscape's depth-based exploration, real-time staff notation visualization, and the 35-instrument orchestral engine. Click to watch on YouTube.*
 
 ---
 
@@ -59,10 +59,10 @@ Sonigraph turns your Obsidian vault into an interactive musical instrument. The 
 - Force-directed graph layout with smart clustering
 - Musical variation system to re-roll sonic interpretations
 
-### 🎹 34-Instrument Orchestra
+### 🎹 35-Instrument Orchestra
 
 Full orchestral palette with real-time synthesis:
-- **6 families**: Keyboard, Strings, Woodwinds, Brass, Vocals, Percussion, Electronic
+- **7 families**: Keyboard, Strings, Woodwinds, Brass, Vocals, Percussion, Electronic
 - **Sample-based synthesis** for realistic orchestral timbres
 - **Physics-modeled percussion** (timpani, mallet instruments, gongs)
 - **Electronic synthesis** (lead, bass, arpeggiators with modulation)
@@ -151,15 +151,15 @@ If you find this plugin useful, please consider supporting its development!
 
 ## Current Version
 
-**v0.17.9** - Production Ready
+**v0.17.12** - Production Ready
 
 **Latest Updates:**
+- Harmonium instrument added to keyboard family (35 total instruments) (v0.17.12)
+- Resolved 441 PR review issues: Removed all eslint-disable-line directives (v0.17.12)
+- Fixed Piano Roll visualization: Corrected timeline display and playhead sync (v0.17.12)
+- Local Soundscape performance: Eliminated 5+ second initialization delay (v0.17.12)
 - Major batch fixes: 2,841 issues resolved including Promise handling and type safety (v0.17.9)
-- Removed 93 eslint-disable comments via D3.js and logging type improvements (v0.17.9)
 - Created reusable fix scripts with intelligent edge case detection (v0.17.9)
-- Final Obsidian plugin store compliance: All required PR review issues resolved (v0.17.8)
-- Enhanced linting: Pre-commit hooks now catch all plugin store requirements (v0.17.8)
-- Type safety improvements: 211 additional fixes from Obsidian PR review (v0.17.7)
 
 See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
