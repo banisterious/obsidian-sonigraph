@@ -37,7 +37,7 @@ export class LocalSoundscapeFilterModal extends Modal {
 		void contentEl.empty();
 		void contentEl.addClass('local-soundscape-filter-modal');
 
-		contentEl.createEl('h2', { text: 'Filter Local Soundscape' });
+		contentEl.createEl('h2', { text: 'Filter local soundscape' });
 
 		// Tag filters section
 		void this.createTagFiltersSection(contentEl);

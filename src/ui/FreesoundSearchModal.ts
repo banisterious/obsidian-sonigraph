@@ -474,7 +474,7 @@ export class FreesoundSearchModal extends Modal {
 				attr: { 'aria-label': `Add ${result.name} to library` }
 			});
 			setIcon(addBtn, 'plus');
-			addBtn.createSpan({ text: 'Add to Library' });
+			addBtn.createSpan({ text: 'Add to library' });
 			addBtn.addEventListener('click', () => this.addSampleToLibrary(result));
 		});
 	}

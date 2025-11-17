@@ -23992,16 +23992,16 @@ var init_control_panel = __esm({
         this.updateNavigationCounts();
         this.showTab(familyId);
       }
-      handleInstrumentEnabledChange(instrument, enabled) {
+      async handleInstrumentEnabledChange(instrument, enabled) {
         logger28.info("ui", `Instrument ${instrument} enabled changed`, { enabled });
         const instrumentKey = instrument;
         if (this.plugin.settings.instruments[instrumentKey]) {
           this.plugin.settings.instruments[instrumentKey].enabled = enabled;
-          void this.plugin.saveSettings();
+          await this.plugin.saveSettings();
         }
         void this.updateNavigationCounts();
         if (this.plugin.audioEngine) {
-          void this.plugin.audioEngine.updateSettings(this.plugin.settings);
+          await this.plugin.audioEngine.updateSettings(this.plugin.settings);
           logger28.debug("ui", "Audio engine settings updated after instrument enable/disable", {
             instrument,
             enabled
@@ -68900,33 +68900,42 @@ var brassInstruments = {
         "D3": `D3.${FORMAT_PLACEHOLDER}`,
         "F2": `F2.${FORMAT_PLACEHOLDER}`,
         "F3": `F3.${FORMAT_PLACEHOLDER}`,
-        "A#1": `As1.${FORMAT_PLACEHOLDER}`
+        "A#1": `As1.${FORMAT_PLACEHOLDER}`,
+        "Bb2": `As2.${FORMAT_PLACEHOLDER}`,
+        // Also add flat notation
+        "Bb1": `As1.${FORMAT_PLACEHOLDER}`
       },
       release: 2.2,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/trombone/",
       effects: ["reverb", "filter"],
       maxVoices: 3,
       priority: "medium",
-      category: "brass"
+      category: "brass",
+      octaveOffset: -1
+      // Shift down one octave to match proper trombone range
     },
     tuba: {
       urls: {
-        "A#1": `As1.${FORMAT_PLACEHOLDER}`,
-        "A#2": `As2.${FORMAT_PLACEHOLDER}`,
-        "A#3": `As3.${FORMAT_PLACEHOLDER}`,
-        "D3": `D3.${FORMAT_PLACEHOLDER}`,
-        "D4": `D4.${FORMAT_PLACEHOLDER}`,
-        "D#2": `Ds2.${FORMAT_PLACEHOLDER}`,
         "F1": `F1.${FORMAT_PLACEHOLDER}`,
+        "A#1": `As1.${FORMAT_PLACEHOLDER}`,
+        "D#2": `Ds2.${FORMAT_PLACEHOLDER}`,
         "F2": `F2.${FORMAT_PLACEHOLDER}`,
-        "F3": `F3.${FORMAT_PLACEHOLDER}`
+        "A#2": `As2.${FORMAT_PLACEHOLDER}`,
+        "D3": `D3.${FORMAT_PLACEHOLDER}`,
+        "F3": `F3.${FORMAT_PLACEHOLDER}`,
+        "A#3": `As3.${FORMAT_PLACEHOLDER}`,
+        "D4": `D4.${FORMAT_PLACEHOLDER}`
       },
       release: 3.5,
       baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/tuba/",
-      effects: ["reverb"],
-      maxVoices: 2,
-      priority: "medium",
-      category: "brass"
+      effects: ["reverb", "filter"],
+      // Match trumpet's effects
+      maxVoices: 3,
+      // Match trumpet's maxVoices
+      priority: "high",
+      // Match trumpet's priority
+      category: "brass",
+      octaveOffset: -1
     }
   }
 };
@@ -95668,7 +95677,7 @@ var AudioEngine = class {
     this.effectBusManager = new EffectBusManager();
     this.instrumentConfigLoader = new InstrumentConfigLoader({
       audioFormat: "ogg",
-      // Use OGG since it's the only format available on nbrosowsky CDN
+      // Use OGG - better for Tone.js sample playback
       preloadFamilies: true
     });
     this.instrumentCacheValid = false;
@@ -96304,11 +96313,52 @@ var AudioEngine = class {
     var _a, _b, _c, _d;
     try {
       logger97.debug("instruments", `Initializing ${instrumentName} with high-quality samples`);
+      if (instrumentName === "tuba") {
+        logger97.info("tuba-debug", "Tuba Sampler config details", {
+          baseUrl: config.baseUrl,
+          urlCount: Object.keys(config.urls || {}).length,
+          sampleUrls: config.urls,
+          release: config.release,
+          fullConfig: JSON.stringify(config, null, 2)
+        });
+      }
       const sampler = await new Promise((resolve, reject) => {
         const samplerInstance = new Sampler({
           ...config,
           onload: () => {
             logger97.debug("samples", `${instrumentName} samples loaded successfully`);
+            if (instrumentName === "tuba") {
+              const buffers = samplerInstance["_buffers"];
+              const bufferData = {};
+              if (buffers && buffers["_buffers"]) {
+                const internalBuffers = buffers["_buffers"];
+                if (internalBuffers instanceof Map) {
+                  internalBuffers.forEach((value, key) => {
+                    const valueObj = value;
+                    const buffer = valueObj == null ? void 0 : valueObj["_buffer"];
+                    const url = (buffer == null ? void 0 : buffer["_src"]) || (buffer == null ? void 0 : buffer["url"]) || (valueObj == null ? void 0 : valueObj["url"]) || (valueObj == null ? void 0 : valueObj["_url"]) || "unknown";
+                    const buffersObj2 = buffers;
+                    const samplerObj2 = samplerInstance;
+                    const baseUrl = buffersObj2["baseUrl"] || samplerObj2["baseUrl"] || "no-base-url";
+                    bufferData[key] = {
+                      hasBuffer: !!value,
+                      url,
+                      fullPath: typeof url === "string" && !url.startsWith("http") ? `${baseUrl}${url}` : url,
+                      bufferKeys: value ? Object.keys(valueObj) : []
+                    };
+                  });
+                }
+              }
+              const samplerObj = samplerInstance;
+              const buffersObj = buffers;
+              logger97.info("tuba-debug", "Tuba samples loaded - inspecting Sampler buffers", {
+                hasBuffers: !!buffers,
+                bufferCount: buffers ? Object.keys(buffersObj).length : 0,
+                actualLoadedSamples: bufferData,
+                baseUrlFromSampler: samplerObj["baseUrl"],
+                buffersBaseUrl: buffersObj == null ? void 0 : buffersObj["baseUrl"]
+              });
+            }
             resolve(samplerInstance);
           },
           onerror: (error) => {
@@ -98364,7 +98414,17 @@ var AudioEngine = class {
       return;
     }
     try {
-      const { pitch, duration: duration2, velocity, instrument } = mapping;
+      let { pitch, duration: duration2, velocity, instrument } = mapping;
+      const configs = this.getSamplerConfigs();
+      const instrumentConfig = configs[instrument];
+      if (instrumentConfig == null ? void 0 : instrumentConfig.octaveOffset) {
+        pitch = pitch * Math.pow(2, instrumentConfig.octaveOffset);
+        logger97.debug("octave-transpose", `Applied octave offset to ${instrument}`, {
+          originalPitch: mapping.pitch.toFixed(2),
+          offset: instrumentConfig.octaveOffset,
+          transposedPitch: pitch.toFixed(2)
+        });
+      }
       if (!this.activeNotesPerInstrument.has(instrument)) {
         this.activeNotesPerInstrument.set(instrument, 0);
       }
@@ -98393,7 +98453,34 @@ var AudioEngine = class {
       this.activeNotesPerInstrument.set(instrument, currentNotes + 1);
       const microDelay = Math.random() * 0.01;
       const triggerTime = getContext().currentTime + microDelay;
-      void synth.triggerAttackRelease(detunedFrequency, duration2, triggerTime, velocity);
+      let playbackValue = detunedFrequency;
+      if (synth.constructor.name === "Sampler") {
+        const freq = new Frequency(detunedFrequency, "hz");
+        playbackValue = freq.toNote();
+      }
+      if (instrument === "tuba") {
+        const synthObj = synth;
+        const buffers = synthObj["_buffers"];
+        let bufferInfo = "no-buffers";
+        if (buffers) {
+          const buffersMap = buffers["_buffers"];
+          if (buffersMap instanceof Map) {
+            bufferInfo = `${buffersMap.size} buffers loaded`;
+          }
+        }
+        logger97.info("tuba-tonejs-call", "About to call triggerAttackRelease", {
+          instrument,
+          detunedFrequency: detunedFrequency.toFixed(2),
+          playbackValue: typeof playbackValue === "string" ? playbackValue : playbackValue.toFixed(2),
+          duration: duration2,
+          triggerTime: triggerTime.toFixed(4),
+          velocity: velocity.toFixed(2),
+          synthType: synth.constructor.name,
+          bufferInfo,
+          synthName: synthObj["name"] || "unnamed"
+        });
+      }
+      void synth.triggerAttackRelease(playbackValue, duration2, triggerTime, velocity);
       const timestamp = elapsedTime !== void 0 ? elapsedTime : getContext().currentTime;
       void this.emitNoteEvent(instrument, detunedFrequency, duration2, velocity, timestamp, nodeId, nodeTitle);
       const durationMs = typeof duration2 === "number" ? duration2 * 1e3 : parseFloat(duration2) * 1e3;
@@ -99111,12 +99198,13 @@ var AudioEngine = class {
         void timpaniVolume.connect(this.volume);
         this.instruments.set("timpani", timpaniPoly);
       }
-      if ((_b = this.settings.instruments.xylophone) == null ? void 0 : _b.enabled) {
+      if (((_b = this.settings.instruments.xylophone) == null ? void 0 : _b.enabled) && !this.instruments.has("xylophone")) {
         const xylophoneVolume = new Volume(this.settings.instruments.xylophone.volume);
         this.instrumentVolumes.set("xylophone", xylophoneVolume);
         void xylophonePoly.connect(xylophoneVolume);
         void xylophoneVolume.connect(this.volume);
         this.instruments.set("xylophone", xylophonePoly);
+        logger97.debug("audio", "Using synthesis for xylophone (samples not loaded)");
       }
       if ((_c = this.settings.instruments.strings) == null ? void 0 : _c.enabled) {
         const stringsVolume = new Volume(this.settings.instruments.strings.volume);
@@ -99125,54 +99213,61 @@ var AudioEngine = class {
         void stringsVolume.connect(this.volume);
         this.instruments.set("strings", stringsPoly);
       }
-      if ((_d = this.settings.instruments.flute) == null ? void 0 : _d.enabled) {
+      if (((_d = this.settings.instruments.flute) == null ? void 0 : _d.enabled) && !this.instruments.has("flute")) {
         const fluteVolume = new Volume(this.settings.instruments.flute.volume);
         this.instrumentVolumes.set("flute", fluteVolume);
         void flutePoly.connect(fluteVolume);
         void fluteVolume.connect(this.volume);
         this.instruments.set("flute", flutePoly);
+        logger97.debug("audio", "Using synthesis for flute (samples not loaded)");
       }
-      if ((_e = this.settings.instruments.clarinet) == null ? void 0 : _e.enabled) {
+      if (((_e = this.settings.instruments.clarinet) == null ? void 0 : _e.enabled) && !this.instruments.has("clarinet")) {
         const clarinetVolume = new Volume(this.settings.instruments.clarinet.volume);
         this.instrumentVolumes.set("clarinet", clarinetVolume);
         void clarinetPoly.connect(clarinetVolume);
         void clarinetVolume.connect(this.volume);
         this.instruments.set("clarinet", clarinetPoly);
+        logger97.debug("audio", "Using synthesis for clarinet (samples not loaded)");
       }
-      if ((_f = this.settings.instruments.trumpet) == null ? void 0 : _f.enabled) {
+      if (((_f = this.settings.instruments.trumpet) == null ? void 0 : _f.enabled) && !this.instruments.has("trumpet")) {
         const trumpetVolume = new Volume(this.settings.instruments.trumpet.volume);
         this.instrumentVolumes.set("trumpet", trumpetVolume);
         void trumpetPoly.connect(trumpetVolume);
         void trumpetVolume.connect(this.volume);
         this.instruments.set("trumpet", trumpetPoly);
+        logger97.debug("audio", "Using synthesis for trumpet (samples not loaded)");
       }
-      if ((_g = this.settings.instruments.saxophone) == null ? void 0 : _g.enabled) {
+      if (((_g = this.settings.instruments.saxophone) == null ? void 0 : _g.enabled) && !this.instruments.has("saxophone")) {
         const saxophoneVolume = new Volume(this.settings.instruments.saxophone.volume);
         this.instrumentVolumes.set("saxophone", saxophoneVolume);
         void saxophonePoly.connect(saxophoneVolume);
         void saxophoneVolume.connect(this.volume);
         this.instruments.set("saxophone", saxophonePoly);
+        logger97.debug("audio", "Using synthesis for saxophone (samples not loaded)");
       }
-      if ((_h = this.settings.instruments.tuba) == null ? void 0 : _h.enabled) {
+      if (((_h = this.settings.instruments.tuba) == null ? void 0 : _h.enabled) && !this.instruments.has("tuba")) {
         const tubaVolume = new Volume(this.settings.instruments.tuba.volume);
         this.instrumentVolumes.set("tuba", tubaVolume);
         void tubaPoly.connect(tubaVolume);
         void tubaVolume.connect(this.volume);
         this.instruments.set("tuba", tubaPoly);
+        logger97.debug("audio", "Using synthesis for tuba (samples not loaded)");
       }
-      if ((_i = this.settings.instruments.bassoon) == null ? void 0 : _i.enabled) {
+      if (((_i = this.settings.instruments.bassoon) == null ? void 0 : _i.enabled) && !this.instruments.has("bassoon")) {
         const bassoonVolume = new Volume(this.settings.instruments.bassoon.volume);
         this.instrumentVolumes.set("bassoon", bassoonVolume);
         void bassoonPoly.connect(bassoonVolume);
         void bassoonVolume.connect(this.volume);
         this.instruments.set("bassoon", bassoonPoly);
+        logger97.debug("audio", "Using synthesis for bassoon (samples not loaded)");
       }
-      if ((_j = this.settings.instruments.guitarNylon) == null ? void 0 : _j.enabled) {
+      if (((_j = this.settings.instruments.guitarNylon) == null ? void 0 : _j.enabled) && !this.instruments.has("guitarNylon")) {
         const guitarNylonVolume = new Volume(this.settings.instruments.guitarNylon.volume);
         this.instrumentVolumes.set("guitarNylon", guitarNylonVolume);
         void guitarNylonPoly.connect(guitarNylonVolume);
         void guitarNylonVolume.connect(this.volume);
         this.instruments.set("guitarNylon", guitarNylonPoly);
+        logger97.debug("audio", "Using synthesis for guitarNylon (samples not loaded)");
       }
       logger97.debug("audio", "Lightweight synthesis initialized", {
         instrumentsCreated: this.instruments.size,

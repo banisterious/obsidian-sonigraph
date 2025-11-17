@@ -1,5 +1,6 @@
 // Import Tone.js with ESM-compatible approach
 import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, Frequency } from 'tone';
+import type { SamplerOptions } from 'tone';
 import { App } from 'obsidian';
 import { MusicalMapping } from '../graph/types';
 import { SonigraphSettings, EFFECT_PRESETS, EffectPreset, DEFAULT_SETTINGS, EffectNode, migrateToEnhancedRouting, isValidInstrumentKey } from '../utils/constants';
@@ -48,6 +49,11 @@ interface SamplerWithBuffers {
 interface ToneBuffer {
 	loaded?: boolean;
 }
+
+/**
+ * Union type for all Tone.js effect types used in the audio engine
+ */
+type ToneEffect = Reverb | Chorus | Filter | Delay | Distortion | Compressor;
 
 /**
  * Extended Tone.js synth interface with active voice tracking
@@ -139,7 +145,7 @@ export class AudioEngine {
 		this.voiceManager = new VoiceManager(true); // Enable adaptive quality by default
 		this.effectBusManager = new EffectBusManager();
 		this.instrumentConfigLoader = new InstrumentConfigLoader({
-			audioFormat: 'ogg', // Use OGG since it's the only format available on nbrosowsky CDN
+			audioFormat: 'ogg', // Use OGG - better for Tone.js sample playback
 			preloadFamilies: true
 		});
 		
@@ -944,17 +950,73 @@ export class AudioEngine {
 	private async initializeInstrumentWithSamples(instrumentName: string, config: Record<string, unknown>): Promise<void> {
 		try {
 			logger.debug('instruments', `Initializing ${instrumentName} with high-quality samples`);
-			
+
+			// DEBUG: Log exact config being passed to Sampler
+			if (instrumentName === 'tuba') {
+				logger.info('tuba-debug', 'Tuba Sampler config details', {
+					baseUrl: config.baseUrl,
+					urlCount: Object.keys(config.urls || {}).length,
+					sampleUrls: config.urls,
+					release: config.release,
+					fullConfig: JSON.stringify(config, null, 2)
+				});
+			}
+
 			// Use Promise-based loading for better error handling
 			const sampler = await new Promise<Sampler>((resolve, reject) => {
 				const samplerInstance = new Sampler({
 					...config,
 					onload: () => {
 						logger.debug('samples', `${instrumentName} samples loaded successfully`);
+
+						// DEBUG: Log what Tone.js actually loaded for tuba
+						if (instrumentName === 'tuba') {
+							// Access the internal Buffers object to see what was actually loaded
+							const buffers = (samplerInstance as unknown as Record<string, unknown>)['_buffers'];
+							const bufferData: Record<string, Record<string, unknown>> = {};
+
+							if (buffers && (buffers as Record<string, unknown>)['_buffers']) {
+								// The Buffers class stores samples in _buffers Map
+								const internalBuffers = (buffers as Record<string, unknown>)['_buffers'];
+								if (internalBuffers instanceof Map) {
+									internalBuffers.forEach((value: unknown, key: string) => {
+										// Try multiple paths to get the URL
+										const valueObj = value as Record<string, unknown>;
+										const buffer = valueObj?.['_buffer'] as Record<string, unknown>;
+										const url = buffer?.['_src'] || buffer?.['url'] ||
+												   valueObj?.['url'] || valueObj?.['_url'] ||
+												   'unknown';
+
+										// Also log the full baseUrl that was used
+										const buffersObj = buffers as Record<string, unknown>;
+										const samplerObj = samplerInstance as unknown as Record<string, unknown>;
+										const baseUrl = buffersObj['baseUrl'] || samplerObj['baseUrl'] || 'no-base-url';
+
+										bufferData[key] = {
+											hasBuffer: !!value,
+											url: url as string,
+											fullPath: typeof url === 'string' && !url.startsWith('http') ? `${baseUrl as string}${url}` : url as string,
+											bufferKeys: value ? Object.keys(valueObj) : []
+										};
+									});
+								}
+							}
+
+							const samplerObj = samplerInstance as unknown as Record<string, unknown>;
+							const buffersObj = buffers as Record<string, unknown>;
+							logger.info('tuba-debug', 'Tuba samples loaded - inspecting Sampler buffers', {
+								hasBuffers: !!buffers,
+								bufferCount: buffers ? Object.keys(buffersObj).length : 0,
+								actualLoadedSamples: bufferData,
+								baseUrlFromSampler: samplerObj['baseUrl'],
+								buffersBaseUrl: buffersObj?.['baseUrl']
+							});
+						}
+
 						resolve(samplerInstance);
 					},
 					onerror: (error: unknown) => {
-						logger.error('samples', `${instrumentName} samples failed to load`, { 
+						logger.error('samples', `${instrumentName} samples failed to load`, {
 							error: error?.message || error,
 							config: {
 								baseUrl: config.baseUrl,
@@ -3471,7 +3533,22 @@ export class AudioEngine {
 		}
 
 		try {
-			const { pitch, duration, velocity, instrument } = mapping;
+			let { pitch, duration, velocity, instrument } = mapping;
+
+			// Apply octave offset if configured for this instrument
+			const configs = this.getSamplerConfigs();
+			const instrumentConfig = configs[instrument];
+			if (instrumentConfig?.octaveOffset) {
+				// Transpose pitch by the specified number of octaves
+				// Each octave is a factor of 2 in frequency
+				pitch = pitch * Math.pow(2, instrumentConfig.octaveOffset);
+
+				logger.debug('octave-transpose', `Applied octave offset to ${instrument}`, {
+					originalPitch: mapping.pitch.toFixed(2),
+					offset: instrumentConfig.octaveOffset,
+					transposedPitch: pitch.toFixed(2)
+				});
+			}
 
 			// CRITICAL: Per-instrument polyphony limiting to prevent Tone.js from dropping notes
 			// Initialize counter for this instrument if needed
@@ -3521,8 +3598,42 @@ export class AudioEngine {
 			const microDelay = Math.random() * 0.01; // 0-10ms random stagger
 			const triggerTime = getContext().currentTime + microDelay;
 
+			// For Samplers, convert Hz to note name for proper sample interpolation
+			// Tone.js Sampler works better with note names than raw Hz values
+			let playbackValue: number | string = detunedFrequency;
+			if (synth.constructor.name === 'Sampler') {
+				const freq = new Frequency(detunedFrequency, 'hz');
+				playbackValue = freq.toNote(); // Convert to note name like "G3"
+			}
+
+			// DEBUG: Log exactly what we're passing to Tone.js
+			if (instrument === 'tuba') {
+				// Inspect the Sampler's loaded buffers
+				const synthObj = synth as unknown as Record<string, unknown>;
+				const buffers = synthObj['_buffers'] as Record<string, unknown> | undefined;
+				let bufferInfo = 'no-buffers';
+				if (buffers) {
+					const buffersMap = buffers['_buffers'] as Map<string, unknown> | undefined;
+					if (buffersMap instanceof Map) {
+						bufferInfo = `${buffersMap.size} buffers loaded`;
+					}
+				}
+
+				logger.info('tuba-tonejs-call', 'About to call triggerAttackRelease', {
+					instrument,
+					detunedFrequency: detunedFrequency.toFixed(2),
+					playbackValue: typeof playbackValue === 'string' ? playbackValue : playbackValue.toFixed(2),
+					duration,
+					triggerTime: triggerTime.toFixed(4),
+					velocity: velocity.toFixed(2),
+					synthType: synth.constructor.name,
+					bufferInfo,
+					synthName: synthObj['name'] || 'unnamed'
+				});
+			}
+
 			// Trigger the note with micro-stagger
-			void synth.triggerAttackRelease(detunedFrequency, duration, triggerTime, velocity);
+			void synth.triggerAttackRelease(playbackValue, duration, triggerTime, velocity);
 
 			// Emit note event for visualization
 			// Use provided elapsedTime if available, otherwise fall back to audio context time
@@ -3722,8 +3833,9 @@ export class AudioEngine {
 		});
 
 		switch (mode) {
-			case 'day':
+			case 'day': {
 				return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+			}
 
 			case 'week': {
 				// ISO week number
@@ -3731,13 +3843,15 @@ export class AudioEngine {
 				const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1000));
 				const weekNumber = Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
 				return `${date.getFullYear()}-W${String(weekNumber).padStart(2, '0')}`;
+			}
 
-       }
-			case 'month':
+			case 'month': {
 				return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+			}
 
-			case 'year':
+			case 'year': {
 				return `${date.getFullYear()}`;
+			}
 
 			default:
 				return null;
@@ -4050,11 +4164,12 @@ export class AudioEngine {
 		const sorted = [...notes].sort((a, b) => a.mapping.pitch - b.mapping.pitch);
 
 		switch (strategy) {
-			case 'compact':
+			case 'compact': {
 				// Keep notes close together (already sorted)
 				return sorted;
+			}
 
-			case 'spread':
+			case 'spread': {
 				// Spread notes across octaves
 				return sorted.map((note, i) => ({
 					...note,
@@ -4063,8 +4178,9 @@ export class AudioEngine {
 						pitch: note.mapping.pitch * Math.pow(2, Math.floor(i / 3))
 					}
 				}));
+			}
 
-			case 'drop2':
+			case 'drop2': {
 				// Drop the second-highest note by an octave (jazz voicing)
 				if (sorted.length >= 3) {
 					const result = [...sorted];
@@ -4079,8 +4195,9 @@ export class AudioEngine {
 					return result;
 				}
 				return sorted;
+			}
 
-			case 'drop3':
+			case 'drop3': {
 				// Drop the third-highest note by an octave
 				if (sorted.length >= 4) {
 					const result = [...sorted];
@@ -4095,6 +4212,7 @@ export class AudioEngine {
 					return result;
 				}
 				return sorted;
+			}
 
 			default:
 				return sorted;
@@ -5399,8 +5517,7 @@ export class AudioEngine {
 	/**
 	 * Issue #012: Create Sampler with synthesis fallback for failed CDN loading
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Sampler configuration accepts heterogeneous Tone.js options
-	private createSamplerWithFallback(config: any, instrumentName: string): PolySynth | Sampler {
+	private createSamplerWithFallback(config: Partial<SamplerOptions>, instrumentName: string): PolySynth | Sampler {
 		try {
 			const sampler = new Sampler(config);
 			
@@ -5474,30 +5591,29 @@ export class AudioEngine {
 	/**
 	 * Issue #012: Reconnect instrument to effects chain after fallback creation
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Instrument can be any Tone.js synth or sampler type
-	private reconnectInstrumentToEffects(instrumentName: string, instrument: PolySynth, volume: Volume, effects: Map<string, any>): void {
+	private reconnectInstrumentToEffects(instrumentName: string, instrument: PolySynth, volume: Volume, effects: Map<string, unknown>): void {
 		let output = instrument.connect(volume);
-		
+
 		// Get instrument settings for effects
 		const instrumentSettings = this.settings.instruments[instrumentName as keyof typeof this.settings.instruments];
 		if (!instrumentSettings?.effects) return;
-		
+
 		// Reconnect effects chain
 		if (instrumentSettings.effects.reverb?.enabled) {
-			const reverb = effects.get('reverb');
+			const reverb = effects.get('reverb') as ToneEffect | undefined;
 			if (reverb) output = output.connect(reverb);
 		}
-		
+
 		if (instrumentSettings.effects.chorus?.enabled) {
-			const chorus = effects.get('chorus');
+			const chorus = effects.get('chorus') as ToneEffect | undefined;
 			if (chorus) output = output.connect(chorus);
 		}
-		
+
 		if (instrumentSettings.effects.filter?.enabled) {
-			const filter = effects.get('filter');
+			const filter = effects.get('filter') as ToneEffect | undefined;
 			if (filter) output = output.connect(filter);
 		}
-		
+
 		// Connect to master volume
 		void output.connect(this.volume);
 	}
@@ -5530,19 +5646,21 @@ export class AudioEngine {
 		
 		try {
 			switch (instrumentName) {
-				case 'timpani':
+				case 'timpani': {
 					// Add slight pitch bend for realistic timpani tuning
 					const pitchBend = (Math.random() - 0.5) * 0.1; // ±0.05 semitones
 					this.percussionEngine.triggerTimpani(note, velocity, duration, pitchBend);
 					break;
-					
-				case 'xylophone':
+				}
+
+				case 'xylophone': {
 					// Use harder mallets for brighter attack
 					const hardness = Math.min(velocity * 1.2, 1.0);
 					this.percussionEngine.triggerMallet('xylophone', note, velocity, duration, hardness);
 					break;
-					
-				case 'vibraphone':
+				}
+
+				case 'vibraphone': {
 					// Softer mallets with motor enabled for sustained notes
 					const motorEnabled = duration > 2.0; // Enable motor for long notes
 					if (motorEnabled) {
@@ -5550,12 +5668,14 @@ export class AudioEngine {
 					}
 					this.percussionEngine.triggerMallet('vibraphone', note, velocity, duration, velocity * 0.7);
 					break;
-					
-				case 'gongs':
+				}
+
+				case 'gongs': {
 					// Resonance based on velocity
 					const resonance = Math.min(velocity * 1.5, 1.0);
 					this.percussionEngine.triggerGong(note, velocity, duration, resonance);
 					break;
+				}
 			}
 			
 			logger.debug('advanced-percussion', `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration}`);
@@ -5628,18 +5748,20 @@ export class AudioEngine {
 		
 		try {
 			switch (instrumentName) {
-				case 'leadSynth':
+				case 'leadSynth': {
 					// Dynamic filter modulation based on frequency
 					const filterMod = Math.min(frequency / 2000, 1.0); // Higher frequencies = more filter opening
 					this.electronicEngine.triggerLeadSynth(note, velocity, duration, filterMod);
 					break;
-					
-				case 'bassSynth':
+				}
+
+				case 'bassSynth': {
 					// Sub-oscillator level based on velocity and low frequencies
 					const subLevel = frequency < 200 ? Math.min(velocity * 1.5, 1.0) : velocity * 0.5;
 					this.electronicEngine.triggerBassSynth(note, velocity, duration, subLevel);
 					break;
-					
+				}
+
 				case 'arpSynth': {
 					// Arpeggiator pattern based on note position in scale
 					const patterns = ['up', 'down', 'updown'] as const;
@@ -5667,7 +5789,7 @@ export class AudioEngine {
 	private async triggerEnvironmentalSound(instrumentName: string, frequency: number, duration: number, velocity: number, time: number): Promise<void> {
 		try {
 			switch (instrumentName) {
-				case 'whaleHumpback':
+				case 'whaleHumpback': {
 					// Try external whale samples first if high-quality mode is enabled for this instrument
 					const whaleSettings = this.settings.instruments.whaleHumpback;
 					if (whaleSettings?.useHighQuality) {
@@ -5688,10 +5810,11 @@ export class AudioEngine {
 					// Whale songs are often in very low frequencies with slow pitch bends
 					const whaleFreq = Math.max(frequency * 0.5, 40); // Lower the frequency, minimum 40Hz
 					whaleSynth.triggerAttackRelease(whaleFreq, duration, time, velocity * 0.8); // Match sequence duration, slightly quieter
-					
+
 					logger.debug('environmental-sound', `Whale synthesis triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration.toFixed(3)}`);
-					
+
 					break;
+				}
 			}
 			
 			logger.debug('environmental-sound', `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration}`);

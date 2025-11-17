@@ -69,7 +69,7 @@ export class TemplateTabsModal extends Modal {
             
             // Create description
             contentEl.createEl('p', {
-                text: 'This is a template modal with tabbed interface. Replace this with your modal description.',
+                text: 'This is a template modal with tabbed interface. replace this with your modal description.',
                 cls: 'template-tabs-description'
             });
             
@@ -143,7 +143,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         dataTab.createDiv({ 
-            text: 'Data Management', 
+            text: 'Data management', 
             cls: 'template-tab-label' 
         });
         
@@ -177,7 +177,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         toolsTab.createDiv({ 
-            text: 'Tools & Utilities', 
+            text: 'Tools & utilities', 
             cls: 'template-tab-label' 
         });
         
@@ -194,7 +194,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         helpTab.createDiv({ 
-            text: 'Help & Documentation', 
+            text: 'Help & documentation', 
             cls: 'template-tab-label' 
         });
         
@@ -279,7 +279,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         this.contentContainer.createEl('p', {
-            text: 'Welcome to the template dashboard! This is where you would show overview information, statistics, or quick actions.',
+            text: 'Welcome to the template dashboard! this is where you would show overview information, statistics, or quick actions.',
             cls: 'template-content-description'
         });
         
@@ -317,7 +317,7 @@ export class TemplateTabsModal extends Modal {
         });
         
         this.contentContainer.createEl('p', {
-            text: 'Manage your data items here. This is an example of a data management interface.',
+            text: 'Manage your data items here. this is an example of a data management interface.',
             cls: 'template-content-description'
         });
         

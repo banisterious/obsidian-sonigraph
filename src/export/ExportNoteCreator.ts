@@ -325,10 +325,14 @@ ${audioConfig}
 
         if (quality.sampleRate && quality.bitDepth) {
             // WAV format
-            return `${quality.sampleRate / 1000}kHz, ${quality.bitDepth}-bit`;
+            const sampleRate = Number(quality.sampleRate);
+            const bitDepth = Number(quality.bitDepth);
+            return `${sampleRate / 1000}kHz, ${bitDepth}-bit`;
         } else if (quality.sampleRate && quality.bitRate) {
             // MP3 format
-            return `${quality.sampleRate / 1000}kHz, ${quality.bitRate}kbps`;
+            const sampleRate = Number(quality.sampleRate);
+            const bitRate = Number(quality.bitRate);
+            return `${sampleRate / 1000}kHz, ${bitRate}kbps`;
         }
 
         return 'Custom';

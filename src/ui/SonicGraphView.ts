@@ -976,7 +976,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Control Center button
         const controlCenterBtn = buttonGroup.createEl('button', {
             cls: 'sonic-graph-header-btn sonic-graph-control-center-btn',
-            text: 'Control Center'
+            text: 'Control center'
         });
         const controlCenterIcon = createLucideIcon('keyboard-music', 16);
         void controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
@@ -1047,7 +1047,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const visualHeader = this.visualDisplaySection.createDiv({ cls: 'sonic-graph-visual-display-header' });
 
         const visualTitle = visualHeader.createDiv({ cls: 'sonic-graph-visual-display-title' });
-        visualTitle.createSpan({ text: '📊 Visual Note Display' });
+        visualTitle.createSpan({ text: '📊 visual note display' });
 
         const visualHeaderControls = visualHeader.createDiv({ cls: 'sonic-graph-visual-display-controls' });
 
@@ -1439,7 +1439,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             this.lastAudioNodeIndex = -1;
             
             // Start animation
-            this.playButton.setButtonText('Pause Animation');
+            this.playButton.setButtonText('Pause animation');
             this.timelineContainer.classList.remove('timeline-hidden');
             this.timelineContainer.classList.add('timeline-visible');
             
@@ -2311,7 +2311,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // Independence toggle
         new Setting(content)
-            .setName('Independent from Content-Aware Mapping')
+            .setName('Independent from content-aware mapping')
             .setDesc('Operate independently of phase 4.1 content-aware mapping system')
             .addToggle(toggle => toggle
                 .setValue(settings.independentFromContentAware)
@@ -2444,7 +2444,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated config: ${key} = ${value}`);
+        logger.debug('connection-type-mapping', `Updated config: ${key} = ${String(value)}`);
     }
 
     /**
@@ -2461,7 +2461,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${value}`);
+        logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${String(value)}`);
     }
 
     /**
@@ -2480,7 +2480,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${value}`);
+        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${String(value)}`);
     }
 
     /**
@@ -2706,7 +2706,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             { value: 'week', text: 'Week' },
             { value: 'day', text: 'Day' },
             { value: 'hour', text: 'Hour' },
-            { value: 'custom', text: 'Custom Range' }
+            { value: 'custom', text: 'Custom range' }
         ];
 
         granularityOptions.forEach(option => {
@@ -2804,9 +2804,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
 
         const spreadingModes = [
-            { value: 'none', text: 'None - No spreading', desc: 'Events play exactly when files were created. May cause audio crackling if many files were created simultaneously.' },
-            { value: 'gentle', text: 'Gentle - Light spreading', desc: 'Slightly separates clustered events over a small time window. Recommended for most users.' },
-            { value: 'aggressive', text: 'Aggressive - Strong spreading', desc: 'Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations.' }
+            { value: 'none', text: 'None - no spreading', desc: 'Events play exactly when files were created. May cause audio crackling if many files were created simultaneously.' },
+            { value: 'gentle', text: 'Gentle - light spreading', desc: 'Slightly separates clustered events over a small time window. Recommended for most users.' },
+            { value: 'aggressive', text: 'Aggressive - strong spreading', desc: 'Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations.' }
         ];
 
         spreadingModes.forEach(mode => {
@@ -3220,7 +3220,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Performance note
         const performanceNote = container.createDiv({ cls: 'sonic-graph-setting-item' });
         performanceNote.createEl('div', {
-            text: 'Continuous layers target <5% additional CPU usage and work alongside existing node-based audio', 
+            text: 'Continuous layers target <5% additional cpu usage and work alongside existing node-based audio', 
             cls: 'sonic-graph-setting-description sonic-graph-info' 
         });
     }
@@ -5307,7 +5307,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const loggingSelect = loggingItem.createEl('select', { cls: 'sonic-graph-setting-select' });
         const logLevels = [
             { value: 'off', text: 'Off' },
-            { value: 'error', text: 'Errors Only' },
+            { value: 'error', text: 'Errors only' },
             { value: 'warn', text: 'Warnings' },
             { value: 'info', text: 'Info' },
             { value: 'debug', text: 'Debug' }
@@ -5548,8 +5548,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     private updateLayoutSetting(key: keyof SonicGraphSettings['layout'], value: unknown): void {
         // Performance optimization: Use debounced settings updates
         this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
-        
-        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${value}`);
+
+        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${String(value)}`);
     }
 
     /**

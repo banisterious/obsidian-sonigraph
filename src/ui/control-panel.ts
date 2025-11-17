@@ -454,7 +454,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Quick Start Card
 		const quickStartCard = new MaterialCard({
-			title: 'Quick Start',
+			title: 'Quick start',
 			iconName: 'zap',
 			subtitle: 'Get up and running in 3 steps',
 			elevation: 1
@@ -472,14 +472,14 @@ export class MaterialControlPanelModal extends Modal {
 		});
 
 		stepsList.createEl('li', {
-			text: 'Try Local Soundscape: right-click any note in your vault and select "open in Local Soundscape" to hear how it connects to other notes.'
+			text: 'Try local soundscape: right-click any note in your vault and select"open in Local Soundscape" to hear how it connects to other notes.'
 		});
 
 		this.contentContainer.appendChild(quickStartCard.getElement());
 
 		// Key Features Card
 		const featuresCard = new MaterialCard({
-			title: 'Key Features',
+			title: 'Key features',
 			iconName: 'star',
 			subtitle: 'What you can do with Sonigraph',
 			elevation: 1
@@ -490,23 +490,23 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Local Soundscape feature
 		const lsFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
-		lsFeature.createEl('strong', { text: 'Local Soundscape' });
+		lsFeature.createEl('strong', { text: 'Local soundscape' });
 		lsFeature.createEl('p', {
-			text: 'Visualize and sonify a single note and its connections. notes at different depths play different instrument families, creating layers of harmony. enable musical enhancements in the Local Soundscape tab for richer, more musical results.'
+			text: 'Visualize and sonify a single note and its connections. notes at different depths play different instrument families, creating layers of harmony. enable musical enhancements in the local soundscape tab for richer, more musical results.'
 		});
 
 		// Sonic Graph feature
 		const sgFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
 		sgFeature.createEl('strong', { text: 'Sonic Graph' });
 		sgFeature.createEl('p', {
-			text: 'See and hear your entire vault as an animated graph. Watch temporal patterns unfold as your knowledge base comes alive with sound and motion.'
+			text: 'See and hear your entire vault as an animated graph. watch temporal patterns unfold as your knowledge base comes alive with sound and motion.'
 		});
 
 		// Musical Enhancements feature
 		const meFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
 		meFeature.createEl('strong', { text: 'Musical enhancements' });
 		meFeature.createEl('p', {
-			text: 'Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. configure these in the Local Soundscape tab.'
+			text: 'Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. configure these in the local soundscape tab.'
 		});
 
 		// Continuous Layers feature
@@ -520,7 +520,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Musical Enhancements Guide Card
 		const meGuideCard = new MaterialCard({
-			title: 'Musical Enhancements Guide',
+			title: 'Musical enhancements guide',
 			iconName: 'music',
 			subtitle: 'Making your soundscapes more musical',
 			elevation: 1
@@ -564,7 +564,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Tips & Best Practices Card
 		const tipsCard = new MaterialCard({
-			title: 'Tips & Best Practices',
+			title: 'Tips & best practices',
 			iconName: 'lightbulb',
 			subtitle: 'Get the most out of Sonigraph',
 			elevation: 1
@@ -586,22 +586,22 @@ export class MaterialControlPanelModal extends Modal {
 		});
 
 		tipsList.createEl('li', {
-			text: 'Adjust Depth in Local Soundscape: Depth 2 is ideal for most notes. Higher depths show more context but may become overwhelming.'
+			text: 'Adjust depth in local soundscape: depth 2 is ideal for most notes. higher depths show more context but may become overwhelming.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Monitor Performance: Check the Status tab to see active voices and ensure your system isn\'t overloaded.'
+			text: 'Monitor performance: check the status tab to see active voices and ensure your system isn\'t overloaded.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Experiment with Turn-Taking: Call-Response and Solos patterns dramatically reduce sonic congestion while adding musical dialogue.'
+			text: 'Experiment with turn-taking: call-response and solos patterns dramatically reduce sonic congestion while adding musical dialogue.'
 		});
 
 		this.contentContainer.appendChild(tipsCard.getElement());
 
 		// Help & Resources Card
 		const helpCard = new MaterialCard({
-			title: 'Help & Resources',
+			title: 'Help & resources',
 			iconName: 'help-circle',
 			subtitle: 'Need more information?',
 			elevation: 1
@@ -628,7 +628,7 @@ export class MaterialControlPanelModal extends Modal {
 		commandsLi.appendText(' Search "Sonigraph" in Obsidian\'s command palette (Ctrl/Cmd + P) to see all available commands.');
 
 		const feedbackLi = helpList.createEl('li');
-		feedbackLi.createEl('strong', { text: 'Issues & Feedback:' });
+		feedbackLi.createEl('strong', { text: 'Issues & feedback:' });
 		void feedbackLi.appendText(' Report bugs or request features on ');
 		feedbackLi.createEl('a', {
 			text: 'GitHub Issues',
@@ -714,7 +714,7 @@ export class MaterialControlPanelModal extends Modal {
 		cpuStat.createSpan({ cls: 'osp-stat-label', text: 'CPU' });
 		
 		const voicesStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
-		voicesStat.createSpan({ cls: 'osp-stat-value', text: `${status.audio.currentNotes || 0}` });
+		voicesStat.createSpan({ cls: 'osp-stat-value', text: `${Number(status.audio.currentNotes) || 0}` });
 		voicesStat.createSpan({ cls: 'osp-stat-label', text: 'Voices' });
 		
 		const contextStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
@@ -1707,7 +1707,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Timing window
 		new Setting(container)
 			.setName('Timing window')
-			.setDesc('Notes arriving within this window are grouped into chords. Start with 50-100ms for simultaneous notes. WARNING: Values over 200ms will group sequential notes into large chords.')
+			.setDesc('Notes arriving within this window are grouped into chords. start with 50-100ms for simultaneous notes. warning: values over 200ms will group sequential notes into large chords.')
 			.addSlider(slider => slider
 				.setLimits(20, 500, 10)
 				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.timingWindow || 50)
@@ -2082,13 +2082,13 @@ export class MaterialControlPanelModal extends Modal {
 		const globalChipSet = globalContent.createDiv({ cls: 'ospcc-chip-set' });
 		
 		const enableAllChip = new ActionChip({
-			text: 'Enable All Instruments',
+			text: 'Enable all instruments',
 			iconName: 'checkCircle',
 			onToggle: (selected) => this.handleGlobalAction('enableAll', selected)
 		});
 		
 		const resetAllChip = new ActionChip({
-			text: 'Reset All Settings',
+			text: 'Reset all settings',
 			iconName: 'reset',
 			onToggle: (selected) => this.handleGlobalAction('resetAll', selected)
 		});
@@ -2328,7 +2328,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Description
 		const description = content.createDiv({ cls: 'osp-control-description' });
-		description.createEl('p', { text: 'Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections.' });
+		description.createEl('p', { text: 'Transform your knowledge graph into a temporal audio-visual experience. notes appear chronologically with musical accompaniment based on content and connections.' });
 
 		// Settings section
 		const settingsSection = content.createDiv({ cls: 'osp-settings-section osp-settings-section--spaced' });
@@ -2388,7 +2388,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Add reset button at the top
 		const resetButtonContainer = content.createDiv({ cls: 'osp-sonic-graph-reset-container' });
 		const resetButton = new MaterialButton({
-			text: 'Reset to Defaults',
+			text: 'Reset to defaults',
 			icon: 'rotate-ccw',
 			variant: 'outlined',
 			onClick: () => this.resetSonicGraphSettings()
@@ -2814,20 +2814,20 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const avgVolumeStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
 		avgVolumeStat.createSpan({ cls: 'osp-stat-value', text: '0.7' });
-		avgVolumeStat.createSpan({ cls: 'osp-stat-label', text: 'Avg Vol' });
+		avgVolumeStat.createSpan({ cls: 'osp-stat-label', text: 'Avg vol' });
 		
 		// Compact bulk actions
 		const actionsRow = content.createDiv({ cls: 'osp-actions-row' });
 		
 		const enableAllBtn = actionsRow.createEl('button', { 
 			cls: 'osp-action-btn osp-action-btn--primary',
-			text: 'Enable All'
+			text: 'Enable all'
 		});
 		enableAllBtn.addEventListener('click', () => this.handleBulkAction(familyId, 'enableAll', true));
 		
 		const disableAllBtn = actionsRow.createEl('button', { 
 			cls: 'osp-action-btn osp-action-btn--secondary',
-			text: 'Disable All'
+			text: 'Disable all'
 		});
 		disableAllBtn.addEventListener('click', () => this.handleBulkAction(familyId, 'disableAll', true));
 		
@@ -2873,7 +2873,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private createRhythmicPercussionCard(): void {
 		const card = new MaterialCard({
-			title: 'Rhythmic Percussion (Accent Layer)',
+			title: 'Rhythmic percussion (accent layer)',
 			iconName: 'drum',
 			subtitle: 'Add drum accents to enhance rhythmic emphasis',
 			elevation: 1
@@ -4660,7 +4660,7 @@ All whale samples are authentic recordings from marine research institutions and
 		if (enabledInstruments.length === 0) {
 			content.createDiv({
 				cls: 'osp-warning-message',
-				text: '⚠️ No instruments are currently enabled. Enable instruments in their respective tabs to use Local Soundscape.'
+				text: '⚠️ no instruments are currently enabled. enable instruments in their respective tabs to use local soundscape.'
 			});
 		} else {
 			const infoDiv = content.createDiv({ cls: 'osp-info-message' });
@@ -4821,7 +4821,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 		// Description
 		content.createEl('p', {
-			text: 'Limit the number of notes per depth level. Higher values create longer, more detailed soundscapes but may impact performance.',
+			text: 'Limit the number of notes per depth level. higher values create longer, more detailed soundscapes but may impact performance.',
 			cls: 'setting-item-description'
 		});
 
@@ -4908,7 +4908,7 @@ All whale samples are authentic recordings from marine research institutions and
 		// Preset selector
 		new Setting(content)
 			.setName('Musicality preset')
-			.setDesc('Choose a pre-configured style, or select Custom to fine-tune individual parameters')
+			.setDesc('Choose a pre-configured style, or select custom to fine-tune individual parameters')
 			.addDropdown(dropdown => {
 				dropdown
 					.addOption('conservative', 'Conservative - Subtle, restrained expression')
@@ -4968,7 +4968,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Timing Humanization
 			new Setting(customControls)
 				.setName('Timing humanization')
-				.setDesc('Micro-timing variation in milliseconds (50-250ms). Higher values create looser, more organic groove.')
+				.setDesc('Micro-timing variation in milliseconds (50-250ms). higher values create looser, more organic groove.')
 				.addSlider(slider => {
 					slider
 						.setLimits(50, 250, 25)
@@ -5001,7 +5001,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Harmonic Adventurousness
 			new Setting(customControls)
 				.setName('Harmonic adventurousness')
-				.setDesc('Frequency of exotic chords and voice leading (0-100%). Higher values add more chromatic color and jazz harmonies.')
+				.setDesc('Frequency of exotic chords and voice leading (0-100%). higher values add more chromatic color and jazz harmonies.')
 				.addSlider(slider => {
 					slider
 						.setLimits(0, 100, 5)
@@ -5034,7 +5034,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Dynamic Range
 			new Setting(customControls)
 				.setName('Dynamic range')
-				.setDesc('Velocity variation between notes. Extreme creates dramatic contrasts from whisper-quiet to forte.')
+				.setDesc('Velocity variation between notes. extreme creates dramatic contrasts from whisper-quiet to forte.')
 				.addDropdown(dropdown => {
 					dropdown
 						.addOption('subtle', 'Subtle - Even, balanced dynamics')
@@ -5056,7 +5056,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Polyphonic Density
 			new Setting(customControls)
 				.setName('Polyphonic density')
-				.setDesc('How much embellishments overlap with the center phrase. Maximum creates rich, layered textures.')
+				.setDesc('How much embellishments overlap with the center phrase. maximum creates rich, layered textures.')
 				.addDropdown(dropdown => {
 					dropdown
 						.addOption('sparse', 'Sparse - Minimal overlap, clear separation')
@@ -5078,7 +5078,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Melodic Independence
 			new Setting(customControls)
 				.setName('Melodic independence')
-				.setDesc('How freely embellishments deviate from center melody (0-100%). Higher values create more independent counterpoint.')
+				.setDesc('How freely embellishments deviate from center melody (0-100%). higher values create more independent counterpoint.')
 				.addSlider(slider => {
 					slider
 						.setLimits(0, 100, 5)
@@ -5111,7 +5111,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Voice Leading Style
 			new Setting(customControls)
 				.setName('Voice leading style')
-				.setDesc('Approach to harmonic movement between chords. Chromatic creates jazzy, sophisticated progressions.')
+				.setDesc('Approach to harmonic movement between chords. chromatic creates jazzy, sophisticated progressions.')
 				.addDropdown(dropdown => {
 					dropdown
 						.addOption('smooth', 'Smooth - Minimal voice movement, consonant')
@@ -5145,7 +5145,7 @@ All whale samples are authentic recordings from marine research institutions and
 		const card = new MaterialCard({
 			title: 'Tips & best practices',
 			iconName: 'lightbulb',
-			subtitle: 'Get the most out of Local Soundscape',
+			subtitle: 'Get the most out of local soundscape',
 			elevation: 1
 		});
 
@@ -5154,37 +5154,37 @@ All whale samples are authentic recordings from marine research institutions and
 
 		// Tip 1: Depth settings
 		const tip1 = tipsList.createEl('li');
-		tip1.createEl('strong', { text: 'Start with Depth 2:' });
+		tip1.createEl('strong', { text: 'Start with depth 2:' });
 		void tip1.appendText(' This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.');
 
 		// Tip 2: Musical Enhancements
 		const tip2 = tipsList.createEl('li');
-		tip2.createEl('strong', { text: 'Enable Scale Quantization:' });
+		tip2.createEl('strong', { text: 'Enable scale quantization:' });
 		tip2.appendText(' This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.');
 
 		// Tip 3: Clustering
 		const tip3 = tipsList.createEl('li');
-		tip3.createEl('strong', { text: 'Use Clustering to Discover Patterns:' });
+		tip3.createEl('strong', { text: 'Use clustering to discover patterns:' });
 		void tip3.appendText(' Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.');
 
 		// Tip 4: Turn-Taking
 		const tip4 = tipsList.createEl('li');
-		tip4.createEl('strong', { text: 'Reduce Sonic Congestion:' });
+		tip4.createEl('strong', { text: 'Reduce Sonic congestion:' });
 		tip4.appendText(' Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.');
 
 		// Tip 5: Filtering
 		const tip5 = tipsList.createEl('li');
-		tip5.createEl('strong', { text: 'Filter by Tags/Folders:' });
+		tip5.createEl('strong', { text: 'Filter by tags/folders:' });
 		void tip5.appendText(' Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.');
 
 		// Tip 6: Performance
 		const tip6 = tipsList.createEl('li');
-		tip6.createEl('strong', { text: 'Manage Performance:' });
+		tip6.createEl('strong', { text: 'Manage performance:' });
 		void tip6.appendText(' For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.');
 
 		// Tip 7: Workflow integration
 		const tip7 = tipsList.createEl('li');
-		tip7.createEl('strong', { text: 'Daily Review Workflow:' });
+		tip7.createEl('strong', { text: 'Daily review workflow:' });
 		void tip7.appendText(' Right-click your daily note and "Open in Local Soundscape" to hear what you\'re connecting to. This reveals emerging themes in your thinking.');
 
 		this.contentContainer.appendChild(card.getElement());
@@ -5206,7 +5206,7 @@ All whale samples are authentic recordings from marine research institutions and
 		// FAQ 1: Why does the music sound simplistic?
 		const faq1 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q1 = faq1.createEl('h4', { cls: 'osp-faq-question' });
-		q1.createEl('strong', { text: 'Q: Why does the music sound simplistic or repetitive?' });
+		q1.createEl('strong', { text: 'Q: why does the music sound simplistic or repetitive?' });
 		void q1.appendText(' ');
 		q1.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
@@ -5232,13 +5232,13 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a1ol = a1.createEl('ol');
 		const a1oli1 = a1ol.createEl('li');
-		a1oli1.createEl('strong', { text: 'Enable Musical Enhancements' });
+		a1oli1.createEl('strong', { text: 'Enable musical enhancements' });
 		a1oli1.appendText(' (above) - This is the most impactful change:');
 		const a1oli1ul = a1oli1.createEl('ul');
-		a1oli1ul.createEl('li', { text: 'Scale Quantization creates harmonic consonance' });
-		a1oli1ul.createEl('li', { text: 'Chord Voicing adds polyphonic richness' });
-		a1oli1ul.createEl('li', { text: 'Rhythmic Patterns organize timing musically' });
-		a1oli1ul.createEl('li', { text: 'Tension Tracking creates emotional arcs' });
+		a1oli1ul.createEl('li', { text: 'Scale quantization creates harmonic consonance' });
+		a1oli1ul.createEl('li', { text: 'Chord voicing adds polyphonic richness' });
+		a1oli1ul.createEl('li', { text: 'Rhythmic patterns organize timing musically' });
+		a1oli1ul.createEl('li', { text: 'Tension tracking creates emotional arcs' });
 		a1oli1ul.createEl('li', { text: 'Turn-Taking reduces congestion through dialogue' });
 
 		const a1oli2 = a1ol.createEl('li');
@@ -5254,12 +5254,12 @@ All whale samples are authentic recordings from marine research institutions and
 		void a1oli4.appendText(' - Different clustering methods reveal different organizational patterns in your vault');
 
 		const a1p3 = a1.createEl('p');
-		a1p3.createEl('em', { text: 'Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.' });
+		a1p3.createEl('em', { text: 'Note: the plugin reads content inside callouts and includes it in word counts when using accurate parsing (sonic Graph mode). callout markers are stripped but the text content is counted.' });
 
 		// FAQ 2: Why only one node / sparse vault issue
 		const faq2 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q2 = faq2.createEl('h4', { cls: 'osp-faq-question' });
-		q2.createEl('strong', { text: 'Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?' });
+		q2.createEl('strong', { text: 'Q: I only see one node, or my soundscapes are simple even with musical enhancements enabled. why?' });
 		void q2.appendText(' ');
 		q2.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
@@ -5284,23 +5284,23 @@ All whale samples are authentic recordings from marine research institutions and
 		void a2li3.appendText(' Tag/folder filters are excluding connected notes');
 
 		const a2p3 = a2.createEl('p');
-		a2p3.createEl('strong', { text: 'What Musical Enhancements need to work:' });
+		a2p3.createEl('strong', { text: 'What musical enhancements need to work:' });
 
 		const a2ul2 = a2.createEl('ul');
 		const a2li4 = a2ul2.createEl('li');
 		a2li4.createEl('strong', { text: 'Turn-Taking:' });
 		void a2li4.appendText(' Needs 3+ notes at different depths to create call-response dialogue');
 		const a2li5 = a2ul2.createEl('li');
-		a2li5.createEl('strong', { text: 'Chord Voicing:' });
+		a2li5.createEl('strong', { text: 'Chord voicing:' });
 		void a2li5.appendText(' Needs 2+ notes at same depth to build harmonies');
 		const a2li6 = a2ul2.createEl('li');
-		a2li6.createEl('strong', { text: 'Rhythmic Patterns:' });
+		a2li6.createEl('strong', { text: 'Rhythmic patterns:' });
 		void a2li6.appendText(' Needs 4+ notes to organize into musical patterns');
 		const a2li7 = a2ul2.createEl('li');
-		a2li7.createEl('strong', { text: 'Tension Tracking:' });
+		a2li7.createEl('strong', { text: 'Tension tracking:' });
 		void a2li7.appendText(' Needs 5+ notes to create narrative arcs');
 		const a2li8 = a2ul2.createEl('li');
-		a2li8.createEl('strong', { text: 'Scale Quantization:' });
+		a2li8.createEl('strong', { text: 'Scale quantization:' });
 		void a2li8.appendText(' Works with any number of notes, but more varied with higher counts');
 
 		const a2p4 = a2.createEl('p');
@@ -5308,7 +5308,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a2ol = a2.createEl('ol');
 		const a2oli1 = a2ol.createEl('li');
-		a2oli1.createEl('strong', { text: 'Enable Continuous Layers:' });
+		a2oli1.createEl('strong', { text: 'Enable continuous layers:' });
 		void a2oli1.appendText(' Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
 		a2oli1.createEl('strong', { text: 'Important:' });
 		void a2oli1.appendText(' You must enable at least one Freesound sample in the Layers tab\'s Sample Browser for continuous layers to produce audio.');
@@ -5336,13 +5336,13 @@ All whale samples are authentic recordings from marine research institutions and
 		const a2p5 = a2.createEl('p');
 		a2p5.createEl('strong', { text: 'For sparse vaults:' });
 		void a2p5.appendText(' If your vault generally has limited connections, ');
-		a2p5.createEl('strong', { text: 'Continuous Layers' });
+		a2p5.createEl('strong', { text: 'Continuous layers' });
 		a2p5.appendText(' are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.');
 
 		// FAQ 3: How to create musically rich notes
 		const faq3 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q3 = faq3.createEl('h4', { cls: 'osp-faq-question' });
-		q3.createEl('strong', { text: 'Q: How do I create musically rich notes for playback?' });
+		q3.createEl('strong', { text: 'Q: how do I create musically rich notes for playback?' });
 		void q3.appendText(' ');
 		q3.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
@@ -5353,7 +5353,7 @@ All whale samples are authentic recordings from marine research institutions and
 		void a3p1.appendText(' The richness of your soundscape depends primarily on your note\'s link structure and network density. Here\'s what creates the most beautiful, harmonically rich playback:');
 
 		const a3p2 = a3.createEl('p');
-		a3p2.createEl('strong', { text: 'The Depth slider and link structure:' });
+		a3p2.createEl('strong', { text: 'The depth slider and link structure:' });
 
 		const a3ul1 = a3.createEl('ul');
 		const a3li1 = a3ul1.createEl('li');
@@ -5389,7 +5389,7 @@ All whale samples are authentic recordings from marine research institutions and
 		a3li7.appendText(' Add custom metadata for explicit control over musical parameters (see documentation)');
 
 		const a3p4 = a3.createEl('p');
-		a3p4.createEl('em', { text: 'Important: Heading levels (# vs ## vs ###) do NOT currently affect musical depth or layering - only the link network structure does. The Depth slider controls network exploration radius, not markdown hierarchy.' });
+		a3p4.createEl('em', { text: 'Important: heading levels (# vs ## vs ###) do not currently affect musical depth or layering - only the link network structure does. the depth slider controls network exploration radius, not markdown hierarchy.' });
 
 		this.contentContainer.appendChild(card.getElement());
 	}

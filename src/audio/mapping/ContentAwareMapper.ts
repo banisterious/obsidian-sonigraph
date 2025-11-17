@@ -316,12 +316,12 @@ export class ContentAwareMapper {
         let range = 12; // One octave
 
         switch (characteristics.fileType) {
-            case 'image':
+            case 'image': {
                 // Image dimensions influence pitch range
                 if (characteristics.metadata.imageMetadata) {
                     const { width, height } = characteristics.metadata.imageMetadata;
                     const aspectRatio = width / height;
-                    
+
                     if (aspectRatio > 1.5) { // Wide images
                         baseNote = 48; // Lower pitch
                         range = 24; // Wider range
@@ -331,9 +331,10 @@ export class ContentAwareMapper {
                     }
                 }
                 break;
+            }
 
             case 'audio':
-            case 'video':
+            case 'video': {
                 // Audio duration influences pitch range
                 if (characteristics.metadata.mediaDuration) {
                     const minutes = characteristics.metadata.mediaDuration / 60;
@@ -346,8 +347,9 @@ export class ContentAwareMapper {
                     }
                 }
                 break;
+            }
 
-            case 'document':
+            case 'document': {
                 // PDF page count influences pitch
                 if (characteristics.metadata.pageCount) {
                     const pages = characteristics.metadata.pageCount;
@@ -355,6 +357,7 @@ export class ContentAwareMapper {
                     range = Math.min(24, pages + 8); // More pages = wider range
                 }
                 break;
+            }
 
             case 'text': {
                 // Word count and heading structure influence pitch
@@ -499,11 +502,12 @@ export class ContentAwareMapper {
             case 'document':
                 richness += 0.1; // Documents have structured richness
                 break;
-            case 'text':
+            case 'text': {
                 // Text richness depends on content structure
                 const wordCount = characteristics.metadata.wordCount || 0;
                 if (wordCount > 1000) richness += 0.1;
                 break;
+            }
         }
 
         // Relationship richness
@@ -603,13 +607,14 @@ export class ContentAwareMapper {
 
         // File type influences harmonic approach
         switch (characteristics.fileType) {
-            case 'text':
+            case 'text': {
                 // Rich text content creates harmonic complexity
                 const wordCount = characteristics.metadata.wordCount || 0;
                 if (wordCount > 500) {
                     density += 0.1;
                 }
                 break;
+            }
             case 'document':
                 density += 0.1; // Documents tend to be harmonically rich
                 break;

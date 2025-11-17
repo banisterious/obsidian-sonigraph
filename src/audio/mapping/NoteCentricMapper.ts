@@ -358,35 +358,40 @@ export class NoteCentricMapper {
 						if ((seed + i) % 4 === 0) pitch -= ascendStep;
 						break;
          }
-					case 'descending':
+					case 'descending': {
 						// Mix stepwise and leaps - more natural descent
 						const descendStep = ((seed + i * 7) % 5) + 1;
 						pitch -= descendStep * i;
 						if ((seed + i) % 4 === 0) pitch += descendStep;
 						break;
-					case 'arch':
+					}
+					case 'arch': {
 						// More expressive arch with varied apex
 						const archHeight = 6 + ((seed % 5) * 2); // Variable height
 						pitch += Math.sin(posInPhrase * Math.PI) * archHeight;
 						// Add wobble to the curve
 						pitch += Math.sin(posInPhrase * Math.PI * 3) * 2;
 						break;
-					case 'valley':
+					}
+					case 'valley': {
 						// More expressive valley
 						const valleyDepth = 6 + ((seed % 5) * 2);
 						pitch -= Math.sin(posInPhrase * Math.PI) * valleyDepth;
 						pitch += Math.sin(posInPhrase * Math.PI * 3) * 2;
 						break;
-					case 'oscillating':
+					}
+					case 'oscillating': {
 						// Less predictable oscillation
 						const oscSize = 2 + ((seed + i) % 4);
 						pitch += (i % 2 === 0 ? oscSize : -oscSize) * (1 + i * 0.2);
 						break;
-					case 'static':
+					}
+					case 'static': {
 						// Repeating with more varied embellishments
 						const embellish = ((seed + i * 13) % 7) - 3; // -3 to +3
 						pitch += embellish;
 						break;
+					}
 				}
 
 				// Add expressive variations based on prose features
@@ -1386,13 +1391,14 @@ export class NoteCentricMapper {
 					rhythm: motif.rhythmPattern.map(d => d * 2)
 				};
 
-			case 'fragment':
+			case 'fragment': {
 				// Use only first 2-3 notes (fragmentation creates tension)
 				const fragmentLength = Math.min(3, motif.pitchPattern.length);
 				return {
 					melody: absoluteMelody.slice(0, fragmentLength).map(p => p + transposition),
 					rhythm: motif.rhythmPattern.slice(0, fragmentLength)
 				};
+			}
 
 			default:
 				return {

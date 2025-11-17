@@ -193,7 +193,7 @@ export class ConnectionTypeMappingPanel {
 
         // Independence from content-aware mapping
         new Setting(section)
-            .setName('Independent from Content-Aware Mapping')
+            .setName('Independent from content-aware mapping')
             .setDesc('Operate independently of phase 4.1 content-aware mapping system')
             .addToggle(toggle => {
                 this.independentToggle = toggle;

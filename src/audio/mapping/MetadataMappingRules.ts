@@ -289,17 +289,19 @@ export class MetadataMappingRules {
         
         switch (condition.operator) {
             case 'equals': {
-                const hasTag = tags.includes(condition.value);
-                return { matched: hasTag, reason: hasTag ? `Has tag ${condition.value}` : `Missing tag ${condition.value}` };
+                const tagValue = String(condition.value);
+                const hasTag = tags.includes(tagValue);
+                return { matched: hasTag, reason: hasTag ? `Has tag ${tagValue}` : `Missing tag ${tagValue}` };
             }
 
             case 'contains': {
+                const tagValue = String(condition.value);
                 const hasPartialTag = tags.some(tag =>
                     condition.caseSensitive ?
-                    tag.includes(condition.value) :
-                    tag.toLowerCase().includes(condition.value.toLowerCase())
+                    tag.includes(tagValue) :
+                    tag.toLowerCase().includes(tagValue.toLowerCase())
                 );
-                return { matched: hasPartialTag, reason: hasPartialTag ? `Tag contains ${condition.value}` : `No tag contains ${condition.value}` };
+                return { matched: hasPartialTag, reason: hasPartialTag ? `Tag contains ${tagValue}` : `No tag contains ${tagValue}` };
             }
 
             default:
@@ -317,7 +319,8 @@ export class MetadataMappingRules {
         }
 
         // Parse condition value as "property:expectedValue" or just "property" for existence check
-        const [property, expectedValue] = condition.value.split(':');
+        const valueStr = String(condition.value);
+        const [property, expectedValue] = valueStr.split(':');
         const actualValue = frontmatter[property];
 
         if (expectedValue === undefined) {
@@ -353,8 +356,9 @@ export class MetadataMappingRules {
     private evaluateFileExtensionCondition(condition: MetadataCondition, extension: string): { matched: boolean; reason: string } {
         switch (condition.operator) {
             case 'equals': {
-                const matches = extension.toLowerCase() === condition.value.toLowerCase();
-                return { matched: matches, reason: matches ? `Extension is ${extension}` : `Extension ${extension} does not match ${condition.value}` };
+                const valueStr = String(condition.value);
+                const matches = extension.toLowerCase() === valueStr.toLowerCase();
+                return { matched: matches, reason: matches ? `Extension is ${extension}` : `Extension ${extension} does not match ${valueStr}` };
             }
 
             default:
@@ -368,19 +372,21 @@ export class MetadataMappingRules {
     private evaluatePathPatternCondition(condition: MetadataCondition, filePath: string): { matched: boolean; reason: string } {
         switch (condition.operator) {
             case 'contains': {
+                const valueStr = String(condition.value);
                 const contains = condition.caseSensitive ?
-                    filePath.includes(condition.value) :
-                    filePath.toLowerCase().includes(condition.value.toLowerCase());
-                return { matched: contains, reason: contains ? `Path contains ${condition.value}` : `Path does not contain ${condition.value}` };
+                    filePath.includes(valueStr) :
+                    filePath.toLowerCase().includes(valueStr.toLowerCase());
+                return { matched: contains, reason: contains ? `Path contains ${valueStr}` : `Path does not contain ${valueStr}` };
             }
 
             case 'matches': {
                 try {
-                    const regex = new RegExp(condition.value, condition.caseSensitive ? '' : 'i');
+                    const valueStr = String(condition.value);
+                    const regex = new RegExp(valueStr, condition.caseSensitive ? '' : 'i');
                     const matches = regex.test(filePath);
-                    return { matched: matches, reason: matches ? `Path matches pattern ${condition.value}` : `Path does not match pattern ${condition.value}` };
+                    return { matched: matches, reason: matches ? `Path matches pattern ${valueStr}` : `Path does not match pattern ${valueStr}` };
                 } catch {
-                    return { matched: false, reason: `Invalid regex pattern: ${condition.value}` };
+                    return { matched: false, reason: `Invalid regex pattern: ${String(condition.value)}` };
                 }
             }
 
@@ -395,17 +401,19 @@ export class MetadataMappingRules {
     private evaluateFileSizeCondition(condition: MetadataCondition, fileSize: number): { matched: boolean; reason: string } {
         switch (condition.operator) {
             case 'greaterThan': {
-                const isGreater = fileSize > condition.value;
-                return { matched: isGreater, reason: isGreater ? `File size ${fileSize} > ${condition.value}` : `File size ${fileSize} <= ${condition.value}` };
+                const threshold = Number(condition.value);
+                const isGreater = fileSize > threshold;
+                return { matched: isGreater, reason: isGreater ? `File size ${fileSize} > ${threshold}` : `File size ${fileSize} <= ${threshold}` };
             }
 
             case 'lessThan': {
-                const isLess = fileSize < condition.value;
-                return { matched: isLess, reason: isLess ? `File size ${fileSize} < ${condition.value}` : `File size ${fileSize} >= ${condition.value}` };
+                const threshold = Number(condition.value);
+                const isLess = fileSize < threshold;
+                return { matched: isLess, reason: isLess ? `File size ${fileSize} < ${threshold}` : `File size ${fileSize} >= ${threshold}` };
             }
 
             case 'between': {
-                const [min, max] = Array.isArray(condition.value) ? condition.value : [0, condition.value];
+                const [min, max] = Array.isArray(condition.value) ? condition.value : [0, Number(condition.value)];
                 const isBetween = fileSize >= min && fileSize <= max;
                 return { matched: isBetween, reason: isBetween ? `File size ${fileSize} between ${min}-${max}` : `File size ${fileSize} not between ${min}-${max}` };
             }
@@ -428,13 +436,15 @@ export class MetadataMappingRules {
 
         switch (condition.operator) {
             case 'lessThan': {
-                const isRecent = age < condition.value;
-                return { matched: isRecent, reason: isRecent ? `File age ${age.toFixed(1)} days < ${condition.value}` : `File age ${age.toFixed(1)} days >= ${condition.value}` };
+                const threshold = Number(condition.value);
+                const isRecent = age < threshold;
+                return { matched: isRecent, reason: isRecent ? `File age ${age.toFixed(1)} days < ${threshold}` : `File age ${age.toFixed(1)} days >= ${threshold}` };
             }
 
             case 'greaterThan': {
-                const isOld = age > condition.value;
-                return { matched: isOld, reason: isOld ? `File age ${age.toFixed(1)} days > ${condition.value}` : `File age ${age.toFixed(1)} days <= ${condition.value}` };
+                const threshold = Number(condition.value);
+                const isOld = age > threshold;
+                return { matched: isOld, reason: isOld ? `File age ${age.toFixed(1)} days > ${threshold}` : `File age ${age.toFixed(1)} days <= ${threshold}` };
             }
 
             default:
@@ -547,13 +557,13 @@ export class MetadataMappingRules {
                 description: 'Priority level for audio mapping',
                 examples: ['high', 'medium', 'low'],
                 defaultValue: 'medium',
-                validation: (value) => ['high', 'medium', 'low'].includes(value)
+                validation: (value) => typeof value === 'string' && ['high', 'medium', 'low'].includes(value)
             },
             'instrument-family': {
                 type: 'string',
                 description: 'Instrument family preference',
                 examples: ['strings', 'brass', 'woodwinds', 'percussion', 'electronic'],
-                validation: (value) => ['strings', 'brass', 'woodwinds', 'percussion', 'keyboard', 'electronic', 'world'].includes(value)
+                validation: (value) => typeof value === 'string' && ['strings', 'brass', 'woodwinds', 'percussion', 'keyboard', 'electronic', 'world'].includes(value)
             },
             'musical-tempo': {
                 type: 'number',
@@ -578,7 +588,7 @@ export class MetadataMappingRules {
      * Generate unique rule ID
      */
     private generateRuleId(): string {
-        return `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return `rule_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     }
 
     /**

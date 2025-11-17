@@ -151,7 +151,7 @@ export class LocalSoundscapeView extends ItemView {
 		if (this.centerFile) {
 			return `Local Soundscape: ${this.centerFile.basename}`;
 		}
-		return 'Local Soundscape';
+		return 'Local soundscape';
 	}
 
 	getIcon(): string {
@@ -318,7 +318,7 @@ export class LocalSoundscapeView extends ItemView {
 		// Control Center button
 		const controlCenterButton = controlsSection.createEl('button', {
 			cls: 'header-button control-center-button',
-			attr: { 'aria-label': 'Open Control Center' }
+			attr: { 'aria-label': 'Open control center' }
 		});
 		const controlCenterIcon = createLucideIcon('keyboard-music', 16);
 		void controlCenterButton.appendChild(controlCenterIcon);
@@ -592,18 +592,18 @@ export class LocalSoundscapeView extends ItemView {
 
 		const infoText = infoSection.createDiv({ cls: 'setting-info' });
 		infoText.createEl('p', {
-			text: 'Local Soundscape creates an immersive audio-visual environment centered on a note.',
+			text: 'Local soundscape creates an immersive audio-visual environment centered on a note.',
 			cls: 'setting-description'
 		});
 		infoText.createEl('p', {
-			text: 'Use depth control to explore connections. Apply filters to focus on specific content. Enable clustering to visualize groups.',
+			text: 'Use depth control to explore connections. apply filters to focus on specific content. enable clustering to visualize groups.',
 			cls: 'setting-description'
 		});
 
 		// Audio Settings Link
 		const audioSettingsInfo = infoSection.createDiv({ cls: 'setting-item' });
 		audioSettingsInfo.createEl('p', {
-			text: 'Audio settings (auto-play, musical key, context-aware modifiers) are configured in the Control Center.',
+			text: 'Audio settings (auto-play, musical key, context-aware modifiers) are configured in the control center.',
 			cls: 'setting-description'
 		});
 		const linkButton = audioSettingsInfo.createEl('button', {
@@ -706,7 +706,7 @@ export class LocalSoundscapeView extends ItemView {
 		const voiceIcon = createLucideIcon('music', 14);
 		void voiceIcon.addClass('stat-icon');
 		void voiceLabel.appendChild(voiceIcon);
-		voiceLabel.appendChild(createSpan({ text: 'Active Voices' }));
+		voiceLabel.appendChild(createSpan({ text: 'Active voices' }));
 		this.voiceCountDisplay = voiceCountContainer.createSpan({
 			text: '0',
 			cls: 'stat-value voice-count'
@@ -773,11 +773,11 @@ export class LocalSoundscapeView extends ItemView {
 	private createMusicalScaleControls(container: HTMLElement): void {
 		// Section header
 		const header = container.createDiv({ cls: 'musical-settings-header' });
-		header.createSpan({ text: 'Musical Scale Settings', cls: 'settings-header-text' });
+		header.createSpan({ text: 'Musical scale settings', cls: 'settings-header-text' });
 
 		// Enable/disable toggle
 		const enableToggle = container.createDiv({ cls: 'musical-setting-row' });
-		enableToggle.createSpan({ text: 'Scale Quantization:', cls: 'setting-label' });
+		enableToggle.createSpan({ text: 'Scale quantization:', cls: 'setting-label' });
 
 		const enableCheckbox = enableToggle.createEl('input', {
 			type: 'checkbox',
@@ -790,7 +790,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Root note selector
 		const rootNoteRow = container.createDiv({ cls: 'musical-setting-row' });
-		rootNoteRow.createSpan({ text: 'Root Note:', cls: 'setting-label' });
+		rootNoteRow.createSpan({ text: 'Root note:', cls: 'setting-label' });
 
 		const rootNoteSelect = rootNoteRow.createEl('select', { cls: 'musical-setting-select' });
 		const rootNotes: Array<{value: string, label: string}> = [
@@ -824,7 +824,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Scale type selector
 		const scaleTypeRow = container.createDiv({ cls: 'musical-setting-row' });
-		scaleTypeRow.createSpan({ text: 'Scale Type:', cls: 'setting-label' });
+		scaleTypeRow.createSpan({ text: 'Scale type:', cls: 'setting-label' });
 
 		const scaleTypeSelect = scaleTypeRow.createEl('select', { cls: 'musical-setting-select' });
 		const scaleTypes: Array<{value: string, label: string, description: string}> = [
@@ -857,7 +857,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Quantization strength slider
 		const quantStrengthRow = container.createDiv({ cls: 'musical-setting-row slider-row' });
-		quantStrengthRow.createSpan({ text: 'Quantization Strength:', cls: 'setting-label' });
+		quantStrengthRow.createSpan({ text: 'Quantization strength:', cls: 'setting-label' });
 
 		const sliderContainer = quantStrengthRow.createDiv({ cls: 'slider-container' });
 		const quantStrengthSlider = sliderContainer.createEl('input', {
@@ -885,7 +885,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Adaptive Pitch Ranges toggle (Phase 2)
 		const adaptivePitchRow = container.createDiv({ cls: 'musical-setting-row' });
-		adaptivePitchRow.createSpan({ text: 'Adaptive Pitch Ranges:', cls: 'setting-label' });
+		adaptivePitchRow.createSpan({ text: 'Adaptive pitch ranges:', cls: 'setting-label' });
 
 		const adaptivePitchCheckbox = adaptivePitchRow.createEl('input', {
 			type: 'checkbox',
@@ -903,7 +903,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Chord Voicing toggle (Phase 2)
 		const chordVoicingRow = container.createDiv({ cls: 'musical-setting-row' });
-		chordVoicingRow.createSpan({ text: 'Chord Voicing:', cls: 'setting-label' });
+		chordVoicingRow.createSpan({ text: 'Chord voicing:', cls: 'setting-label' });
 
 		const chordVoicingCheckbox = chordVoicingRow.createEl('input', {
 			type: 'checkbox',
@@ -921,7 +921,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Voicing density slider (only shown when chord voicing enabled)
 		const densityRow = container.createDiv({ cls: 'musical-setting-row slider-row' });
-		densityRow.createSpan({ text: 'Voicing Density:', cls: 'setting-label' });
+		densityRow.createSpan({ text: 'Voicing density:', cls: 'setting-label' });
 
 		const densitySliderContainer = densityRow.createDiv({ cls: 'slider-container' });
 		const densitySlider = densitySliderContainer.createEl('input', {
@@ -1317,7 +1317,7 @@ export class LocalSoundscapeView extends ItemView {
 			// Show error in graph container
 			this.graphContainer.empty();
 			const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
-			errorDiv.createEl('p', { text: 'Failed to load graph. Container not ready.' });
+			errorDiv.createEl('p', { text: 'Failed to load graph. container not ready.' });
 			errorDiv.createEl('p', { text: 'Please try connecting again.' });
 		}
 	}

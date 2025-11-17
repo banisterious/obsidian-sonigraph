@@ -93,7 +93,8 @@ export class Mp3Encoder {
                 if (progressInterval) {
                     clearInterval(progressInterval);
                 }
-                reject(new Error(`MediaRecorder error: ${error}`));
+                const errorMsg = error instanceof ErrorEvent ? error.message : String(error);
+                reject(new Error(`MediaRecorder error: ${errorMsg}`));
             };
         });
 
