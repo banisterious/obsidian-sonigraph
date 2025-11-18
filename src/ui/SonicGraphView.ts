@@ -2988,9 +2988,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 .setName('Instrument distribution')
                 .setDesc('How to distribute instruments across similar files')
                 .addDropdown(dropdown => dropdown
-                    .addOption('balanced', 'Balanced - Prevent clustering')
-                    .addOption('random', 'Random - Natural variation')
-                    .addOption('semantic', 'Semantic - Based on content')
+                    .addOption('balanced', 'Balanced - prevent clustering')
+                    .addOption('random', 'Random - natural variation')
+                    .addOption('semantic', 'Semantic - based on content')
                     .setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.distributionStrategy || 'balanced')
                     .onChange(async (value) => {
                         if (!this.plugin.settings.audioEnhancement.contentAwareMapping.distributionStrategy) {
@@ -3067,19 +3067,19 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             .setName('Musical genre')
             .setDesc('Choose the ambient genre for continuous layers')
             .addDropdown(dropdown => dropdown
-                .addOption('ambient', 'Ambient - Gentle evolving textures')
-                .addOption('drone', 'Drone - Sustained atmospheric tones')
-                .addOption('orchestral', 'Orchestral - Classical instruments in sustained arrangements')
-                .addOption('electronic', 'Electronic - Synthesized pads and evolving textures')
-                .addOption('minimal', 'Minimal - Sparse, contemplative elements')
-                .addOption('oceanic', 'Oceanic - Whale songs and ocean sounds')
-                .addOption('sci-fi', 'Sci-fi - Futuristic atmospheric sounds')
-                .addOption('experimental', 'Experimental - Unconventional sound design')
-                .addOption('industrial', 'Industrial - Mechanical drones and factory ambience')
-                .addOption('urban', 'Urban - City soundscapes and human activity')
-                .addOption('nature', 'Nature - Forest ambience, rain, wind')
-                .addOption('mechanical', 'Mechanical - Machine hums and motor drones')
-                .addOption('organic', 'Organic - Acoustic instruments with natural processing')
+                .addOption('ambient', 'Ambient - gentle evolving textures')
+                .addOption('drone', 'Drone - sustained atmospheric tones')
+                .addOption('orchestral', 'Orchestral - classical instruments in sustained arrangements')
+                .addOption('electronic', 'Electronic - synthesized pads and evolving textures')
+                .addOption('minimal', 'Minimal - sparse, contemplative elements')
+                .addOption('oceanic', 'Oceanic - whale songs and ocean sounds')
+                .addOption('sci-fi', 'Sci-fi - futuristic atmospheric sounds')
+                .addOption('experimental', 'Experimental - unconventional sound design')
+                .addOption('industrial', 'Industrial - mechanical drones and factory ambience')
+                .addOption('urban', 'Urban - city soundscapes and human activity')
+                .addOption('nature', 'Nature - forest ambience, rain, wind')
+                .addOption('mechanical', 'Mechanical - machine hums and motor drones')
+                .addOption('organic', 'Organic - acoustic instruments with natural processing')
                 .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.genre || 'ambient')
                 .onChange(async (value) => {
                     if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
@@ -3176,11 +3176,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 .setName('Musical scale')
                 .setDesc('Scale for harmonic progressions')
                 .addDropdown(dropdown => dropdown
-                    .addOption('major', 'Major - Bright and uplifting')
-                    .addOption('minor', 'Minor - Contemplative and introspective')
-                    .addOption('dorian', 'Dorian - Medieval and mysterious')
-                    .addOption('pentatonic_major', 'Pentatonic major - Simple and peaceful')
-                    .addOption('pentatonic_minor', 'Pentatonic minor - Eastern and meditative')
+                    .addOption('major', 'Major - bright and uplifting')
+                    .addOption('minor', 'Minor - contemplative and introspective')
+                    .addOption('dorian', 'Dorian - medieval and mysterious')
+                    .addOption('pentatonic_major', 'Pentatonic major - simple and peaceful')
+                    .addOption('pentatonic_minor', 'Pentatonic minor - eastern and meditative')
                     .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.scale || 'major')
                     .onChange(async (value) => {
                         if (!this.plugin.settings.audioEnhancement?.continuousLayers) {

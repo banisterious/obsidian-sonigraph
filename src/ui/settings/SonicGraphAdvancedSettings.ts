@@ -203,14 +203,14 @@ export class SonicGraphAdvancedSettings {
 			.setName('Musical scale')
 			.setDesc('Constrain generated notes to a specific scale')
 			.addDropdown(dropdown => dropdown
-				.addOption('major', 'Major - Bright, happy')
-				.addOption('minor', 'Minor - Dark, melancholic')
-				.addOption('dorian', 'Dorian - Modal, jazzy')
-				.addOption('phrygian', 'Phrygian - Spanish, exotic')
-				.addOption('lydian', 'Lydian - Dreamy, ethereal')
-				.addOption('mixolydian', 'Mixolydian - Folk, bluesy')
-				.addOption('pentatonic', 'Pentatonic - Asian, simple')
-				.addOption('chromatic', 'Chromatic - All notes')
+				.addOption('major', 'Major - bright, happy')
+				.addOption('minor', 'Minor - dark, melancholic')
+				.addOption('dorian', 'Dorian - modal, jazzy')
+				.addOption('phrygian', 'Phrygian - spanish, exotic')
+				.addOption('lydian', 'Lydian - dreamy, ethereal')
+				.addOption('mixolydian', 'Mixolydian - folk, bluesy')
+				.addOption('pentatonic', 'Pentatonic - asian, simple')
+				.addOption('chromatic', 'Chromatic - all notes')
 				.setValue(this.plugin.settings.audioEnhancement?.musicalTheory?.scale || 'major')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
@@ -431,9 +431,9 @@ export class SonicGraphAdvancedSettings {
 				.setName('Orchestration mode')
 				.setDesc('How hubs interact with other nodes')
 				.addDropdown(dropdown => dropdown
-					.addOption('hub-led', 'Hub-led - Hubs dominate')
-					.addOption('balanced', 'Balanced - Moderate emphasis')
-					.addOption('democratic', 'Democratic - Subtle emphasis')
+					.addOption('hub-led', 'Hub-led - hubs dominate')
+					.addOption('balanced', 'Balanced - moderate emphasis')
+					.addOption('democratic', 'Democratic - subtle emphasis')
 					.setValue(this.plugin.settings.hubOrchestration?.orchestrationMode || 'balanced')
 					.onChange(async (value) => {
 						if (this.plugin.settings.hubOrchestration) {
@@ -809,10 +809,10 @@ export class SonicGraphAdvancedSettings {
 				.setName('Panning mode')
 				.setDesc('How node positions map to stereo panning')
 				.addDropdown(dropdown => dropdown
-					.addOption('geometric', 'Geometric - Based on X position')
-					.addOption('cluster-based', 'Cluster-based - By cluster')
-					.addOption('folder-based', 'Folder-based - By folder')
-					.addOption('hybrid', 'Hybrid - Combined approach')
+					.addOption('geometric', 'Geometric - based on X position')
+					.addOption('cluster-based', 'Cluster-based - by cluster')
+					.addOption('folder-based', 'Folder-based - by folder')
+					.addOption('hybrid', 'Hybrid - combined approach')
 					.setValue(this.plugin.settings.spatialAudio?.mode || 'hybrid')
 					.onChange(async (value: string) => {
 						if (this.plugin.settings.spatialAudio) {
@@ -866,10 +866,10 @@ export class SonicGraphAdvancedSettings {
 				.setName('Panning curve')
 				.setDesc('Curve type for position-to-pan mapping')
 				.addDropdown(dropdown => dropdown
-					.addOption(PanningCurve.Linear, 'Linear - Direct proportion')
-					.addOption(PanningCurve.Exponential, 'Exponential - Emphasize extremes')
-					.addOption(PanningCurve.Sigmoid, 'Sigmoid - Smooth S-curve')
-					.addOption(PanningCurve.Logarithmic, 'Logarithmic - Compress extremes')
+					.addOption(PanningCurve.Linear, 'Linear - direct proportion')
+					.addOption(PanningCurve.Exponential, 'Exponential - emphasize extremes')
+					.addOption(PanningCurve.Sigmoid, 'Sigmoid - smooth S-curve')
+					.addOption(PanningCurve.Logarithmic, 'Logarithmic - compress extremes')
 					.setValue(this.plugin.settings.spatialAudio?.graphPositionSettings.curve || PanningCurve.Sigmoid)
 					.onChange(async (value) => {
 						if (this.plugin.settings.spatialAudio?.graphPositionSettings) {

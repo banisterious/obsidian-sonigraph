@@ -243,9 +243,9 @@ export class SonicGraphCoreSettings {
 			.setName('Event spreading')
 			.setDesc('Prevent audio crackling by spacing simultaneous events')
 			.addDropdown(dropdown => dropdown
-				.addOption('none', 'None - No spreading')
-				.addOption('gentle', 'Gentle - Light spreading')
-				.addOption('aggressive', 'Aggressive - Heavy spreading')
+				.addOption('none', 'None - no spreading')
+				.addOption('gentle', 'Gentle - light spreading')
+				.addOption('aggressive', 'Aggressive - heavy spreading')
 				.setValue(this.plugin.settings.sonicGraphSettings?.timeline.eventSpreadingMode || 'gentle')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.sonicGraphSettings) return;
@@ -417,9 +417,9 @@ export class SonicGraphCoreSettings {
 			.setName('Instrument distribution')
 			.setDesc('How to distribute instruments across similar files')
 			.addDropdown(dropdown => dropdown
-				.addOption('balanced', 'Balanced - Prevent clustering')
-				.addOption('random', 'Random - Natural variation')
-				.addOption('semantic', 'Semantic - Based on content')
+				.addOption('balanced', 'Balanced - prevent clustering')
+				.addOption('random', 'Random - natural variation')
+				.addOption('semantic', 'Semantic - based on content')
 				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.distributionStrategy || 'balanced')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.audioEnhancement?.contentAwareMapping) return;

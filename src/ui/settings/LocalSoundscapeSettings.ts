@@ -285,8 +285,8 @@ export class LocalSoundscapeSettings {
 				.setName('Context mode')
 				.setDesc('How contextual factors affect audio')
 				.addDropdown(dropdown => dropdown
-					.addOption('influenced', 'Influenced - Blend with base values')
-					.addOption('only', 'Only - Use context exclusively')
+					.addOption('influenced', 'Influenced - blend with base values')
+					.addOption('only', 'Only - use context exclusively')
 					.setValue(contextAware.mode || 'influenced')
 					.onChange(async (value) => {
 						contextAware.mode = value as 'influenced' | 'only';
