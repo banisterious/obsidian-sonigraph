@@ -151,15 +151,15 @@ If you find this plugin useful, please consider supporting its development!
 
 ## Current Version
 
-**v0.17.12** - Production Ready
+**v0.17.14** - Production Ready
 
 **Latest Updates:**
+- Resolved all PR review round 8 ESLint issues: 364 total fixes across 5 categories (v0.17.14)
+- Standardized UI text to sentence case for consistency across all settings (v0.17.14)
 - Harmonium instrument added to keyboard family (35 total instruments) (v0.17.12)
 - Resolved 441 PR review issues: Removed all eslint-disable-line directives (v0.17.12)
 - Fixed Piano Roll visualization: Corrected timeline display and playhead sync (v0.17.12)
 - Local Soundscape performance: Eliminated 5+ second initialization delay (v0.17.12)
-- Major batch fixes: 2,841 issues resolved including Promise handling and type safety (v0.17.9)
-- Created reusable fix scripts with intelligent edge case detection (v0.17.9)
 
 See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 

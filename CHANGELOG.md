@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.14] - 2025-11-17
+
+### Fixed
+- **Code Quality**: Resolved all PR review round 8 ESLint issues
+  - Fixed 13 avoid-inline-styles violations (replaced direct style assignments with setCssProps)
+  - Fixed 13 non-promise-conditional issues (made null/undefined checks explicit)
+  - Fixed 16 require-imports issues (converted require() to ES6 imports)
+  - Fixed 56 void-promise-return issues (removed Promise returns in void contexts)
+  - Fixed 266 sentence case issues (converted title case to sentence case in UI text)
+  - All commits passed lint-staged hooks successfully
+
+### Changed
+- **UI Text Consistency**: Standardized dropdown option descriptions to sentence case
+  - Genre selections, scale/mode options, cache strategies
+  - Spatial audio settings, orchestration modes, event spreading options
+  - Instrument distribution, adaptive detail modes, clustering algorithms
+
 ## [0.17.12] - 2025-11-16
 
 ### Added
