@@ -464,15 +464,15 @@ export class MaterialControlPanelModal extends Modal {
 		const stepsList = quickStartContent.createEl('ol', { cls: 'osp-guide-steps' });
 
 		stepsList.createEl('li', {
-			text: 'Enable instruments: go to the keyboard, strings, or electronic tabs and enable 3-5 instruments you like. start with piano, strings, and lead synth for a balanced sound.'
+			text: 'Enable instruments: Go to the keyboard, strings, or electronic tabs and enable 3-5 instruments you like. Start with piano, strings, and lead synth for a balanced sound.'
 		});
 
 		stepsList.createEl('li', {
-			text: 'Configure musical settings: visit the musical tab to set your preferred scale (try c major) and tempo (60-120 BPM works well for most vaults).'
+			text: 'Configure musical settings: Visit the musical tab to set your preferred scale (try C major) and tempo (60-120 BPM works well for most vaults).'
 		});
 
 		stepsList.createEl('li', {
-			text: 'Try local soundscape: right-click any note in your vault and select"open in Local Soundscape" to hear how it connects to other notes.'
+			text: 'Try Local Soundscape: Right-click any note in your vault and select "open in Local Soundscape" to hear how it connects to other notes.'
 		});
 
 		this.contentContainer.appendChild(quickStartCard.getElement());
@@ -490,30 +490,30 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Local Soundscape feature
 		const lsFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
-		lsFeature.createEl('strong', { text: 'Local soundscape' });
+		lsFeature.createEl('strong', { text: 'Local Soundscape' });
 		lsFeature.createEl('p', {
-			text: 'Visualize and sonify a single note and its connections. notes at different depths play different instrument families, creating layers of harmony. enable musical enhancements in the local soundscape tab for richer, more musical results.'
+			text: 'Visualize and sonify a single note and its connections. Notes at different depths play different instrument families, creating layers of harmony. Enable musical enhancements in the Local Soundscape tab for richer, more musical results.'
 		});
 
 		// Sonic Graph feature
 		const sgFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
 		sgFeature.createEl('strong', { text: 'Sonic Graph' });
 		sgFeature.createEl('p', {
-			text: 'See and hear your entire vault as an animated graph. watch temporal patterns unfold as your knowledge base comes alive with sound and motion.'
+			text: 'See and hear your entire vault as an animated graph. Watch temporal patterns unfold as your knowledge base comes alive with sound and motion.'
 		});
 
 		// Musical Enhancements feature
 		const meFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
 		meFeature.createEl('strong', { text: 'Musical enhancements' });
 		meFeature.createEl('p', {
-			text: 'Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. configure these in the local soundscape tab.'
+			text: 'Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. Configure these in the Local Soundscape tab.'
 		});
 
 		// Continuous Layers feature
 		const clFeature = featuresList.createDiv({ cls: 'osp-guide-feature' });
 		clFeature.createEl('strong', { text: 'Continuous layers' });
 		clFeature.createEl('p', {
-			text: 'Add ambient background soundscapes from curated audio libraries. browse and preview samples from Freesound.org to create the perfect atmosphere for focused work.'
+			text: 'Add ambient background soundscapes from curated audio libraries. Browse and preview samples from Freesound.org to create the perfect atmosphere for focused work.'
 		});
 
 		this.contentContainer.appendChild(featuresCard.getElement());
@@ -529,7 +529,7 @@ export class MaterialControlPanelModal extends Modal {
 		const meGuideContent = meGuideCard.getContent();
 
 		meGuideContent.createEl('p', {
-			text: 'Musical enhancements transform raw sonification into expressive, harmonic compositions. here are recommended settings for different goals:',
+			text: 'Musical enhancements transform raw sonification into expressive, harmonic compositions. Here are recommended settings for different goals:',
 			cls: 'osp-guide-text'
 		});
 
@@ -537,7 +537,7 @@ export class MaterialControlPanelModal extends Modal {
 		const preset1 = meGuideContent.createDiv({ cls: 'osp-guide-preset' });
 		preset1.createEl('strong', { text: 'For harmonic beauty:' });
 		const preset1List = preset1.createEl('ul');
-		preset1List.createEl('li', { text: 'Enable scale quantization (c major, 80% strength)' });
+		preset1List.createEl('li', { text: 'Enable scale quantization (C major, 80% strength)' });
 		preset1List.createEl('li', { text: 'Enable adaptive pitch ranges' });
 		preset1List.createEl('li', { text: 'Enable chord voicing (50% density)' });
 
