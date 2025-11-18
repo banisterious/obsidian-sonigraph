@@ -63,8 +63,8 @@ export class LocalSoundscapeSettings {
 			.setName('Playback mode')
 			.setDesc('Choose audio generation approach')
 			.addDropdown(dropdown => dropdown
-				.addOption('note-centric', 'Note-centric (Rich single-note sonification)')
-				.addOption('graph-centric', 'Graph-centric (Traditional multi-node approach)')
+				.addOption('note-centric', 'Note-centric (rich single-note sonification)')
+				.addOption('graph-centric', 'Graph-centric (traditional multi-node approach)')
 				.setValue(this.plugin.settings.localSoundscape?.playbackMode || 'note-centric')
 				.onChange(async (value: 'graph-centric' | 'note-centric') => {
 					if (!this.plugin.settings.localSoundscape) {
