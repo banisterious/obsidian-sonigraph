@@ -1735,12 +1735,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         const section = container.createDiv({ cls: 'sonic-graph-settings-section adaptive-detail-override' });
-        section.createEl('div', { text: 'Adaptive detAIL', cls: 'sonic-graph-settings-section-title' });
+        section.createEl('div', { text: 'Adaptive detail', cls: 'sonic-graph-settings-section-title' });
         
         // Session override toggle using Obsidian Setting API
         new Setting(section)
             .setName('Disable for this session')
-            .setDesc('The adaptive detail system automatically hides nodes and links based on zoom level to improve performance. disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.')
+            .setDesc('The adaptive detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.')
             .addToggle(toggle => toggle
                 .setValue(false) // Start with adaptive detail enabled
                 .onChange((isOverridden) => {
