@@ -2340,7 +2340,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Description
 		const description = content.createDiv({ cls: 'osp-control-description' });
-		description.createEl('p', { text: 'Transform your knowledge graph into a temporal audio-visual experience. notes appear chronologically with musical accompaniment based on content and connections.' });
+		description.createEl('p', { text: 'Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections.' });
 
 		// Settings section
 		const settingsSection = content.createDiv({ cls: 'osp-settings-section osp-settings-section--spaced' });
@@ -2949,9 +2949,9 @@ export class MaterialControlPanelModal extends Modal {
 
 		// Individual drum toggles
 		const drums: Array<{ key: 'kick' | 'snare' | 'hihat' | 'tom', label: string }> = [
-			{ key: 'kick', label: 'Kick Drum' },
-			{ key: 'snare', label: 'Snare Drum' },
-			{ key: 'hihat', label: 'Hi-Hat' },
+			{ key: 'kick', label: 'Kick drum' },
+			{ key: 'snare', label: 'Snare drum' },
+			{ key: 'hihat', label: 'Hi-hat' },
 			{ key: 'tom', label: 'Tom' }
 		];
 
