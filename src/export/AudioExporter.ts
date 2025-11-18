@@ -21,6 +21,10 @@ import { NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
 import { NoteCentricPlayer } from '../audio/playback/NoteCentricPlayer';
 import { getLogger } from '../logging';
 import type { SonigraphSettings } from '../utils/constants';
+import { getContext } from 'tone';
+import * as fs from 'fs';
+import * as path from 'path';
+import { ExportNoteCreator } from './ExportNoteCreator';
 
 const logger = getLogger('export');
 
@@ -199,8 +203,6 @@ export class AudioExporter {
             }
         } else {
             // System location - ensure directory exists
-            const fs = require('fs');
-            const path = require('path');
             const dirPath = path.isAbsolute(config.location) ? config.location : path.resolve(config.location);
 
             if (!fs.existsSync(dirPath)) {
@@ -347,7 +349,6 @@ export class AudioExporter {
         targetSampleRate: number
     ): Promise<AudioBuffer> {
         // Get Tone.js audio context
-        const { getContext } = require('tone');
         const audioContext = getContext().rawContext as BaseAudioContext;
 
         if (!audioContext) {
@@ -575,8 +576,6 @@ export class AudioExporter {
         } else {
             // Write to system location using Node.js fs
             const uint8Array = new Uint8Array(data);
-            const fs = require('fs');
-            const path = require('path');
 
             // Ensure directory exists
             const dirPath = path.dirname(fullPath);
@@ -605,7 +604,6 @@ export class AudioExporter {
      */
     private async createExportNote(config: ExportConfig, filePath: string): Promise<string> {
         try {
-            const { ExportNoteCreator } = require('./ExportNoteCreator');
             const noteCreator = new ExportNoteCreator(this.app, this.pluginVersion);
 
             // Build result object for note creation
@@ -619,7 +617,6 @@ export class AudioExporter {
             if (config.locationType === 'system') {
                 // System location - use fs.statSync
                 try {
-                    const fs = require('fs');
                     const stats = fs.statSync(filePath);
                     result.fileSize = stats.size;
                 } catch (error) {
@@ -670,7 +667,6 @@ export class AudioExporter {
 
         // Use path.join for system paths to handle path separators correctly
         if (config.locationType === 'system') {
-            const path = require('path');
             return path.join(config.location, `${config.filename}.${extension}`);
         }
 
@@ -681,17 +677,16 @@ export class AudioExporter {
     /**
      * Check if file exists (supports both vault and system paths)
      */
-    private fileExists(path: string): boolean {
+    private fileExists(filePath: string): boolean {
         // Check if it's a vault path (relative) or system path (absolute)
-        const isSystemPath = require('path').isAbsolute(path);
+        const isSystemPath = path.isAbsolute(filePath);
 
         if (isSystemPath) {
             // System path - use fs
-            const fs = require('fs');
-            return fs.existsSync(path);
+            return fs.existsSync(filePath);
         } else {
             // Vault path - use Obsidian API
-            const file = this.app.vault.getAbstractFileByPath(path);
+            const file = this.app.vault.getAbstractFileByPath(filePath);
             return file !== null;
         }
     }

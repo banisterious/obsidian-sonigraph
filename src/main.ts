@@ -10,6 +10,7 @@ import { MusicalMapper } from './graph/musical-mapper';
 import { getLogger, LoggerFactory } from './logging';
 import { initializeWhaleIntegration, getWhaleIntegration } from './external/whale-integration';
 import { FreesoundSampleLoader } from './audio/layers/FreesoundSampleLoader';
+import curatedSamples from '../curated-samples-transformed.json';
 
 const logger = getLogger('main');
 
@@ -994,8 +995,6 @@ export default class SonigraphPlugin extends Plugin {
 	 */
 	private getCuratedSamples(): unknown[] {
 		// Import the transformed curated samples
-		 
-		const curatedSamples = require('../curated-samples-transformed.json');
 		return curatedSamples;
 	}
 

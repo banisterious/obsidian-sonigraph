@@ -12,7 +12,7 @@ import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { AudioExporter } from './AudioExporter';
 import { ExportConfig, ExportScope, AudioFormat, QualityPreset, ExportLocationType } from './types';
 import { ExportProgressModal } from './ExportProgressModal';
-import { CollisionResolution } from './FileCollisionModal';
+import { CollisionResolution, FileCollisionModal } from './FileCollisionModal';
 import { NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
 import { getLogger } from '../logging';
 
@@ -736,7 +736,6 @@ export class ExportModal extends Modal {
                 // Show collision modal
                 void logger.info('export-modal', 'File collision detected, showing resolution modal');
 
-                const { FileCollisionModal } = require('./FileCollisionModal');
                 const collisionModal = new FileCollisionModal(
                     this.app,
                     fullPath,

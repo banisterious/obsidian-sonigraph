@@ -1546,14 +1546,13 @@ export class LocalSoundscapeView extends ItemView {
 		});
 
 		// Use the existing export modal - pass null for animator since Local Soundscape is static
-		const { ExportModal } = require('../export/ExportModal');
-		const modal = new ExportModal(
+		const modal = await import('../export/ExportModal').then(m => new m.ExportModal(
 			this.app,
 			this.plugin,
 			this.plugin.audioEngine,
 			null,  // No temporal animator for Local Soundscape (static graph)
 			this.currentNoteCentricMapping  // Pass note-centric mapping if available
-		);
+		));
 		void modal.open();
 	}
 
@@ -2619,8 +2618,8 @@ export class LocalSoundscapeView extends ItemView {
 	 * Start real-time playback using single polling loop (memory-efficient pattern)
 	 * This replaces the previous approach of creating 187 setTimeout callbacks upfront
 	 */
-	private startRealtimePlayback(): void {
-		const { getContext } = require('tone');
+	private async startRealtimePlayback(): Promise<void> {
+		const { getContext } = await import('tone');
 
 		logger.info('playback', 'Starting real-time polling loop for Local Soundscape', {
 			noteCount: this.currentMappings.length,

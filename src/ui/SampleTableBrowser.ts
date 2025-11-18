@@ -543,14 +543,15 @@ export class SampleTableBrowser {
 	/**
 	 * Open Freesound search modal
 	 */
-	private openFreesoundSearch(): void {
+	private async openFreesoundSearch(): Promise<void> {
 		const apiKey = this.plugin.settings.freesoundApiKey;
 		if (!apiKey) {
 			new Notice('Please configure your Freesound API key in settings');
 			return;
 		}
 
-		const modal = new (require('./FreesoundSearchModal').FreesoundSearchModal)(
+		const { FreesoundSearchModal } = await import('./FreesoundSearchModal');
+		const modal = new FreesoundSearchModal(
 			this.app,
 			apiKey,
 			async (sample: FreesoundSample) => {

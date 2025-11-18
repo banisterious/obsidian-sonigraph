@@ -1524,13 +1524,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             return;
         }
 
-        const { ExportModal } = require('../export/ExportModal');
-        const modal = new ExportModal(
+        const modal = await import('../export/ExportModal').then(m => new m.ExportModal(
             this.app,
             this.plugin,
             this.plugin.audioEngine,
             this.temporalAnimator
-        );
+        ));
         void modal.open();
         void logger.info('ui', 'Opened export modal');
     }
