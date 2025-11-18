@@ -63,24 +63,24 @@ export class FreesoundSampleLoader {
   /**
    * Initialize the sample loader
    */
-  async initialize(): Promise<void> {
+  initialize(): void {
     if (this.isInitialized) {
       return;
     }
-    
+
     try {
       void logger.info('initialization', 'Initializing FreesoundSampleLoader');
-      
+
       // Test API connection if key is provided
       if (this.apiKey) {
         this.testApiConnection();
       }
-      
+
       // Start cache cleanup timer
       void this.startCacheCleanup();
-      
+
       this.isInitialized = true;
-      
+
       logger.info('initialization', 'FreesoundSampleLoader initialized', {
         hasApiKey: !!this.apiKey,
         totalGenres: this.sampleLibrary.size

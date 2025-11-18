@@ -991,7 +991,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         const exportIcon = createLucideIcon('download', 16);
         void exportBtn.insertBefore(exportIcon, exportBtn.firstChild);
-        exportBtn.addEventListener('click', () => this.openExportModal());
+        exportBtn.addEventListener('click', () => void this.openExportModal());
     }
 
     /**
@@ -1174,7 +1174,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 excludeFiles: this.graphDataExtractor['excludeFiles']
             });
             
-            const graphData = await this.executeWhenIdle(async () => {
+            const graphData = await this.executeWhenIdle(() => {
                 return this.graphDataExtractor.extractGraphData();
             });
             logger.info('sonic-graph-data', `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
@@ -2057,16 +2057,16 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         ['louvain', 'modularity', 'hybrid'].forEach(algorithm => {
             const option = algorithmSelect.createEl('option');
             option.value = algorithm;
-            option.textContent = algorithm === 'louvain' ? 'Louvain (Fast)' : 
-                               algorithm === 'modularity' ? 'Modularity (Quality)' : 
-                               'Hybrid (Recommended)';
+            option.textContent = algorithm === 'louvain' ? 'Louvain (fast)' :
+                               algorithm === 'modularity' ? 'Modularity (quality)' :
+                               'Hybrid (recommended)';
             if (algorithm === settings.algorithm) {
                 option.selected = true;
             }
         });
         
         // Add tooltip to clustering algorithm dropdown
-        setTooltip(algorithmSelect, 'Choose the clustering algorithm for automatic group detection. Louvain (Fast) prioritizes speed for large graphs, Modularity (Quality) emphasizes cluster quality, and Hybrid (Recommended) balances both speed and quality for optimal results.', {
+        setTooltip(algorithmSelect, 'Choose the clustering algorithm for automatic group detection. Louvain (fast) prioritizes speed for large graphs, Modularity (quality) emphasizes cluster quality, and Hybrid (recommended) balances both speed and quality for optimal results.', {
             placement: 'top'
         });
         
@@ -2445,7 +2445,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated config: ${key} = ${String(value)}`);
+        logger.debug('connection-type-mapping', `Updated config: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -2462,7 +2462,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${String(value)}`);
+        logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -2481,7 +2481,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${String(value)}`);
+        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -2805,9 +2805,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
 
         const spreadingModes = [
-            { value: 'none', text: 'None - no spreading', desc: 'Events play exactly when files were created. May cause audio crackling if many files were created simultaneously.' },
-            { value: 'gentle', text: 'Gentle - light spreading', desc: 'Slightly separates clustered events over a small time window. Recommended for most users.' },
-            { value: 'aggressive', text: 'Aggressive - strong spreading', desc: 'Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations.' }
+            { value: 'none', text: 'none - no spreading', desc: 'Events play exactly when files were created. May cause audio crackling if many files were created simultaneously.' },
+            { value: 'gentle', text: 'gentle - light spreading', desc: 'Slightly separates clustered events over a small time window. Recommended for most users.' },
+            { value: 'aggressive', text: 'aggressive - strong spreading', desc: 'Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations.' }
         ];
 
         spreadingModes.forEach(mode => {
@@ -2988,9 +2988,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 .setName('Instrument distribution')
                 .setDesc('How to distribute instruments across similar files')
                 .addDropdown(dropdown => dropdown
-                    .addOption('balanced', 'Balanced - prevent clustering')
-                    .addOption('random', 'Random - natural variation')
-                    .addOption('semantic', 'Semantic - based on content')
+                    .addOption('balanced', 'balanced - prevent clustering')
+                    .addOption('random', 'random - natural variation')
+                    .addOption('semantic', 'semantic - based on content')
                     .setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.distributionStrategy || 'balanced')
                     .onChange(async (value) => {
                         if (!this.plugin.settings.audioEnhancement.contentAwareMapping.distributionStrategy) {
@@ -3067,19 +3067,19 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             .setName('Musical genre')
             .setDesc('Choose the ambient genre for continuous layers')
             .addDropdown(dropdown => dropdown
-                .addOption('ambient', 'Ambient - gentle evolving textures')
-                .addOption('drone', 'Drone - sustained atmospheric tones')
-                .addOption('orchestral', 'Orchestral - classical instruments in sustained arrangements')
-                .addOption('electronic', 'Electronic - synthesized pads and evolving textures')
-                .addOption('minimal', 'Minimal - sparse, contemplative elements')
-                .addOption('oceanic', 'Oceanic - whale songs and ocean sounds')
+                .addOption('ambient', 'ambient - gentle evolving textures')
+                .addOption('drone', 'drone - sustained atmospheric tones')
+                .addOption('orchestral', 'orchestral - classical instruments in sustained arrangements')
+                .addOption('electronic', 'electronic - synthesized pads and evolving textures')
+                .addOption('minimal', 'minimal - sparse, contemplative elements')
+                .addOption('oceanic', 'oceanic - whale songs and ocean sounds')
                 .addOption('sci-fi', 'Sci-fi - futuristic atmospheric sounds')
-                .addOption('experimental', 'Experimental - unconventional sound design')
-                .addOption('industrial', 'Industrial - mechanical drones and factory ambience')
-                .addOption('urban', 'Urban - city soundscapes and human activity')
-                .addOption('nature', 'Nature - forest ambience, rain, wind')
-                .addOption('mechanical', 'Mechanical - machine hums and motor drones')
-                .addOption('organic', 'Organic - acoustic instruments with natural processing')
+                .addOption('experimental', 'experimental - unconventional sound design')
+                .addOption('industrial', 'industrial - mechanical drones and factory ambience')
+                .addOption('urban', 'urban - city soundscapes and human activity')
+                .addOption('nature', 'nature - forest ambience, rain, wind')
+                .addOption('mechanical', 'mechanical - machine hums and motor drones')
+                .addOption('organic', 'organic - acoustic instruments with natural processing')
                 .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.genre || 'ambient')
                 .onChange(async (value) => {
                     if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
@@ -3176,9 +3176,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 .setName('Musical scale')
                 .setDesc('Scale for harmonic progressions')
                 .addDropdown(dropdown => dropdown
-                    .addOption('major', 'Major - bright and uplifting')
-                    .addOption('minor', 'Minor - contemplative and introspective')
-                    .addOption('dorian', 'Dorian - medieval and mysterious')
+                    .addOption('major', 'major - bright and uplifting')
+                    .addOption('minor', 'minor - contemplative and introspective')
+                    .addOption('dorian', 'dorian - medieval and mysterious')
                     .addOption('pentatonic_major', 'Pentatonic major - simple and peaceful')
                     .addOption('pentatonic_minor', 'Pentatonic minor - eastern and meditative')
                     .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.scale || 'major')
@@ -4829,12 +4829,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const modeSelect = modeItem.createEl('select', {
             cls: 'sonic-graph-dropdown'
         });
-        const modes = [
-            { value: 'graph-position', label: 'Graph Position' },
-            { value: 'folder-based', label: 'Folder Based' },
-            { value: 'cluster-based', label: 'Cluster Based' },
-            { value: 'hybrid', label: 'Hybrid (Recommended)' },
-            { value: 'disabled', label: 'Disabled' }
+        const modes: Array<{ value: PanningMode; label: string }> = [
+            { value: PanningMode.GraphPosition, label: 'Graph position' },
+            { value: PanningMode.FolderBased, label: 'Folder based' },
+            { value: PanningMode.ClusterBased, label: 'Cluster based' },
+            { value: PanningMode.Hybrid, label: 'Hybrid (recommended)' },
+            { value: PanningMode.Disabled, label: 'disabled' }
         ];
         modes.forEach(mode => {
             const option = modeSelect.createEl('option', {
@@ -4898,11 +4898,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const curveSelect = curveItem.createEl('select', {
             cls: 'sonic-graph-dropdown'
         });
-        const curves = [
-            { value: 'linear', label: 'Linear' },
-            { value: 'exponential', label: 'Exponential' },
-            { value: 'sigmoid', label: 'Sigmoid (Recommended)' },
-            { value: 'logarithmic', label: 'Logarithmic' }
+        const curves: Array<{ value: PanningCurve; label: string }> = [
+            { value: PanningCurve.Linear, label: 'linear' },
+            { value: PanningCurve.Exponential, label: 'exponential' },
+            { value: PanningCurve.Sigmoid, label: 'Sigmoid (recommended)' },
+            { value: PanningCurve.Logarithmic, label: 'logarithmic' }
         ];
         curves.forEach(curve => {
             const option = curveSelect.createEl('option', {
@@ -5402,7 +5402,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
 
         exportButton.addEventListener('click', () => {
-            void (async () => {
+            void (() => {
                 const now = new Date();
                 const pad = (n: number) => n.toString().padStart(2, '0');
                 const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
@@ -5608,7 +5608,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Performance optimization: Use debounced settings updates
         this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
 
-        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${String(value)}`);
+        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
     }
 
     /**

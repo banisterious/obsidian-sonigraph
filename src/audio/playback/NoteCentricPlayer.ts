@@ -131,11 +131,11 @@ export class NoteCentricPlayer {
 	/**
 	 * Play a musical phrase
 	 */
-	private async playPhrase(
+	private playPhrase(
 		phrase: MusicalPhrase,
 		role: string,
 		startDelay: number
-	): Promise<void> {
+	): void {
 		// Get instrument once per phrase, not per note
 		// Increment counter to ensure each phrase can get a different instrument
 		const instrument = this.getInstrumentForRole(role, this.phraseCounter++);

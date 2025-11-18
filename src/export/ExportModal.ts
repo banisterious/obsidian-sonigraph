@@ -10,7 +10,7 @@ import { App, Modal, Setting, DropdownComponent, TextComponent, Notice } from 'o
 import { AudioEngine } from '../audio/engine';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { AudioExporter } from './AudioExporter';
-import { ExportConfig, ExportScope, AudioFormat, QualityPreset, ExportLocationType } from './types';
+import { ExportConfig, ExportScope, AudioFormat, QualityPreset, ExportLocationType, WavQuality, Mp3Quality, OggQuality, FlacQuality } from './types';
 import { ExportProgressModal } from './ExportProgressModal';
 import { CollisionResolution, FileCollisionModal } from './FileCollisionModal';
 import { NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';

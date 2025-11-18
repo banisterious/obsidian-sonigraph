@@ -341,11 +341,11 @@ export class SonigraphSettingTab extends PluginSettingTab {
 			.setName('Logging level')
 			.setDesc('Control the verbosity of plugin logs. Default is "Warnings".')
 			.addDropdown(dropdown => dropdown
-				.addOption('off', 'Off')
+				.addOption('off', 'off')
 				.addOption('error', 'Errors only')
-				.addOption('warn', 'Warnings')
-				.addOption('info', 'Info')
-				.addOption('debug', 'Debug')
+				.addOption('warn', 'warnings')
+				.addOption('info', 'info')
+				.addOption('debug', 'debug')
 				.setValue(LoggerFactory.getLogLevel())
 				.onChange((value: 'off' | 'error' | 'warn' | 'info' | 'debug') => {
 					void LoggerFactory.setLogLevel(value);

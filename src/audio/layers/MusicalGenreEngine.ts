@@ -540,11 +540,11 @@ export class MusicalGenreEngine {
     void currentNode.connect(this.synthVolume);
   }
   
-  private async loadGenreSamples(categories: string[]): Promise<void> {
+  private loadGenreSamples(categories: string[]): void {
     if (!this.sampleLoader) {
       return;
     }
-    
+
     try {
       for (const category of categories) {
         const samples = this.sampleLoader.getSamplesForCategory(category);
@@ -557,7 +557,7 @@ export class MusicalGenreEngine {
               logger.debug('samples', `Loaded sample for category: ${category}`);
             }
           });
-          
+
           this.loadedSamples.set(category, sampler);
         }
       }

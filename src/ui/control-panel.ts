@@ -2,7 +2,7 @@ import { App, Modal, Setting, Notice, requestUrl } from 'obsidian';
 import SonigraphPlugin from '../main';
 import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
-import { INSTRUMENT_INFO } from '../utils/constants';
+import { INSTRUMENT_INFO, InstrumentSettings } from '../utils/constants';
 import { TAB_CONFIGS, createLucideIcon, setLucideIcon, getFamilyIcon, getInstrumentIcon, LucideIconName } from './lucide-icons';
 import { MaterialCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
 import { PlayButtonManager, PlayButtonState } from './play-button-manager';
@@ -60,7 +60,7 @@ type PolyphonicDensity = 'sparse' | 'moderate' | 'maximum';
 type VoiceLeadingStyle = 'smooth' | 'chromatic' | 'parallel';
 type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
 
-function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): unknown | undefined {
+function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): InstrumentSettings | undefined {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
 		return instruments[instrumentKey as InstrumentKey];
@@ -68,11 +68,11 @@ function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): 
 	return undefined;
 }
 
-function setInstrumentSetting<K extends keyof unknown>(
+function setInstrumentSetting<K extends keyof InstrumentSettings>(
 	plugin: SonigraphPlugin,
 	instrumentKey: string,
 	settingKey: K,
-	value: unknown
+	value: InstrumentSettings[K]
 ): boolean {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
@@ -421,7 +421,6 @@ export class MaterialControlPanelModal extends Modal {
 			case 'strings':
 			case 'woodwinds':
 			case 'brass':
-
 			case 'percussion':
 			case 'electronic':
 			case 'experimental':
@@ -956,7 +955,7 @@ export class MaterialControlPanelModal extends Modal {
 					.addOption('adaptive', 'Adaptive (recommended)')
 					.addOption('lru', 'Least recently used')
 					.addOption('lfu', 'Least frequently used')
-					.addOption('predictive', 'Predictive')
+					.addOption('predictive', 'predictive')
 					.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
 					.onChange(async (value) => {
 						this.plugin.settings.freesoundCacheStrategy = value as 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive';
@@ -1225,7 +1224,7 @@ export class MaterialControlPanelModal extends Modal {
 				}
 
 				audio.addEventListener('canplay', () => resolve(), { once: true });
-				audio.addEventListener('error', (e) => reject(e), { once: true });
+				audio.addEventListener('error', (e) => reject(new Error(`Audio load error: ${e.type}`)), { once: true });
 				audio.src = blobUrl;
 				void audio.load();
 			});
@@ -2403,7 +2402,7 @@ export class MaterialControlPanelModal extends Modal {
 			text: 'Reset to defaults',
 			icon: 'rotate-ccw',
 			variant: 'outlined',
-			onClick: () => this.resetSonicGraphSettings()
+			onClick: () => void this.resetSonicGraphSettings()
 		});
 		resetButtonContainer.appendChild(resetButton.getElement());
 
@@ -4042,9 +4041,9 @@ export class MaterialControlPanelModal extends Modal {
 			qualitySelect.value = usesHighQuality ? 'recording' : 'synthesis';
 			
 			// Handle changes
-			qualitySelect.addEventListener('change', async () => {
+			qualitySelect.addEventListener('change', () => void (async () => {
 				const useRecording = qualitySelect.value === 'recording';
-				
+
 				// Check if recording is available when switching to recording mode
 				if (useRecording && this.instrumentRequiresHighQuality(instrumentName)) {
 					const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
@@ -4055,15 +4054,15 @@ export class MaterialControlPanelModal extends Modal {
 						return;
 					}
 				}
-				
+
 				// Update settings
 				setInstrumentSetting(this.plugin, instrumentName, 'useHighQuality', useRecording);
 				await this.plugin.saveSettings();
-				
+
 				// Show feedback
 				const modeText = useRecording ? 'recording' : 'synthesis';
 				new Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
-			});
+			})());
 			
 			// Disable recording option if not available
 			if (this.instrumentRequiresHighQuality(instrumentName)) {
@@ -4923,10 +4922,10 @@ All whale samples are authentic recordings from marine research institutions and
 			.setDesc('Choose a pre-configured style, or select custom to fine-tune individual parameters')
 			.addDropdown(dropdown => {
 				dropdown
-					.addOption('conservative', 'Conservative - subtle, restrained expression')
-					.addOption('balanced', 'Balanced - current default sound (recommended)')
-					.addOption('adventurous', 'Adventurous - bold, experimental character')
-					.addOption('custom', 'Custom - manual control')
+					.addOption('conservative', 'conservative - subtle, restrained expression')
+					.addOption('balanced', 'balanced - current default sound (recommended)')
+					.addOption('adventurous', 'adventurous - bold, experimental character')
+					.addOption('custom', 'custom - manual control')
 					.setValue(currentPreset)
 					.onChange(async (value) => {
 						// Initialize audioEnhancement if needed
@@ -5049,9 +5048,9 @@ All whale samples are authentic recordings from marine research institutions and
 				.setDesc('Velocity variation between notes. extreme creates dramatic contrasts from whisper-quiet to forte.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('subtle', 'Subtle - even, balanced dynamics')
-						.addOption('moderate', 'Moderate - noticeable variation')
-						.addOption('extreme', 'Extreme - dramatic contrasts')
+						.addOption('subtle', 'subtle - even, balanced dynamics')
+						.addOption('moderate', 'moderate - noticeable variation')
+						.addOption('extreme', 'extreme - dramatic contrasts')
 						.setValue(musicality.dynamicRange || 'extreme')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
@@ -5071,9 +5070,9 @@ All whale samples are authentic recordings from marine research institutions and
 				.setDesc('How much embellishments overlap with the center phrase. maximum creates rich, layered textures.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('sparse', 'Sparse - minimal overlap, clear separation')
-						.addOption('moderate', 'Moderate - some overlap, balanced texture')
-						.addOption('maximum', 'Maximum - dense overlap, rich polyphony')
+						.addOption('sparse', 'sparse - minimal overlap, clear separation')
+						.addOption('moderate', 'moderate - some overlap, balanced texture')
+						.addOption('maximum', 'maximum - dense overlap, rich polyphony')
 						.setValue(musicality.polyphonicDensity || 'maximum')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
@@ -5126,9 +5125,9 @@ All whale samples are authentic recordings from marine research institutions and
 				.setDesc('Approach to harmonic movement between chords. chromatic creates jazzy, sophisticated progressions.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('smooth', 'Smooth - minimal voice movement, consonant')
-						.addOption('balanced', 'Balanced - mix of smooth and chromatic')
-						.addOption('chromatic', 'Chromatic - adventurous, jazzy movement')
+						.addOption('smooth', 'smooth - minimal voice movement, consonant')
+						.addOption('balanced', 'balanced - mix of smooth and chromatic')
+						.addOption('chromatic', 'chromatic - adventurous, jazzy movement')
 						.setValue(musicality.voiceLeadingStyle || 'chromatic')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {

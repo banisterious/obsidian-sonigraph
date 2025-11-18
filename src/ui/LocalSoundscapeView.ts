@@ -735,9 +735,9 @@ export class LocalSoundscapeView extends ItemView {
 
 		const modeSelect = modeSelector.createEl('select', { cls: 'mode-select' });
 		const modes: Array<{value: VisualizationMode, label: string}> = [
-			{ value: 'piano-roll', label: 'Piano Roll' },
-			{ value: 'spectrum', label: 'Spectrum' },
-			{ value: 'staff', label: 'Staff' }
+			{ value: 'piano-roll', label: 'Piano roll' },
+			{ value: 'spectrum', label: 'spectrum' },
+			{ value: 'staff', label: 'staff' }
 		];
 
 		modes.forEach(mode => {
@@ -2639,7 +2639,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Start the audio context if suspended
 		if (getContext().state === 'suspended') {
-			getContext().resume();
+			void getContext().resume();
 			void logger.debug('context', 'Resumed suspended audio context for Local Soundscape playback');
 		}
 

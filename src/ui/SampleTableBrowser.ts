@@ -80,7 +80,7 @@ export class SampleTableBrowser {
 			text: 'Search Freesound',
 			cls: 'sonigraph-sample-table-search-btn'
 		});
-		searchBtn.addEventListener('click', () => this.openFreesoundSearch());
+		searchBtn.addEventListener('click', () => void this.openFreesoundSearch());
 	}
 
 	/**
@@ -554,7 +554,7 @@ export class SampleTableBrowser {
 		const modal = new FreesoundSearchModal(
 			this.app,
 			apiKey,
-			async (sample: FreesoundSample) => {
+			(sample: FreesoundSample) => void (async () => {
 				// Add sample to library
 				if (!this.plugin.settings.freesoundSamples) {
 					this.plugin.settings.freesoundSamples = [];
@@ -574,7 +574,7 @@ export class SampleTableBrowser {
 				this.render(); // Refresh table
 
 				new Notice(`Added "${sample.title}" to library`);
-			}
+			})()
 		);
 
 		void modal.open();

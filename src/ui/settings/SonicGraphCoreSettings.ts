@@ -180,9 +180,9 @@ export class SonicGraphCoreSettings {
 			.setDesc('Override automatic temporal clustering detection')
 			.addDropdown(dropdown => dropdown
 				.addOption('auto', 'Auto (detect from timeline)')
-				.addOption('dense', 'Force dense')
-				.addOption('balanced', 'Force balanced')
-				.addOption('sparse', 'Force sparse')
+				.addOption('dense', 'force dense')
+				.addOption('balanced', 'force balanced')
+				.addOption('sparse', 'force sparse')
 				.setValue(this.plugin.settings.sonicGraphSettings?.audio.autoDetectionOverride || 'auto')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.sonicGraphSettings) return;
@@ -243,9 +243,9 @@ export class SonicGraphCoreSettings {
 			.setName('Event spreading')
 			.setDesc('Prevent audio crackling by spacing simultaneous events')
 			.addDropdown(dropdown => dropdown
-				.addOption('none', 'None - no spreading')
-				.addOption('gentle', 'Gentle - light spreading')
-				.addOption('aggressive', 'Aggressive - heavy spreading')
+				.addOption('none', 'none - no spreading')
+				.addOption('gentle', 'gentle - light spreading')
+				.addOption('aggressive', 'aggressive - heavy spreading')
 				.setValue(this.plugin.settings.sonicGraphSettings?.timeline.eventSpreadingMode || 'gentle')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.sonicGraphSettings) return;
@@ -417,9 +417,9 @@ export class SonicGraphCoreSettings {
 			.setName('Instrument distribution')
 			.setDesc('How to distribute instruments across similar files')
 			.addDropdown(dropdown => dropdown
-				.addOption('balanced', 'Balanced - prevent clustering')
-				.addOption('random', 'Random - natural variation')
-				.addOption('semantic', 'Semantic - based on content')
+				.addOption('balanced', 'balanced - prevent clustering')
+				.addOption('random', 'random - natural variation')
+				.addOption('semantic', 'semantic - based on content')
 				.setValue(this.plugin.settings.audioEnhancement?.contentAwareMapping?.distributionStrategy || 'balanced')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.audioEnhancement?.contentAwareMapping) return;

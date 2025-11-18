@@ -1019,7 +1019,8 @@ export class GraphRenderer {
    */
   setZoomTransform(transform: d3.ZoomTransform): void {
     if (this.config.enableZoom && this.zoom) {
-      this.svg.call(this.zoom.transform, transform);
+      const zoom = this.zoom;
+      this.svg.call((selection) => zoom.transform(selection, transform));
       logger.info('zoom-set', `Zoom transform set externally: scale=${transform.k}, translate=(${transform.x}, ${transform.y})`);
     }
   }
@@ -1513,12 +1514,12 @@ export class GraphRenderer {
   /**
    * Apply Smart Clustering and render cluster visualization
    */
-  private async applySmartClustering(): Promise<void> {
+  private applySmartClustering(): void {
     if (!this.smartClustering || !this.smartClusteringSettings?.enabled) {
       void this.clearClusterVisualization();
       return;
     }
-    
+
     logger.debug('smart-clustering', 'Applying smart clustering', {
       hasClustering: !!this.smartClustering,
       enabled: this.smartClusteringSettings?.enabled,
@@ -1526,21 +1527,21 @@ export class GraphRenderer {
       nodeCount: this.nodes.length,
       linkCount: this.links.length
     });
-    
+
     try {
       // Run clustering algorithm
       this.clusteringResult = this.smartClustering.clusterGraph(this.nodes, this.links);
-      
+
       logger.debug('smart-clustering', 'Clustering completed', {
         clusterCount: this.clusteringResult.clusters.length,
         coverage: this.clusteringResult.coverage,
         modularity: this.clusteringResult.modularity,
         orphanNodes: this.clusteringResult.orphanNodes.length
       });
-      
+
       // Render cluster visualization
       void this.renderClusterVisualization();
-      
+
     } catch (error) {
       logger.error('smart-clustering', 'Failed to apply smart clustering', (error as Error).message);
       void this.clearClusterVisualization();
@@ -1562,9 +1563,9 @@ export class GraphRenderer {
       return;
     }
 
-    const tagConnections = (debugData.tagConnections as unknown) || [];
-    const temporalZones = (debugData.temporalZones as unknown) || [];
-    const hubNodes = (debugData.hubNodes as unknown) || [];
+    const tagConnections = debugData.tagConnections || [];
+    const temporalZones = debugData.temporalZones || [];
+    const hubNodes = debugData.hubNodes || [];
 
     logger.debug('debug-viz', 'Updating debug visualization', {
       tagConnections: tagConnections.length || 0,
