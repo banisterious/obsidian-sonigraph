@@ -574,27 +574,27 @@ export class MaterialControlPanelModal extends Modal {
 		const tipsList = tipsContent.createEl('ul', { cls: 'osp-guide-tips' });
 
 		tipsList.createEl('li', {
-			text: 'Start simple: enable 3-5 instruments initially. too many instruments can create sonic clutter.'
+			text: 'Start simple: Enable 3-5 instruments initially. Too many instruments can create sonic clutter.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Mix instrument types: combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound.'
+			text: 'Mix instrument types: Combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Use scale quantization: this is the single most impactful musical enhancement for making soundscapes harmonious.'
+			text: 'Use scale quantization: This is the single most impactful musical enhancement for making soundscapes harmonious.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Adjust depth in local soundscape: depth 2 is ideal for most notes. higher depths show more context but may become overwhelming.'
+			text: 'Adjust depth in Local Soundscape: Depth 2 is ideal for most notes. Higher depths show more context but may become overwhelming.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Monitor performance: check the status tab to see active voices and ensure your system isn\'t overloaded.'
+			text: 'Monitor performance: Check the status tab to see active voices and ensure your system isn\'t overloaded.'
 		});
 
 		tipsList.createEl('li', {
-			text: 'Experiment with turn-taking: call-response and solos patterns dramatically reduce sonic congestion while adding musical dialogue.'
+			text: 'Experiment with turn-taking: Call-response and solos patterns dramatically reduce sonic congestion while adding musical dialogue.'
 		});
 
 		this.contentContainer.appendChild(tipsCard.getElement());
@@ -617,7 +617,7 @@ export class MaterialControlPanelModal extends Modal {
 			text: 'GitHub repository',
 			attr: { href: 'https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides' }
 		});
-		void docLi.appendText(' for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.');
+		void docLi.appendText(' for detailed guides on Local Soundscape, Sonic Graph, and musical enhancements.');
 
 		const settingsLi = helpList.createEl('li');
 		settingsLi.createEl('strong', { text: 'Settings:' });
@@ -625,7 +625,7 @@ export class MaterialControlPanelModal extends Modal {
 
 		const commandsLi = helpList.createEl('li');
 		commandsLi.createEl('strong', { text: 'Commands:' });
-		commandsLi.appendText(' Search "Sonigraph" in Obsidian\'s command palette (Ctrl/Cmd + P) to see all available commands.');
+		commandsLi.appendText(' Search "Sonigraph" in Obsidian\'s command palette (Ctrl/Cmd+P) to see all available commands.');
 
 		const feedbackLi = helpList.createEl('li');
 		feedbackLi.createEl('strong', { text: 'Issues & feedback:' });
@@ -953,9 +953,9 @@ export class MaterialControlPanelModal extends Modal {
 				.setName('Cache strategy')
 				.setDesc('Algorithm for managing cached samples when storage is full')
 				.addDropdown(dropdown => dropdown
-					.addOption('adaptive', 'Adaptive (Recommended)')
-					.addOption('lru', 'Least Recently Used')
-					.addOption('lfu', 'Least Frequently Used')
+					.addOption('adaptive', 'Adaptive (recommended)')
+					.addOption('lru', 'Least recently used')
+					.addOption('lfu', 'Least frequently used')
 					.addOption('predictive', 'Predictive')
 					.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
 					.onChange(async (value) => {
@@ -1442,17 +1442,17 @@ export class MaterialControlPanelModal extends Modal {
 
 		const scales = [
 			{ value: 'major', label: 'Major' },
-			{ value: 'minor', label: 'Minor (Natural)' },
+			{ value: 'minor', label: 'Minor (natural)' },
 			{ value: 'dorian', label: 'Dorian' },
 			{ value: 'phrygian', label: 'Phrygian' },
 			{ value: 'lydian', label: 'Lydian' },
 			{ value: 'mixolydian', label: 'Mixolydian' },
 			{ value: 'aeolian', label: 'Aeolian' },
 			{ value: 'locrian', label: 'Locrian' },
-			{ value: 'pentatonic-major', label: 'Pentatonic Major' },
-			{ value: 'pentatonic-minor', label: 'Pentatonic Minor' },
+			{ value: 'pentatonic-major', label: 'Pentatonic major' },
+			{ value: 'pentatonic-minor', label: 'Pentatonic minor' },
 			{ value: 'blues', label: 'Blues' },
-			{ value: 'whole-tone', label: 'Whole Tone' },
+			{ value: 'whole-tone', label: 'Whole tone' },
 			{ value: 'chromatic', label: 'Chromatic' }
 		];
 
@@ -1715,7 +1715,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Timing window
 		new Setting(container)
 			.setName('Timing window')
-			.setDesc('Notes arriving within this window are grouped into chords. start with 50-100ms for simultaneous notes. warning: values over 200ms will group sequential notes into large chords.')
+			.setDesc('Notes arriving within this window are grouped into chords. Start with 50-100ms for simultaneous notes. Warning: values over 200ms will group sequential notes into large chords.')
 			.addSlider(slider => slider
 				.setLimits(20, 500, 10)
 				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.timingWindow || 50)
@@ -1736,7 +1736,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Temporal grouping mode
 		new Setting(container)
 			.setName('Group notes by')
-			.setDesc('Group notes from the same time period into chords. "Real-time" uses millisecond timing, while day/week/month groups notes by their temporal date.')
+			.setDesc('Group notes from the same time period into chords. Real-time uses millisecond timing, while day/week/month groups notes by their temporal date.')
 			.addDropdown(dropdown => dropdown
 				.addOption('realtime', 'Real-time (milliseconds)')
 				.addOption('day', 'Same day')
