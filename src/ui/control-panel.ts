@@ -889,7 +889,7 @@ export class MaterialControlPanelModal extends Modal {
 							await this.plugin.saveSettings();
 							void logger.info('freesound', 'Freesound API key updated');
 						});
-					text.inputEl.style.fontSize = '13px';
+					text.inputEl.setCssProps({ fontSize: '13px' });
 				})
 				.addButton(button => {
 					button
@@ -2212,7 +2212,7 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const qualityStat = perfStatsRow.createDiv({ cls: 'osp-stat-compact' });
 		const qualityValueSpan = qualityStat.createSpan({ cls: 'osp-stat-value', text: 'High' });
-		qualityValueSpan.style.color = 'var(--color-green)';
+		qualityValueSpan.setCssProps({ color: 'var(--color-green)' });
 		qualityStat.createSpan({ cls: 'osp-stat-label', text: 'Audio quality' });
 		
 		this.contentContainer.appendChild(masterEffectsCard.getElement());
@@ -3925,7 +3925,7 @@ export class MaterialControlPanelModal extends Modal {
 		if (!canToggle) {
 			toggleInput.disabled = true;
 			toggleContainer.classList.add('ospcc-switch--unavailable');
-			toggleContainer.style.cursor = 'not-allowed';
+			toggleContainer.setCssProps({ cursor: 'not-allowed' });
 			toggleContainer.setAttribute('data-tooltip', `${instrumentInfo.name} samples not yet downloaded`);
 			toggleContainer.setAttribute('title', `${instrumentInfo.name} samples not yet downloaded`);
 		}

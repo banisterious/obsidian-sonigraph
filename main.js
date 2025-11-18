@@ -1231,11 +1231,11 @@ var init_constants = __esm({
           }
         },
         guitar: {
-          enabled: true,
+          enabled: false,
           volume: 0.6,
           maxVoices: 4,
-          useHighQuality: true,
-          // Use high-quality recordings
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1299,11 +1299,11 @@ var init_constants = __esm({
           }
         },
         guitarNylon: {
-          enabled: false,
+          enabled: true,
           volume: 0.6,
           maxVoices: 4,
-          useHighQuality: false,
-          // Default to synthesis (user can switch to recordings)
+          useHighQuality: true,
+          // Use high-quality recordings
           effects: {
             reverb: {
               enabled: true,
@@ -1333,11 +1333,11 @@ var init_constants = __esm({
           }
         },
         bassElectric: {
-          enabled: true,
+          enabled: false,
           volume: 0.8,
           maxVoices: 2,
-          useHighQuality: true,
-          // Use high-quality recordings
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1435,11 +1435,11 @@ var init_constants = __esm({
           }
         },
         frenchHorn: {
-          enabled: true,
+          enabled: false,
           volume: 0.6,
           maxVoices: 4,
-          useHighQuality: true,
-          // Use high-quality recordings
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1538,11 +1538,11 @@ var init_constants = __esm({
         },
         // Phase 8: Percussion & Electronic Finale (8 instruments → 33/33 total)
         bassoon: {
-          enabled: true,
+          enabled: false,
           volume: 0.7,
           maxVoices: 4,
-          useHighQuality: true,
-          // Use high-quality recordings
+          useHighQuality: false,
+          // Default to synthesis (user can switch to recordings)
           effects: {
             reverb: {
               enabled: true,
@@ -1604,7 +1604,7 @@ var init_constants = __esm({
           }
         },
         timpani: {
-          enabled: true,
+          enabled: false,
           volume: 0.9,
           maxVoices: 2,
           useHighQuality: false,
@@ -1638,7 +1638,7 @@ var init_constants = __esm({
           }
         },
         xylophone: {
-          enabled: true,
+          enabled: false,
           volume: 0.8,
           maxVoices: 4,
           useHighQuality: false,
@@ -1740,7 +1740,7 @@ var init_constants = __esm({
           }
         },
         leadSynth: {
-          enabled: true,
+          enabled: false,
           volume: 0.6,
           maxVoices: 4,
           effects: {
@@ -1772,7 +1772,7 @@ var init_constants = __esm({
           }
         },
         bassSynth: {
-          enabled: true,
+          enabled: false,
           volume: 0.8,
           maxVoices: 2,
           effects: {
@@ -18040,7 +18040,7 @@ var init_FreesoundSearchModal = __esm({
             attr: { "aria-label": `Add ${result.name} to library` }
           });
           (0, import_obsidian11.setIcon)(addBtn, "plus");
-          addBtn.createSpan({ text: "Add to Library" });
+          addBtn.createSpan({ text: "Add to library" });
           addBtn.addEventListener("click", () => this.addSampleToLibrary(result));
         });
       }
@@ -18860,7 +18860,7 @@ var init_SampleTableBrowser = __esm({
         this.tagListEl.empty();
         if (this.currentTags.length === 0) {
           this.tagListEl.createEl("p", {
-            text: "No tags yet. Add some above.",
+            text: "No tags yet. add some above.",
             cls: "sonigraph-tag-editor-empty"
           });
           return;
@@ -21485,7 +21485,7 @@ var init_control_panel = __esm({
         });
         this.contentContainer.appendChild(welcomeCard.getElement());
         const quickStartCard = new MaterialCard({
-          title: "Quick Start",
+          title: "Quick start",
           iconName: "zap",
           subtitle: "Get up and running in 3 steps",
           elevation: 1
@@ -21499,11 +21499,11 @@ var init_control_panel = __esm({
           text: "Configure musical settings: visit the musical tab to set your preferred scale (try c major) and tempo (60-120 BPM works well for most vaults)."
         });
         stepsList.createEl("li", {
-          text: 'Try Local Soundscape: right-click any note in your vault and select "open in Local Soundscape" to hear how it connects to other notes.'
+          text: 'Try local soundscape: right-click any note in your vault and select"open in Local Soundscape" to hear how it connects to other notes.'
         });
         this.contentContainer.appendChild(quickStartCard.getElement());
         const featuresCard = new MaterialCard({
-          title: "Key Features",
+          title: "Key features",
           iconName: "star",
           subtitle: "What you can do with Sonigraph",
           elevation: 1
@@ -21511,19 +21511,19 @@ var init_control_panel = __esm({
         const featuresContent = featuresCard.getContent();
         const featuresList = featuresContent.createEl("div", { cls: "osp-guide-features" });
         const lsFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
-        lsFeature.createEl("strong", { text: "Local Soundscape" });
+        lsFeature.createEl("strong", { text: "Local soundscape" });
         lsFeature.createEl("p", {
-          text: "Visualize and sonify a single note and its connections. notes at different depths play different instrument families, creating layers of harmony. enable musical enhancements in the Local Soundscape tab for richer, more musical results."
+          text: "Visualize and sonify a single note and its connections. notes at different depths play different instrument families, creating layers of harmony. enable musical enhancements in the local soundscape tab for richer, more musical results."
         });
         const sgFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
         sgFeature.createEl("strong", { text: "Sonic Graph" });
         sgFeature.createEl("p", {
-          text: "See and hear your entire vault as an animated graph. Watch temporal patterns unfold as your knowledge base comes alive with sound and motion."
+          text: "See and hear your entire vault as an animated graph. watch temporal patterns unfold as your knowledge base comes alive with sound and motion."
         });
         const meFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
         meFeature.createEl("strong", { text: "Musical enhancements" });
         meFeature.createEl("p", {
-          text: "Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. configure these in the Local Soundscape tab."
+          text: "Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. configure these in the local soundscape tab."
         });
         const clFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
         clFeature.createEl("strong", { text: "Continuous layers" });
@@ -21532,7 +21532,7 @@ var init_control_panel = __esm({
         });
         this.contentContainer.appendChild(featuresCard.getElement());
         const meGuideCard = new MaterialCard({
-          title: "Musical Enhancements Guide",
+          title: "Musical enhancements guide",
           iconName: "music",
           subtitle: "Making your soundscapes more musical",
           elevation: 1
@@ -21563,7 +21563,7 @@ var init_control_panel = __esm({
         preset4.createEl("p", { text: "Enable all of the above for maximum musicality and expressiveness." });
         this.contentContainer.appendChild(meGuideCard.getElement());
         const tipsCard = new MaterialCard({
-          title: "Tips & Best Practices",
+          title: "Tips & best practices",
           iconName: "lightbulb",
           subtitle: "Get the most out of Sonigraph",
           elevation: 1
@@ -21580,17 +21580,17 @@ var init_control_panel = __esm({
           text: "Use scale quantization: this is the single most impactful musical enhancement for making soundscapes harmonious."
         });
         tipsList.createEl("li", {
-          text: "Adjust Depth in Local Soundscape: Depth 2 is ideal for most notes. Higher depths show more context but may become overwhelming."
+          text: "Adjust depth in local soundscape: depth 2 is ideal for most notes. higher depths show more context but may become overwhelming."
         });
         tipsList.createEl("li", {
-          text: "Monitor Performance: Check the Status tab to see active voices and ensure your system isn't overloaded."
+          text: "Monitor performance: check the status tab to see active voices and ensure your system isn't overloaded."
         });
         tipsList.createEl("li", {
-          text: "Experiment with Turn-Taking: Call-Response and Solos patterns dramatically reduce sonic congestion while adding musical dialogue."
+          text: "Experiment with turn-taking: call-response and solos patterns dramatically reduce sonic congestion while adding musical dialogue."
         });
         this.contentContainer.appendChild(tipsCard.getElement());
         const helpCard = new MaterialCard({
-          title: "Help & Resources",
+          title: "Help & resources",
           iconName: "help-circle",
           subtitle: "Need more information?",
           elevation: 1
@@ -21612,7 +21612,7 @@ var init_control_panel = __esm({
         commandsLi.createEl("strong", { text: "Commands:" });
         commandsLi.appendText(` Search "Sonigraph" in Obsidian's command palette (Ctrl/Cmd + P) to see all available commands.`);
         const feedbackLi = helpList.createEl("li");
-        feedbackLi.createEl("strong", { text: "Issues & Feedback:" });
+        feedbackLi.createEl("strong", { text: "Issues & feedback:" });
         void feedbackLi.appendText(" Report bugs or request features on ");
         feedbackLi.createEl("a", {
           text: "GitHub Issues",
@@ -21672,7 +21672,7 @@ var init_control_panel = __esm({
         cpuStat.createSpan({ cls: "osp-stat-value", text: "12%" });
         cpuStat.createSpan({ cls: "osp-stat-label", text: "CPU" });
         const voicesStat = statsRow.createDiv({ cls: "osp-stat-compact" });
-        voicesStat.createSpan({ cls: "osp-stat-value", text: `${status.audio.currentNotes || 0}` });
+        voicesStat.createSpan({ cls: "osp-stat-value", text: `${Number(status.audio.currentNotes) || 0}` });
         voicesStat.createSpan({ cls: "osp-stat-label", text: "Voices" });
         const contextStat = statsRow.createDiv({ cls: "osp-stat-compact" });
         const contextValue = status.audio.audioContext || "Suspended";
@@ -22399,7 +22399,7 @@ var init_control_panel = __esm({
             await this.plugin.audioEngine.updateSettings(this.plugin.settings);
           }
         });
-        new import_obsidian18.Setting(container).setName("Timing window").setDesc("Notes arriving within this window are grouped into chords. Start with 50-100ms for simultaneous notes. WARNING: Values over 200ms will group sequential notes into large chords.").addSlider(
+        new import_obsidian18.Setting(container).setName("Timing window").setDesc("Notes arriving within this window are grouped into chords. start with 50-100ms for simultaneous notes. warning: values over 200ms will group sequential notes into large chords.").addSlider(
           (slider) => {
             var _a2, _b2;
             return slider.setLimits(20, 500, 10).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.timingWindow) || 50).setDynamicTooltip().onChange(async (value) => {
@@ -22708,12 +22708,12 @@ var init_control_panel = __esm({
         const globalContent = globalCard.getContent();
         const globalChipSet = globalContent.createDiv({ cls: "ospcc-chip-set" });
         const enableAllChip = new ActionChip({
-          text: "Enable All Instruments",
+          text: "Enable all instruments",
           iconName: "checkCircle",
           onToggle: (selected) => this.handleGlobalAction("enableAll", selected)
         });
         const resetAllChip = new ActionChip({
-          text: "Reset All Settings",
+          text: "Reset all settings",
           iconName: "reset",
           onToggle: (selected) => this.handleGlobalAction("resetAll", selected)
         });
@@ -22908,7 +22908,7 @@ var init_control_panel = __esm({
         });
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-control-description" });
-        description.createEl("p", { text: "Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections." });
+        description.createEl("p", { text: "Transform your knowledge graph into a temporal audio-visual experience. notes appear chronologically with musical accompaniment based on content and connections." });
         const settingsSection = content.createDiv({ cls: "osp-settings-section osp-settings-section--spaced" });
         logger28.debug("ui", `Creating show file names toggle with initial state: ${this.showFileNames}`);
         createObsidianToggle(
@@ -22947,7 +22947,7 @@ var init_control_panel = __esm({
         const content = card.getContent();
         const resetButtonContainer = content.createDiv({ cls: "osp-sonic-graph-reset-container" });
         const resetButton = new MaterialButton({
-          text: "Reset to Defaults",
+          text: "Reset to defaults",
           icon: "rotate-ccw",
           variant: "outlined",
           onClick: () => this.resetSonicGraphSettings()
@@ -23262,16 +23262,16 @@ var init_control_panel = __esm({
         voicesStat.createSpan({ cls: "osp-stat-label", text: "Voices" });
         const avgVolumeStat = statsRow.createDiv({ cls: "osp-stat-compact" });
         avgVolumeStat.createSpan({ cls: "osp-stat-value", text: "0.7" });
-        avgVolumeStat.createSpan({ cls: "osp-stat-label", text: "Avg Vol" });
+        avgVolumeStat.createSpan({ cls: "osp-stat-label", text: "Avg vol" });
         const actionsRow = content.createDiv({ cls: "osp-actions-row" });
         const enableAllBtn = actionsRow.createEl("button", {
           cls: "osp-action-btn osp-action-btn--primary",
-          text: "Enable All"
+          text: "Enable all"
         });
         enableAllBtn.addEventListener("click", () => this.handleBulkAction(familyId, "enableAll", true));
         const disableAllBtn = actionsRow.createEl("button", {
           cls: "osp-action-btn osp-action-btn--secondary",
-          text: "Disable All"
+          text: "Disable all"
         });
         disableAllBtn.addEventListener("click", () => this.handleBulkAction(familyId, "disableAll", true));
         const resetBtn = actionsRow.createEl("button", {
@@ -23310,7 +23310,7 @@ var init_control_panel = __esm({
        */
       createRhythmicPercussionCard() {
         const card = new MaterialCard({
-          title: "Rhythmic Percussion (Accent Layer)",
+          title: "Rhythmic percussion (accent layer)",
           iconName: "drum",
           subtitle: "Add drum accents to enhance rhythmic emphasis",
           elevation: 1
@@ -24656,7 +24656,7 @@ All whale samples are authentic recordings from marine research institutions and
         if (enabledInstruments.length === 0) {
           content.createDiv({
             cls: "osp-warning-message",
-            text: "\u26A0\uFE0F No instruments are currently enabled. Enable instruments in their respective tabs to use Local Soundscape."
+            text: "\u26A0\uFE0F no instruments are currently enabled. enable instruments in their respective tabs to use local soundscape."
           });
         } else {
           const infoDiv = content.createDiv({ cls: "osp-info-message" });
@@ -24762,7 +24762,7 @@ All whale samples are authentic recordings from marine research institutions and
         const isUnlimited = currentValue === "all";
         const numericValue = isUnlimited ? 100 : typeof currentValue === "number" ? currentValue : 100;
         content.createEl("p", {
-          text: "Limit the number of notes per depth level. Higher values create longer, more detailed soundscapes but may impact performance.",
+          text: "Limit the number of notes per depth level. higher values create longer, more detailed soundscapes but may impact performance.",
           cls: "setting-item-description"
         });
         new import_obsidian18.Setting(content).setName("Max nodes per depth").setDesc(isUnlimited ? "Unlimited (all nodes)" : `${numericValue} nodes`).addSlider((slider) => {
@@ -24815,7 +24815,7 @@ All whale samples are authentic recordings from marine research institutions and
         const audioEnhancement = this.plugin.settings.audioEnhancement;
         const musicality = (audioEnhancement == null ? void 0 : audioEnhancement.noteCentricMusicality) || {};
         const currentPreset = musicality.preset || "balanced";
-        new import_obsidian18.Setting(content).setName("Musicality preset").setDesc("Choose a pre-configured style, or select Custom to fine-tune individual parameters").addDropdown((dropdown) => {
+        new import_obsidian18.Setting(content).setName("Musicality preset").setDesc("Choose a pre-configured style, or select custom to fine-tune individual parameters").addDropdown((dropdown) => {
           dropdown.addOption("conservative", "Conservative - Subtle, restrained expression").addOption("balanced", "Balanced - Current default sound (recommended)").addOption("adventurous", "Adventurous - Bold, experimental character").addOption("custom", "Custom - Manual control").setValue(currentPreset).onChange(async (value) => {
             if (!this.plugin.settings.audioEnhancement) {
               this.plugin.settings.audioEnhancement = {};
@@ -24853,7 +24853,7 @@ All whale samples are authentic recordings from marine research institutions and
         });
         if (currentPreset === "custom") {
           const customControls = content.createDiv({ cls: "osp-musicality-custom-controls" });
-          new import_obsidian18.Setting(customControls).setName("Timing humanization").setDesc("Micro-timing variation in milliseconds (50-250ms). Higher values create looser, more organic groove.").addSlider((slider) => {
+          new import_obsidian18.Setting(customControls).setName("Timing humanization").setDesc("Micro-timing variation in milliseconds (50-250ms). higher values create looser, more organic groove.").addSlider((slider) => {
             slider.setLimits(50, 250, 25).setValue(musicality.timingHumanization || 125).setDynamicTooltip().onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24875,7 +24875,7 @@ All whale samples are authentic recordings from marine research institutions and
               void this.createLocalSoundscapeTab();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Harmonic adventurousness").setDesc("Frequency of exotic chords and voice leading (0-100%). Higher values add more chromatic color and jazz harmonies.").addSlider((slider) => {
+          new import_obsidian18.Setting(customControls).setName("Harmonic adventurousness").setDesc("Frequency of exotic chords and voice leading (0-100%). higher values add more chromatic color and jazz harmonies.").addSlider((slider) => {
             slider.setLimits(0, 100, 5).setValue(musicality.harmonicAdventurousness || 75).setDynamicTooltip().onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24897,7 +24897,7 @@ All whale samples are authentic recordings from marine research institutions and
               void this.createLocalSoundscapeTab();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Dynamic range").setDesc("Velocity variation between notes. Extreme creates dramatic contrasts from whisper-quiet to forte.").addDropdown((dropdown) => {
+          new import_obsidian18.Setting(customControls).setName("Dynamic range").setDesc("Velocity variation between notes. extreme creates dramatic contrasts from whisper-quiet to forte.").addDropdown((dropdown) => {
             dropdown.addOption("subtle", "Subtle - Even, balanced dynamics").addOption("moderate", "Moderate - Noticeable variation").addOption("extreme", "Extreme - Dramatic contrasts").setValue(musicality.dynamicRange || "extreme").onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24909,7 +24909,7 @@ All whale samples are authentic recordings from marine research institutions and
               await this.plugin.saveSettings();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Polyphonic density").setDesc("How much embellishments overlap with the center phrase. Maximum creates rich, layered textures.").addDropdown((dropdown) => {
+          new import_obsidian18.Setting(customControls).setName("Polyphonic density").setDesc("How much embellishments overlap with the center phrase. maximum creates rich, layered textures.").addDropdown((dropdown) => {
             dropdown.addOption("sparse", "Sparse - Minimal overlap, clear separation").addOption("moderate", "Moderate - Some overlap, balanced texture").addOption("maximum", "Maximum - Dense overlap, rich polyphony").setValue(musicality.polyphonicDensity || "maximum").onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24921,7 +24921,7 @@ All whale samples are authentic recordings from marine research institutions and
               await this.plugin.saveSettings();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Melodic independence").setDesc("How freely embellishments deviate from center melody (0-100%). Higher values create more independent counterpoint.").addSlider((slider) => {
+          new import_obsidian18.Setting(customControls).setName("Melodic independence").setDesc("How freely embellishments deviate from center melody (0-100%). higher values create more independent counterpoint.").addSlider((slider) => {
             slider.setLimits(0, 100, 5).setValue(musicality.melodicIndependence || 80).setDynamicTooltip().onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24943,7 +24943,7 @@ All whale samples are authentic recordings from marine research institutions and
               void this.createLocalSoundscapeTab();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Voice leading style").setDesc("Approach to harmonic movement between chords. Chromatic creates jazzy, sophisticated progressions.").addDropdown((dropdown) => {
+          new import_obsidian18.Setting(customControls).setName("Voice leading style").setDesc("Approach to harmonic movement between chords. chromatic creates jazzy, sophisticated progressions.").addDropdown((dropdown) => {
             dropdown.addOption("smooth", "Smooth - Minimal voice movement, consonant").addOption("balanced", "Balanced - Mix of smooth and chromatic").addOption("chromatic", "Chromatic - Adventurous, jazzy movement").setValue(musicality.voiceLeadingStyle || "chromatic").onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24968,31 +24968,31 @@ All whale samples are authentic recordings from marine research institutions and
         const card = new MaterialCard({
           title: "Tips & best practices",
           iconName: "lightbulb",
-          subtitle: "Get the most out of Local Soundscape",
+          subtitle: "Get the most out of local soundscape",
           elevation: 1
         });
         const content = card.getContent();
         const tipsList = content.createEl("ul", { cls: "osp-guide-tips" });
         const tip1 = tipsList.createEl("li");
-        tip1.createEl("strong", { text: "Start with Depth 2:" });
+        tip1.createEl("strong", { text: "Start with depth 2:" });
         void tip1.appendText(" This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.");
         const tip2 = tipsList.createEl("li");
-        tip2.createEl("strong", { text: "Enable Scale Quantization:" });
+        tip2.createEl("strong", { text: "Enable scale quantization:" });
         tip2.appendText(" This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.");
         const tip3 = tipsList.createEl("li");
-        tip3.createEl("strong", { text: "Use Clustering to Discover Patterns:" });
+        tip3.createEl("strong", { text: "Use clustering to discover patterns:" });
         void tip3.appendText(" Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.");
         const tip4 = tipsList.createEl("li");
-        tip4.createEl("strong", { text: "Reduce Sonic Congestion:" });
+        tip4.createEl("strong", { text: "Reduce Sonic congestion:" });
         tip4.appendText(" Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.");
         const tip5 = tipsList.createEl("li");
-        tip5.createEl("strong", { text: "Filter by Tags/Folders:" });
+        tip5.createEl("strong", { text: "Filter by tags/folders:" });
         void tip5.appendText(" Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.");
         const tip6 = tipsList.createEl("li");
-        tip6.createEl("strong", { text: "Manage Performance:" });
+        tip6.createEl("strong", { text: "Manage performance:" });
         void tip6.appendText(" For highly-connected notes, limit nodes per depth or reduce enabled instruments in the Keyboard/Strings/Electronic tabs to avoid polyphony warnings.");
         const tip7 = tipsList.createEl("li");
-        tip7.createEl("strong", { text: "Daily Review Workflow:" });
+        tip7.createEl("strong", { text: "Daily review workflow:" });
         void tip7.appendText(` Right-click your daily note and "Open in Local Soundscape" to hear what you're connecting to. This reveals emerging themes in your thinking.`);
         this.contentContainer.appendChild(card.getElement());
       }
@@ -25009,7 +25009,7 @@ All whale samples are authentic recordings from marine research institutions and
         const content = card.getContent();
         const faq1 = content.createEl("div", { cls: "osp-faq-item" });
         const q1 = faq1.createEl("h4", { cls: "osp-faq-question" });
-        q1.createEl("strong", { text: "Q: Why does the music sound simplistic or repetitive?" });
+        q1.createEl("strong", { text: "Q: why does the music sound simplistic or repetitive?" });
         void q1.appendText(" ");
         q1.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
         const a1 = faq1.createEl("div", { cls: "osp-faq-answer" });
@@ -25030,13 +25030,13 @@ All whale samples are authentic recordings from marine research institutions and
         a1p2.createEl("strong", { text: "To get richer, more varied soundscapes:" });
         const a1ol = a1.createEl("ol");
         const a1oli1 = a1ol.createEl("li");
-        a1oli1.createEl("strong", { text: "Enable Musical Enhancements" });
+        a1oli1.createEl("strong", { text: "Enable musical enhancements" });
         a1oli1.appendText(" (above) - This is the most impactful change:");
         const a1oli1ul = a1oli1.createEl("ul");
-        a1oli1ul.createEl("li", { text: "Scale Quantization creates harmonic consonance" });
-        a1oli1ul.createEl("li", { text: "Chord Voicing adds polyphonic richness" });
-        a1oli1ul.createEl("li", { text: "Rhythmic Patterns organize timing musically" });
-        a1oli1ul.createEl("li", { text: "Tension Tracking creates emotional arcs" });
+        a1oli1ul.createEl("li", { text: "Scale quantization creates harmonic consonance" });
+        a1oli1ul.createEl("li", { text: "Chord voicing adds polyphonic richness" });
+        a1oli1ul.createEl("li", { text: "Rhythmic patterns organize timing musically" });
+        a1oli1ul.createEl("li", { text: "Tension tracking creates emotional arcs" });
         a1oli1ul.createEl("li", { text: "Turn-Taking reduces congestion through dialogue" });
         const a1oli2 = a1ol.createEl("li");
         a1oli2.createEl("strong", { text: "Use diverse instruments" });
@@ -25048,10 +25048,10 @@ All whale samples are authentic recordings from marine research institutions and
         a1oli4.createEl("strong", { text: "Experiment with clustering" });
         void a1oli4.appendText(" - Different clustering methods reveal different organizational patterns in your vault");
         const a1p3 = a1.createEl("p");
-        a1p3.createEl("em", { text: "Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted." });
+        a1p3.createEl("em", { text: "Note: the plugin reads content inside callouts and includes it in word counts when using accurate parsing (sonic Graph mode). callout markers are stripped but the text content is counted." });
         const faq2 = content.createEl("div", { cls: "osp-faq-item" });
         const q2 = faq2.createEl("h4", { cls: "osp-faq-question" });
-        q2.createEl("strong", { text: "Q: I only see one node, or my soundscapes are simple even with Musical Enhancements enabled. Why?" });
+        q2.createEl("strong", { text: "Q: I only see one node, or my soundscapes are simple even with musical enhancements enabled. why?" });
         void q2.appendText(" ");
         q2.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
         const a2 = faq2.createEl("div", { cls: "osp-faq-answer" });
@@ -25071,28 +25071,28 @@ All whale samples are authentic recordings from marine research institutions and
         a2li3.createEl("strong", { text: "Filters too restrictive:" });
         void a2li3.appendText(" Tag/folder filters are excluding connected notes");
         const a2p3 = a2.createEl("p");
-        a2p3.createEl("strong", { text: "What Musical Enhancements need to work:" });
+        a2p3.createEl("strong", { text: "What musical enhancements need to work:" });
         const a2ul2 = a2.createEl("ul");
         const a2li4 = a2ul2.createEl("li");
         a2li4.createEl("strong", { text: "Turn-Taking:" });
         void a2li4.appendText(" Needs 3+ notes at different depths to create call-response dialogue");
         const a2li5 = a2ul2.createEl("li");
-        a2li5.createEl("strong", { text: "Chord Voicing:" });
+        a2li5.createEl("strong", { text: "Chord voicing:" });
         void a2li5.appendText(" Needs 2+ notes at same depth to build harmonies");
         const a2li6 = a2ul2.createEl("li");
-        a2li6.createEl("strong", { text: "Rhythmic Patterns:" });
+        a2li6.createEl("strong", { text: "Rhythmic patterns:" });
         void a2li6.appendText(" Needs 4+ notes to organize into musical patterns");
         const a2li7 = a2ul2.createEl("li");
-        a2li7.createEl("strong", { text: "Tension Tracking:" });
+        a2li7.createEl("strong", { text: "Tension tracking:" });
         void a2li7.appendText(" Needs 5+ notes to create narrative arcs");
         const a2li8 = a2ul2.createEl("li");
-        a2li8.createEl("strong", { text: "Scale Quantization:" });
+        a2li8.createEl("strong", { text: "Scale quantization:" });
         void a2li8.appendText(" Works with any number of notes, but more varied with higher counts");
         const a2p4 = a2.createEl("p");
         a2p4.createEl("strong", { text: "How to fix:" });
         const a2ol = a2.createEl("ol");
         const a2oli1 = a2ol.createEl("li");
-        a2oli1.createEl("strong", { text: "Enable Continuous Layers:" });
+        a2oli1.createEl("strong", { text: "Enable continuous layers:" });
         void a2oli1.appendText(' Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
         a2oli1.createEl("strong", { text: "Important:" });
         void a2oli1.appendText(" You must enable at least one Freesound sample in the Layers tab's Sample Browser for continuous layers to produce audio.");
@@ -25114,11 +25114,11 @@ All whale samples are authentic recordings from marine research institutions and
         const a2p5 = a2.createEl("p");
         a2p5.createEl("strong", { text: "For sparse vaults:" });
         void a2p5.appendText(" If your vault generally has limited connections, ");
-        a2p5.createEl("strong", { text: "Continuous Layers" });
+        a2p5.createEl("strong", { text: "Continuous layers" });
         a2p5.appendText(" are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.");
         const faq3 = content.createEl("div", { cls: "osp-faq-item" });
         const q3 = faq3.createEl("h4", { cls: "osp-faq-question" });
-        q3.createEl("strong", { text: "Q: How do I create musically rich notes for playback?" });
+        q3.createEl("strong", { text: "Q: how do I create musically rich notes for playback?" });
         void q3.appendText(" ");
         q3.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
         const a3 = faq3.createEl("div", { cls: "osp-faq-answer" });
@@ -25126,7 +25126,7 @@ All whale samples are authentic recordings from marine research institutions and
         a3p1.createEl("strong", { text: "A:" });
         void a3p1.appendText(" The richness of your soundscape depends primarily on your note's link structure and network density. Here's what creates the most beautiful, harmonically rich playback:");
         const a3p2 = a3.createEl("p");
-        a3p2.createEl("strong", { text: "The Depth slider and link structure:" });
+        a3p2.createEl("strong", { text: "The depth slider and link structure:" });
         const a3ul1 = a3.createEl("ul");
         const a3li1 = a3ul1.createEl("li");
         a3li1.createEl("strong", { text: "Depth = link-hop distance:" });
@@ -25153,7 +25153,7 @@ All whale samples are authentic recordings from marine research institutions and
         a3li7.createEl("strong", { text: "Use frontmatter:" });
         a3li7.appendText(" Add custom metadata for explicit control over musical parameters (see documentation)");
         const a3p4 = a3.createEl("p");
-        a3p4.createEl("em", { text: "Important: Heading levels (# vs ## vs ###) do NOT currently affect musical depth or layering - only the link network structure does. The Depth slider controls network exploration radius, not markdown hierarchy." });
+        a3p4.createEl("em", { text: "Important: heading levels (# vs ## vs ###) do not currently affect musical depth or layering - only the link network structure does. the depth slider controls network exploration radius, not markdown hierarchy." });
         this.contentContainer.appendChild(card.getElement());
       }
     };
@@ -59866,7 +59866,8 @@ var init_Mp3Encoder = __esm({
             if (progressInterval) {
               clearInterval(progressInterval);
             }
-            reject(new Error(`MediaRecorder error: ${error}`));
+            const errorMsg = error instanceof ErrorEvent ? error.message : String(error);
+            reject(new Error(`MediaRecorder error: ${errorMsg}`));
           };
         });
         mediaRecorder.start(100);
@@ -60026,7 +60027,8 @@ var init_OfflineRenderer = __esm({
             resolve(blob2);
           };
           mediaRecorder.onerror = (error) => {
-            reject(new Error(`MediaRecorder error: ${error}`));
+            const errorMsg = error instanceof ErrorEvent ? error.message : String(error);
+            reject(new Error(`MediaRecorder error: ${errorMsg}`));
           };
         });
         mediaRecorder.start(100);
@@ -60744,9 +60746,13 @@ ${audioConfig}
         if (!quality)
           return "Unknown";
         if (quality.sampleRate && quality.bitDepth) {
-          return `${quality.sampleRate / 1e3}kHz, ${quality.bitDepth}-bit`;
+          const sampleRate = Number(quality.sampleRate);
+          const bitDepth = Number(quality.bitDepth);
+          return `${sampleRate / 1e3}kHz, ${bitDepth}-bit`;
         } else if (quality.sampleRate && quality.bitRate) {
-          return `${quality.sampleRate / 1e3}kHz, ${quality.bitRate}kbps`;
+          const sampleRate = Number(quality.sampleRate);
+          const bitRate = Number(quality.bitRate);
+          return `${sampleRate / 1e3}kHz, ${bitRate}kbps`;
         }
         return "Custom";
       }
@@ -61204,7 +61210,8 @@ var init_AudioExporter = __esm({
             resolve(blob2);
           };
           mediaRecorder.onerror = (error) => {
-            reject(new Error(`MediaRecorder error: ${error}`));
+            const errorMsg = error instanceof ErrorEvent ? error.message : String(error);
+            reject(new Error(`MediaRecorder error: ${errorMsg}`));
           };
         });
         void mediaRecorder.start(100);
@@ -62074,7 +62081,7 @@ var init_ExportModal = __esm({
       promptForPresetName() {
         return new Promise((resolve) => {
           const modal = new import_obsidian29.Modal(this.app);
-          modal.titleEl.setText("Save Preset");
+          modal.titleEl.setText("Save preset");
           const content = modal.contentEl;
           content.createEl("p", { text: "Enter a name for this preset:" });
           let nameInput;
@@ -66898,14 +66905,16 @@ var MetadataMappingRules = class {
     const tags = ((_a = metadata == null ? void 0 : metadata.tags) == null ? void 0 : _a.map((t) => t.tag)) || [];
     switch (condition.operator) {
       case "equals": {
-        const hasTag = tags.includes(condition.value);
-        return { matched: hasTag, reason: hasTag ? `Has tag ${condition.value}` : `Missing tag ${condition.value}` };
+        const tagValue = String(condition.value);
+        const hasTag = tags.includes(tagValue);
+        return { matched: hasTag, reason: hasTag ? `Has tag ${tagValue}` : `Missing tag ${tagValue}` };
       }
       case "contains": {
+        const tagValue = String(condition.value);
         const hasPartialTag = tags.some(
-          (tag) => condition.caseSensitive ? tag.includes(condition.value) : tag.toLowerCase().includes(condition.value.toLowerCase())
+          (tag) => condition.caseSensitive ? tag.includes(tagValue) : tag.toLowerCase().includes(tagValue.toLowerCase())
         );
-        return { matched: hasPartialTag, reason: hasPartialTag ? `Tag contains ${condition.value}` : `No tag contains ${condition.value}` };
+        return { matched: hasPartialTag, reason: hasPartialTag ? `Tag contains ${tagValue}` : `No tag contains ${tagValue}` };
       }
       default:
         return { matched: false, reason: `Unsupported operator for tags: ${condition.operator}` };
@@ -66919,7 +66928,8 @@ var MetadataMappingRules = class {
     if (!frontmatter) {
       return { matched: false, reason: "No frontmatter found" };
     }
-    const [property, expectedValue] = condition.value.split(":");
+    const valueStr = String(condition.value);
+    const [property, expectedValue] = valueStr.split(":");
     const actualValue = frontmatter[property];
     if (expectedValue === void 0) {
       const exists = actualValue !== void 0;
@@ -66947,8 +66957,9 @@ var MetadataMappingRules = class {
   evaluateFileExtensionCondition(condition, extension) {
     switch (condition.operator) {
       case "equals": {
-        const matches = extension.toLowerCase() === condition.value.toLowerCase();
-        return { matched: matches, reason: matches ? `Extension is ${extension}` : `Extension ${extension} does not match ${condition.value}` };
+        const valueStr = String(condition.value);
+        const matches = extension.toLowerCase() === valueStr.toLowerCase();
+        return { matched: matches, reason: matches ? `Extension is ${extension}` : `Extension ${extension} does not match ${valueStr}` };
       }
       default:
         return { matched: false, reason: `Unsupported operator for file extension: ${condition.operator}` };
@@ -66960,16 +66971,18 @@ var MetadataMappingRules = class {
   evaluatePathPatternCondition(condition, filePath) {
     switch (condition.operator) {
       case "contains": {
-        const contains = condition.caseSensitive ? filePath.includes(condition.value) : filePath.toLowerCase().includes(condition.value.toLowerCase());
-        return { matched: contains, reason: contains ? `Path contains ${condition.value}` : `Path does not contain ${condition.value}` };
+        const valueStr = String(condition.value);
+        const contains = condition.caseSensitive ? filePath.includes(valueStr) : filePath.toLowerCase().includes(valueStr.toLowerCase());
+        return { matched: contains, reason: contains ? `Path contains ${valueStr}` : `Path does not contain ${valueStr}` };
       }
       case "matches": {
         try {
-          const regex = new RegExp(condition.value, condition.caseSensitive ? "" : "i");
+          const valueStr = String(condition.value);
+          const regex = new RegExp(valueStr, condition.caseSensitive ? "" : "i");
           const matches = regex.test(filePath);
-          return { matched: matches, reason: matches ? `Path matches pattern ${condition.value}` : `Path does not match pattern ${condition.value}` };
+          return { matched: matches, reason: matches ? `Path matches pattern ${valueStr}` : `Path does not match pattern ${valueStr}` };
         } catch (e) {
-          return { matched: false, reason: `Invalid regex pattern: ${condition.value}` };
+          return { matched: false, reason: `Invalid regex pattern: ${String(condition.value)}` };
         }
       }
       default:
@@ -66982,15 +66995,17 @@ var MetadataMappingRules = class {
   evaluateFileSizeCondition(condition, fileSize) {
     switch (condition.operator) {
       case "greaterThan": {
-        const isGreater = fileSize > condition.value;
-        return { matched: isGreater, reason: isGreater ? `File size ${fileSize} > ${condition.value}` : `File size ${fileSize} <= ${condition.value}` };
+        const threshold = Number(condition.value);
+        const isGreater = fileSize > threshold;
+        return { matched: isGreater, reason: isGreater ? `File size ${fileSize} > ${threshold}` : `File size ${fileSize} <= ${threshold}` };
       }
       case "lessThan": {
-        const isLess = fileSize < condition.value;
-        return { matched: isLess, reason: isLess ? `File size ${fileSize} < ${condition.value}` : `File size ${fileSize} >= ${condition.value}` };
+        const threshold = Number(condition.value);
+        const isLess = fileSize < threshold;
+        return { matched: isLess, reason: isLess ? `File size ${fileSize} < ${threshold}` : `File size ${fileSize} >= ${threshold}` };
       }
       case "between": {
-        const [min2, max2] = Array.isArray(condition.value) ? condition.value : [0, condition.value];
+        const [min2, max2] = Array.isArray(condition.value) ? condition.value : [0, Number(condition.value)];
         const isBetween = fileSize >= min2 && fileSize <= max2;
         return { matched: isBetween, reason: isBetween ? `File size ${fileSize} between ${min2}-${max2}` : `File size ${fileSize} not between ${min2}-${max2}` };
       }
@@ -67008,12 +67023,14 @@ var MetadataMappingRules = class {
     const age = Math.min(daysSinceCreated, daysSinceModified);
     switch (condition.operator) {
       case "lessThan": {
-        const isRecent = age < condition.value;
-        return { matched: isRecent, reason: isRecent ? `File age ${age.toFixed(1)} days < ${condition.value}` : `File age ${age.toFixed(1)} days >= ${condition.value}` };
+        const threshold = Number(condition.value);
+        const isRecent = age < threshold;
+        return { matched: isRecent, reason: isRecent ? `File age ${age.toFixed(1)} days < ${threshold}` : `File age ${age.toFixed(1)} days >= ${threshold}` };
       }
       case "greaterThan": {
-        const isOld = age > condition.value;
-        return { matched: isOld, reason: isOld ? `File age ${age.toFixed(1)} days > ${condition.value}` : `File age ${age.toFixed(1)} days <= ${condition.value}` };
+        const threshold = Number(condition.value);
+        const isOld = age > threshold;
+        return { matched: isOld, reason: isOld ? `File age ${age.toFixed(1)} days > ${threshold}` : `File age ${age.toFixed(1)} days <= ${threshold}` };
       }
       default:
         return { matched: false, reason: `Unsupported operator for file age: ${condition.operator}` };
@@ -67115,13 +67132,13 @@ var MetadataMappingRules = class {
         description: "Priority level for audio mapping",
         examples: ["high", "medium", "low"],
         defaultValue: "medium",
-        validation: (value) => ["high", "medium", "low"].includes(value)
+        validation: (value) => typeof value === "string" && ["high", "medium", "low"].includes(value)
       },
       "instrument-family": {
         type: "string",
         description: "Instrument family preference",
         examples: ["strings", "brass", "woodwinds", "percussion", "electronic"],
-        validation: (value) => ["strings", "brass", "woodwinds", "percussion", "keyboard", "electronic", "world"].includes(value)
+        validation: (value) => typeof value === "string" && ["strings", "brass", "woodwinds", "percussion", "keyboard", "electronic", "world"].includes(value)
       },
       "musical-tempo": {
         type: "number",
@@ -67144,7 +67161,7 @@ var MetadataMappingRules = class {
    * Generate unique rule ID
    */
   generateRuleId() {
-    return `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `rule_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
   /**
    * Generate cache key for rule evaluation
@@ -82107,7 +82124,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     pluginSettingsBtn.addEventListener("click", () => this.openPluginSettings());
     const controlCenterBtn = buttonGroup.createEl("button", {
       cls: "sonic-graph-header-btn sonic-graph-control-center-btn",
-      text: "Control Center"
+      text: "Control center"
     });
     const controlCenterIcon = createLucideIcon("keyboard-music", 16);
     void controlCenterBtn.insertBefore(controlCenterIcon, controlCenterBtn.firstChild);
@@ -82152,7 +82169,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     this.visualDisplaySection.style.setProperty("--visual-display-height", `${this.visualDisplayHeight}px`);
     const visualHeader = this.visualDisplaySection.createDiv({ cls: "sonic-graph-visual-display-header" });
     const visualTitle = visualHeader.createDiv({ cls: "sonic-graph-visual-display-title" });
-    visualTitle.createSpan({ text: "\u{1F4CA} Visual Note Display" });
+    visualTitle.createSpan({ text: "\u{1F4CA} visual note display" });
     const visualHeaderControls = visualHeader.createDiv({ cls: "sonic-graph-visual-display-controls" });
     const modeTabs = visualHeaderControls.createDiv({ cls: "sonic-graph-visual-mode-tabs" });
     const pianoRollTab = modeTabs.createEl("button", {
@@ -82435,7 +82452,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
       this.nodeAppearanceCounter = 0;
       this.lastAudioNodeIndex = -1;
-      this.playButton.setButtonText("Pause Animation");
+      this.playButton.setButtonText("Pause animation");
       this.timelineContainer.classList.remove("timeline-hidden");
       this.timelineContainer.classList.add("timeline-visible");
       const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
@@ -83092,7 +83109,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         }
       })
     );
-    new import_obsidian30.Setting(content).setName("Independent from Content-Aware Mapping").setDesc("Operate independently of phase 4.1 content-aware mapping system").addToggle(
+    new import_obsidian30.Setting(content).setName("Independent from content-aware mapping").setDesc("Operate independently of phase 4.1 content-aware mapping system").addToggle(
       (toggle) => toggle.setValue(settings.independentFromContentAware).onChange((value) => {
         this.updateConnectionTypeMappingConfig("independentFromContentAware", value);
       })
@@ -83161,7 +83178,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     settings.connectionTypeMapping[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     void this.plugin.saveSettings();
-    logger78.debug("connection-type-mapping", `Updated config: ${key} = ${value}`);
+    logger78.debug("connection-type-mapping", `Updated config: ${key} = ${String(value)}`);
   }
   /**
    * Update connection type mapping global setting
@@ -83174,7 +83191,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     settings.connectionTypeMapping.globalSettings[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     void this.plugin.saveSettings();
-    logger78.debug("connection-type-mapping", `Updated global setting: ${key} = ${value}`);
+    logger78.debug("connection-type-mapping", `Updated global setting: ${key} = ${String(value)}`);
   }
   /**
    * Update specific connection type mapping
@@ -83190,7 +83207,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     mapping[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     void this.plugin.saveSettings();
-    logger78.debug("connection-type-mapping", `Updated ${connectionType} mapping: ${key} = ${value}`);
+    logger78.debug("connection-type-mapping", `Updated ${connectionType} mapping: ${key} = ${String(value)}`);
   }
   /**
    * Helper method to create weight sliders for clustering factors
@@ -83362,7 +83379,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       { value: "week", text: "Week" },
       { value: "day", text: "Day" },
       { value: "hour", text: "Hour" },
-      { value: "custom", text: "Custom Range" }
+      { value: "custom", text: "Custom range" }
     ];
     granularityOptions.forEach((option) => {
       const optionEl = granularitySelect.createEl("option", {
@@ -83442,9 +83459,9 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-select"
     });
     const spreadingModes = [
-      { value: "none", text: "None - No spreading", desc: "Events play exactly when files were created. May cause audio crackling if many files were created simultaneously." },
-      { value: "gentle", text: "Gentle - Light spreading", desc: "Slightly separates clustered events over a small time window. Recommended for most users." },
-      { value: "aggressive", text: "Aggressive - Strong spreading", desc: "Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations." }
+      { value: "none", text: "None - no spreading", desc: "Events play exactly when files were created. May cause audio crackling if many files were created simultaneously." },
+      { value: "gentle", text: "Gentle - light spreading", desc: "Slightly separates clustered events over a small time window. Recommended for most users." },
+      { value: "aggressive", text: "Aggressive - strong spreading", desc: "Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations." }
     ];
     spreadingModes.forEach((mode) => {
       const option = spreadingSelect.createEl("option", {
@@ -83737,7 +83754,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     }
     const performanceNote = container.createDiv({ cls: "sonic-graph-setting-item" });
     performanceNote.createEl("div", {
-      text: "Continuous layers target <5% additional CPU usage and work alongside existing node-based audio",
+      text: "Continuous layers target <5% additional cpu usage and work alongside existing node-based audio",
       cls: "sonic-graph-setting-description sonic-graph-info"
     });
   }
@@ -85450,7 +85467,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const loggingSelect = loggingItem.createEl("select", { cls: "sonic-graph-setting-select" });
     const logLevels = [
       { value: "off", text: "Off" },
-      { value: "error", text: "Errors Only" },
+      { value: "error", text: "Errors only" },
       { value: "warn", text: "Warnings" },
       { value: "info", text: "Info" },
       { value: "debug", text: "Debug" }
@@ -85644,7 +85661,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   updateLayoutSetting(key, value) {
     this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
-    logger78.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${value}`);
+    logger78.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${String(value)}`);
   }
   /**
    * Update filter setting
@@ -89233,30 +89250,35 @@ var NoteCentricMapper = class {
               pitch -= ascendStep;
             break;
           }
-          case "descending":
+          case "descending": {
             const descendStep = (seed + i * 7) % 5 + 1;
             pitch -= descendStep * i;
             if ((seed + i) % 4 === 0)
               pitch += descendStep;
             break;
-          case "arch":
+          }
+          case "arch": {
             const archHeight = 6 + seed % 5 * 2;
             pitch += Math.sin(posInPhrase * Math.PI) * archHeight;
             pitch += Math.sin(posInPhrase * Math.PI * 3) * 2;
             break;
-          case "valley":
+          }
+          case "valley": {
             const valleyDepth = 6 + seed % 5 * 2;
             pitch -= Math.sin(posInPhrase * Math.PI) * valleyDepth;
             pitch += Math.sin(posInPhrase * Math.PI * 3) * 2;
             break;
-          case "oscillating":
+          }
+          case "oscillating": {
             const oscSize = 2 + (seed + i) % 4;
             pitch += (i % 2 === 0 ? oscSize : -oscSize) * (1 + i * 0.2);
             break;
-          case "static":
+          }
+          case "static": {
             const embellish = (seed + i * 13) % 7 - 3;
             pitch += embellish;
             break;
+          }
         }
         if (prose.linguistic.vocabularyDiversity > 0.5) {
           const chromaticism = seed * (i + 1) * 17 % 5 - 2;
@@ -90009,12 +90031,13 @@ var NoteCentricMapper = class {
           melody: absoluteMelody.map((p) => p + transposition),
           rhythm: motif.rhythmPattern.map((d) => d * 2)
         };
-      case "fragment":
+      case "fragment": {
         const fragmentLength = Math.min(3, motif.pitchPattern.length);
         return {
           melody: absoluteMelody.slice(0, fragmentLength).map((p) => p + transposition),
           rhythm: motif.rhythmPattern.slice(0, fragmentLength)
         };
+      }
       default:
         return {
           melody: absoluteMelody.map((p) => p + transposition),
@@ -90062,7 +90085,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
     const { contentEl } = this;
     void contentEl.empty();
     void contentEl.addClass("local-soundscape-filter-modal");
-    contentEl.createEl("h2", { text: "Filter Local Soundscape" });
+    contentEl.createEl("h2", { text: "Filter local soundscape" });
     void this.createTagFiltersSection(contentEl);
     void this.createFolderFiltersSection(contentEl);
     void this.createFileTypeFiltersSection(contentEl);
@@ -90364,7 +90387,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     if (this.centerFile) {
       return `Local Soundscape: ${this.centerFile.basename}`;
     }
-    return "Local Soundscape";
+    return "Local soundscape";
   }
   getIcon() {
     return "radio-tower";
@@ -90481,7 +90504,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     });
     const controlCenterButton = controlsSection.createEl("button", {
       cls: "header-button control-center-button",
-      attr: { "aria-label": "Open Control Center" }
+      attr: { "aria-label": "Open control center" }
     });
     const controlCenterIcon = createLucideIcon("keyboard-music", 16);
     void controlCenterButton.appendChild(controlCenterIcon);
@@ -90671,16 +90694,16 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     infoSection.createEl("h4", { text: "About", cls: "settings-heading" });
     const infoText = infoSection.createDiv({ cls: "setting-info" });
     infoText.createEl("p", {
-      text: "Local Soundscape creates an immersive audio-visual environment centered on a note.",
+      text: "Local soundscape creates an immersive audio-visual environment centered on a note.",
       cls: "setting-description"
     });
     infoText.createEl("p", {
-      text: "Use depth control to explore connections. Apply filters to focus on specific content. Enable clustering to visualize groups.",
+      text: "Use depth control to explore connections. apply filters to focus on specific content. enable clustering to visualize groups.",
       cls: "setting-description"
     });
     const audioSettingsInfo = infoSection.createDiv({ cls: "setting-item" });
     audioSettingsInfo.createEl("p", {
-      text: "Audio settings (auto-play, musical key, context-aware modifiers) are configured in the Control Center.",
+      text: "Audio settings (auto-play, musical key, context-aware modifiers) are configured in the control center.",
       cls: "setting-description"
     });
     const linkButton = audioSettingsInfo.createEl("button", {
@@ -90759,7 +90782,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     const voiceIcon = createLucideIcon("music", 14);
     void voiceIcon.addClass("stat-icon");
     void voiceLabel.appendChild(voiceIcon);
-    voiceLabel.appendChild(createSpan({ text: "Active Voices" }));
+    voiceLabel.appendChild(createSpan({ text: "Active voices" }));
     this.voiceCountDisplay = voiceCountContainer.createSpan({
       text: "0",
       cls: "stat-value voice-count"
@@ -90809,9 +90832,9 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   createMusicalScaleControls(container) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     const header = container.createDiv({ cls: "musical-settings-header" });
-    header.createSpan({ text: "Musical Scale Settings", cls: "settings-header-text" });
+    header.createSpan({ text: "Musical scale settings", cls: "settings-header-text" });
     const enableToggle = container.createDiv({ cls: "musical-setting-row" });
-    enableToggle.createSpan({ text: "Scale Quantization:", cls: "setting-label" });
+    enableToggle.createSpan({ text: "Scale quantization:", cls: "setting-label" });
     const enableCheckbox = enableToggle.createEl("input", {
       type: "checkbox",
       cls: "musical-setting-checkbox"
@@ -90821,7 +90844,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       void this.toggleScaleQuantization(enableCheckbox.checked);
     });
     const rootNoteRow = container.createDiv({ cls: "musical-setting-row" });
-    rootNoteRow.createSpan({ text: "Root Note:", cls: "setting-label" });
+    rootNoteRow.createSpan({ text: "Root note:", cls: "setting-label" });
     const rootNoteSelect = rootNoteRow.createEl("select", { cls: "musical-setting-select" });
     const rootNotes = [
       { value: "C", label: "C" },
@@ -90851,7 +90874,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       void this.updateMusicalScale(rootNoteSelect.value, void 0);
     });
     const scaleTypeRow = container.createDiv({ cls: "musical-setting-row" });
-    scaleTypeRow.createSpan({ text: "Scale Type:", cls: "setting-label" });
+    scaleTypeRow.createSpan({ text: "Scale type:", cls: "setting-label" });
     const scaleTypeSelect = scaleTypeRow.createEl("select", { cls: "musical-setting-select" });
     const scaleTypes = [
       { value: "major", label: "Major", description: "Bright, happy" },
@@ -90880,7 +90903,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       void this.updateMusicalScale(void 0, scaleTypeSelect.value);
     });
     const quantStrengthRow = container.createDiv({ cls: "musical-setting-row slider-row" });
-    quantStrengthRow.createSpan({ text: "Quantization Strength:", cls: "setting-label" });
+    quantStrengthRow.createSpan({ text: "Quantization strength:", cls: "setting-label" });
     const sliderContainer = quantStrengthRow.createDiv({ cls: "slider-container" });
     const quantStrengthSlider = sliderContainer.createEl("input", {
       type: "range",
@@ -90903,7 +90926,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       void this.updateQuantizationStrength(value / 100);
     });
     const adaptivePitchRow = container.createDiv({ cls: "musical-setting-row" });
-    adaptivePitchRow.createSpan({ text: "Adaptive Pitch Ranges:", cls: "setting-label" });
+    adaptivePitchRow.createSpan({ text: "Adaptive pitch ranges:", cls: "setting-label" });
     const adaptivePitchCheckbox = adaptivePitchRow.createEl("input", {
       type: "checkbox",
       cls: "musical-setting-checkbox"
@@ -90917,7 +90940,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       text: "Pitch ranges adapt to selected key for better harmonic integration"
     });
     const chordVoicingRow = container.createDiv({ cls: "musical-setting-row" });
-    chordVoicingRow.createSpan({ text: "Chord Voicing:", cls: "setting-label" });
+    chordVoicingRow.createSpan({ text: "Chord voicing:", cls: "setting-label" });
     const chordVoicingCheckbox = chordVoicingRow.createEl("input", {
       type: "checkbox",
       cls: "musical-setting-checkbox"
@@ -90931,7 +90954,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       text: "Add harmonic richness with depth-based polyphonic voicing"
     });
     const densityRow = container.createDiv({ cls: "musical-setting-row slider-row" });
-    densityRow.createSpan({ text: "Voicing Density:", cls: "setting-label" });
+    densityRow.createSpan({ text: "Voicing density:", cls: "setting-label" });
     const densitySliderContainer = densityRow.createDiv({ cls: "slider-container" });
     const densitySlider = densitySliderContainer.createEl("input", {
       type: "range",
@@ -91240,7 +91263,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       new import_obsidian34.Notice("Failed to load graph. Please try again or reload Obsidian.");
       this.graphContainer.empty();
       const errorDiv = this.graphContainer.createDiv({ cls: "error-message" });
-      errorDiv.createEl("p", { text: "Failed to load graph. Container not ready." });
+      errorDiv.createEl("p", { text: "Failed to load graph. container not ready." });
       errorDiv.createEl("p", { text: "Please try connecting again." });
     }
   }
@@ -98631,18 +98654,21 @@ var AudioEngine = class {
       date: date.toISOString()
     });
     switch (mode) {
-      case "day":
+      case "day": {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      }
       case "week": {
         const oneJan = new Date(date.getFullYear(), 0, 1);
         const numberOfDays = Math.floor((date.getTime() - oneJan.getTime()) / (24 * 60 * 60 * 1e3));
         const weekNumber = Math.ceil((numberOfDays + oneJan.getDay() + 1) / 7);
         return `${date.getFullYear()}-W${String(weekNumber).padStart(2, "0")}`;
       }
-      case "month":
+      case "month": {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      case "year":
+      }
+      case "year": {
         return `${date.getFullYear()}`;
+      }
       default:
         return null;
     }
@@ -98879,9 +98905,10 @@ var AudioEngine = class {
   applyVoicingStrategy(notes, strategy) {
     const sorted = [...notes].sort((a2, b) => a2.mapping.pitch - b.mapping.pitch);
     switch (strategy) {
-      case "compact":
+      case "compact": {
         return sorted;
-      case "spread":
+      }
+      case "spread": {
         return sorted.map((note, i) => ({
           ...note,
           mapping: {
@@ -98889,7 +98916,8 @@ var AudioEngine = class {
             pitch: note.mapping.pitch * Math.pow(2, Math.floor(i / 3))
           }
         }));
-      case "drop2":
+      }
+      case "drop2": {
         if (sorted.length >= 3) {
           const result = [...sorted];
           const secondHighest = result[result.length - 2];
@@ -98903,7 +98931,8 @@ var AudioEngine = class {
           return result;
         }
         return sorted;
-      case "drop3":
+      }
+      case "drop3": {
         if (sorted.length >= 4) {
           const result = [...sorted];
           const thirdHighest = result[result.length - 3];
@@ -98917,6 +98946,7 @@ var AudioEngine = class {
           return result;
         }
         return sorted;
+      }
       default:
         return sorted;
     }
@@ -99969,7 +99999,6 @@ var AudioEngine = class {
   /**
    * Issue #012: Create Sampler with synthesis fallback for failed CDN loading
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Sampler configuration accepts heterogeneous Tone.js options
   createSamplerWithFallback(config, instrumentName) {
     try {
       const sampler = new Sampler(config);
@@ -100025,7 +100054,6 @@ var AudioEngine = class {
   /**
    * Issue #012: Reconnect instrument to effects chain after fallback creation
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Instrument can be any Tone.js synth or sampler type
   reconnectInstrumentToEffects(instrumentName, instrument, volume, effects) {
     var _a, _b, _c;
     let output = instrument.connect(volume);
@@ -100071,25 +100099,29 @@ var AudioEngine = class {
     const note = this.frequencyToNoteName(detunedFrequency);
     try {
       switch (instrumentName) {
-        case "timpani":
+        case "timpani": {
           const pitchBend = (Math.random() - 0.5) * 0.1;
           this.percussionEngine.triggerTimpani(note, velocity, duration2, pitchBend);
           break;
-        case "xylophone":
+        }
+        case "xylophone": {
           const hardness = Math.min(velocity * 1.2, 1);
           this.percussionEngine.triggerMallet("xylophone", note, velocity, duration2, hardness);
           break;
-        case "vibraphone":
+        }
+        case "vibraphone": {
           const motorEnabled = duration2 > 2;
           if (motorEnabled) {
             this.percussionEngine.setVibraphoneMotorEnabled(true);
           }
           this.percussionEngine.triggerMallet("vibraphone", note, velocity, duration2, velocity * 0.7);
           break;
-        case "gongs":
+        }
+        case "gongs": {
           const resonance = Math.min(velocity * 1.5, 1);
           this.percussionEngine.triggerGong(note, velocity, duration2, resonance);
           break;
+        }
       }
       logger97.debug("advanced-percussion", `Triggered ${instrumentName}: ${note}, vel: ${velocity}, dur: ${duration2}`);
     } catch (error) {
@@ -100146,14 +100178,16 @@ var AudioEngine = class {
     const note = this.frequencyToNoteName(detunedFrequency);
     try {
       switch (instrumentName) {
-        case "leadSynth":
+        case "leadSynth": {
           const filterMod = Math.min(frequency / 2e3, 1);
           this.electronicEngine.triggerLeadSynth(note, velocity, duration2, filterMod);
           break;
-        case "bassSynth":
+        }
+        case "bassSynth": {
           const subLevel = frequency < 200 ? Math.min(velocity * 1.5, 1) : velocity * 0.5;
           this.electronicEngine.triggerBassSynth(note, velocity, duration2, subLevel);
           break;
+        }
         case "arpSynth": {
           const patterns = ["up", "down", "updown"];
           const patternIndex = Math.floor(frequency / 100 % patterns.length);
@@ -100177,7 +100211,7 @@ var AudioEngine = class {
   async triggerEnvironmentalSound(instrumentName, frequency, duration2, velocity, time) {
     try {
       switch (instrumentName) {
-        case "whaleHumpback":
+        case "whaleHumpback": {
           const whaleSettings = this.settings.instruments.whaleHumpback;
           if (whaleSettings == null ? void 0 : whaleSettings.useHighQuality) {
             const externalSample = await this.tryLoadExternalWhaleSample(instrumentName, frequency, duration2, velocity, time);
@@ -100195,6 +100229,7 @@ var AudioEngine = class {
           whaleSynth.triggerAttackRelease(whaleFreq, duration2, time, velocity * 0.8);
           logger97.debug("environmental-sound", `Whale synthesis triggered: ${whaleFreq.toFixed(1)}Hz, vel: ${(velocity * 0.8).toFixed(3)}, dur: ${duration2.toFixed(3)}`);
           break;
+        }
       }
       logger97.debug("environmental-sound", `Triggered ${instrumentName}: ${frequency.toFixed(1)}Hz, vel: ${velocity}, dur: ${duration2}`);
     } catch (error) {

@@ -1,0 +1,14 @@
+{
+	"id": "sonigraph",
+	"name": "Sonigraph",
+	"version": "0.17.12",
+	"minAppVersion": "0.15.0",
+	"description": "Transform your knowledge graph into music. Maps nodes and connections to musical parameters, allowing you to hear the relationships and complexity of your ideas.",
+	"author": "banisterious",
+	"authorUrl": "https://github.com/banisterious",
+	"isDesktopOnly": false,
+	"fundingUrl": {
+		"Buy Me a Coffee": "https://www.buymeacoffee.com/banisterious",
+		"GitHub Sponsor": "https://github.com/sponsors/banisterious"
+	}
+}

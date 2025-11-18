@@ -654,9 +654,11 @@ export class LocalSoundscapeRenderer {
 		tooltipInfo.createDiv({ text: `Words: ${node.wordCount}` });
 
 		// Position tooltip near cursor
-		this.tooltip.style.left = `${event.clientX + 10}px`;
-		this.tooltip.style.top = `${event.clientY + 10}px`;
-		this.tooltip.style.display = 'block';
+		this.tooltip.setCssProps({
+			left: `${event.clientX + 10}px`,
+			top: `${event.clientY + 10}px`,
+			display: 'block'
+		});
 	}
 
 	/**
@@ -664,7 +666,7 @@ export class LocalSoundscapeRenderer {
 	 */
 	private hideTooltip(): void {
 		if (this.tooltip) {
-			this.tooltip.style.display = 'none';
+			this.tooltip.setCssProps({ display: 'none' });
 		}
 	}
 
@@ -674,9 +676,11 @@ export class LocalSoundscapeRenderer {
 	private createContextMenu(): void {
 		// Create context menu at body level to avoid container overflow issues
 		this.contextMenu = document.body.createDiv({ cls: 'local-soundscape-context-menu' });
-		this.contextMenu.style.position = 'fixed';
-		this.contextMenu.style.display = 'none';
-		this.contextMenu.style.zIndex = '10000';
+		this.contextMenu.setCssProps({
+			position: 'fixed',
+			display: 'none',
+			zIndex: '10000'
+		});
 
 		// Close context menu when clicking elsewhere
 		document.addEventListener('click', () => {
@@ -720,9 +724,11 @@ export class LocalSoundscapeRenderer {
 		}
 
 		// Position context menu
-		this.contextMenu.style.left = `${event.clientX}px`;
-		this.contextMenu.style.top = `${event.clientY}px`;
-		this.contextMenu.style.display = 'block';
+		this.contextMenu.setCssProps({
+			left: `${event.clientX}px`,
+			top: `${event.clientY}px`,
+			display: 'block'
+		});
 	}
 
 	/**
@@ -730,7 +736,7 @@ export class LocalSoundscapeRenderer {
 	 */
 	private hideContextMenu(): void {
 		if (this.contextMenu) {
-			this.contextMenu.style.display = 'none';
+			this.contextMenu.setCssProps({ display: 'none' });
 		}
 	}
 

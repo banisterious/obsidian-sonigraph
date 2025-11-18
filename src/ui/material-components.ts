@@ -119,7 +119,7 @@ export class MaterialCard {
 		card.className = `ospcc-card ${options.elevation ? `ospcc-elevation-${options.elevation}` : ''} ${options.className || ''}`;
 		
 		if (options.onClick) {
-			card.style.cursor = 'pointer';
+			card.setCssProps({ cursor: 'pointer' });
 			void card.addEventListener('click', options.onClick);
 		}
 

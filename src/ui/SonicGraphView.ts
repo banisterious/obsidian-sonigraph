@@ -574,8 +574,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const onMouseUp = () => {
             if (this.isDraggingDivider) {
                 this.isDraggingDivider = false;
-                document.body.style.cursor = '';
-                document.body.style.userSelect = '';
+                document.body.setCssProps({
+                    cursor: '',
+                    userSelect: ''
+                });
 
                 // Save height preference
                 void logger.info('visual-display', 'Saved visual display height', this.visualDisplayHeight);
@@ -5697,10 +5699,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const modalRect = this.contentEl.getBoundingClientRect();
 
         void colorInput.addClass('sonigraph-color-picker');
-        colorInput.style.left = `${dotRect.left - modalRect.left}px`;
-        colorInput.style.top = `${dotRect.bottom - modalRect.top + 4}px`; // 4px gap below the dot
-        // Enable pointer events for interaction while keeping it visually hidden
-        colorInput.style.pointerEvents = 'auto';
+        colorInput.setCssProps({
+            left: `${dotRect.left - modalRect.left}px`,
+            top: `${dotRect.bottom - modalRect.top + 4}px`, // 4px gap below the dot
+            pointerEvents: 'auto' // Enable pointer events for interaction while keeping it visually hidden
+        });
         
         // Find the view container to append to
         const viewContainerEl = this.contentEl;
@@ -5797,8 +5800,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             const optionEl = document.createElement('div');
             void optionEl.addClass('sonigraph-autocomplete-option');
             optionEl.textContent = option;
-            optionEl.style.cursor = 'pointer';
-            optionEl.style.borderRadius = '2px';
+            optionEl.setCssProps({
+                cursor: 'pointer',
+                borderRadius: '2px'
+            });
             
             optionEl.addEventListener('click', () => {
                 const prefix = option.split(':')[0];
@@ -6330,8 +6335,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         
         // Hide current position indicator when animation completes
         const currentIndicator = this.timelineInfo.querySelector('.sonic-graph-timeline-current-indicator');
-        if (currentIndicator) {
-            currentIndicator.style.display = 'none';
+        if (currentIndicator instanceof HTMLElement) {
+            currentIndicator.setCssProps({ display: 'none' });
         }
         
         void logger.info('ui', 'Sonic Graph animation completed');
