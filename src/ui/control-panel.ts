@@ -5321,33 +5321,33 @@ All whale samples are authentic recordings from marine research institutions and
 		const a2ol = a2.createEl('ol');
 		const a2oli1 = a2ol.createEl('li');
 		a2oli1.createEl('strong', { text: 'Enable continuous layers:' });
-		void a2oli1.appendText(' Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
+		void a2oli1.appendText(' scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
 		a2oli1.createEl('strong', { text: 'Important:' });
-		void a2oli1.appendText(' You must enable at least one Freesound sample in the Layers tab\'s Sample Browser for continuous layers to produce audio.');
+		void a2oli1.appendText(' you must enable at least one Freesound sample in the Layers tab\'s Sample Browser for continuous layers to produce audio.');
 
 		const a2oli2 = a2ol.createEl('li');
 		a2oli2.createEl('strong', { text: 'Increase depth:' });
-		void a2oli2.appendText(' Slide the depth control to 3-5 to explore more connection levels');
+		void a2oli2.appendText(' slide the depth control to 3-5 to explore more connection levels');
 
 		const a2oli3 = a2ol.createEl('li');
 		a2oli3.createEl('strong', { text: 'Choose more connected notes:' });
-		a2oli3.appendText(' Right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"');
+		a2oli3.appendText(' right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"');
 
 		const a2oli4 = a2ol.createEl('li');
 		a2oli4.createEl('strong', { text: 'Build more connections:' });
-		void a2oli4.appendText(' Add links between related notes in your vault to create richer graph structure');
+		void a2oli4.appendText(' add links between related notes in your vault to create richer graph structure');
 
 		const a2oli5 = a2ol.createEl('li');
 		a2oli5.createEl('strong', { text: 'Check filters:' });
-		void a2oli5.appendText(' Ensure Include/Exclude filters aren\'t hiding connected notes');
+		void a2oli5.appendText(' ensure Include/Exclude filters aren\'t hiding connected notes');
 
 		const a2oli6 = a2ol.createEl('li');
 		a2oli6.createEl('strong', { text: 'Try bidirectional links:' });
-		void a2oli6.appendText(' Notes with two-way connections create denser graphs than one-way links');
+		void a2oli6.appendText(' notes with two-way connections create denser graphs than one-way links');
 
 		const a2p5 = a2.createEl('p');
 		a2p5.createEl('strong', { text: 'For sparse vaults:' });
-		void a2p5.appendText(' If your vault generally has limited connections, ');
+		void a2p5.appendText(' if your vault generally has limited connections, ');
 		a2p5.createEl('strong', { text: 'Continuous layers' });
 		a2p5.appendText(' are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.');
 
@@ -5362,7 +5362,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a3p1 = a3.createEl('p');
 		a3p1.createEl('strong', { text: 'A:' });
-		void a3p1.appendText(' The richness of your soundscape depends primarily on your note\'s link structure and network density. Here\'s what creates the most beautiful, harmonically rich playback:');
+		void a3p1.appendText(' the richness of your soundscape depends primarily on your note\'s link structure and network density. Here\'s what creates the most beautiful, harmonically rich playback:');
 
 		const a3p2 = a3.createEl('p');
 		a3p2.createEl('strong', { text: 'The depth slider and link structure:' });
@@ -5370,15 +5370,15 @@ All whale samples are authentic recordings from marine research institutions and
 		const a3ul1 = a3.createEl('ul');
 		const a3li1 = a3ul1.createEl('li');
 		a3li1.createEl('strong', { text: 'Depth = link-hop distance:' });
-		a3li1.appendText(' The Depth slider controls how many "hops" away from your center note the graph explores. Depth 1 = direct links only, Depth 2 = links of links, etc.');
+		a3li1.appendText(' the Depth slider controls how many "hops" away from your center note the graph explores. Depth 1 = direct links only, Depth 2 = links of links, etc.');
 
 		const a3li2 = a3ul1.createEl('li');
 		a3li2.createEl('strong', { text: 'Fully-connected notes:' });
-		a3li2.appendText(' If your notes all link to each other (like test notes that each link to all others), even Depth 1 creates dense harmonic texture because all notes are immediate neighbors.');
+		a3li2.appendText(' if your notes all link to each other (like test notes that each link to all others), even Depth 1 creates dense harmonic texture because all notes are immediate neighbors.');
 
 		const a3li3 = a3ul1.createEl('li');
 		a3li3.createEl('strong', { text: 'Bidirectional links:' });
-		void a3li3.appendText(' Two-way connections between notes create denser, richer graphs than one-way links.');
+		void a3li3.appendText(' two-way connections between notes create denser, richer graphs than one-way links.');
 
 		const a3p3 = a3.createEl('p');
 		a3p3.createEl('strong', { text: 'Additional ways to enrich your notes:' });
@@ -5386,11 +5386,11 @@ All whale samples are authentic recordings from marine research institutions and
 		const a3ul2 = a3.createEl('ul');
 		const a3li4 = a3ul2.createEl('li');
 		a3li4.createEl('strong', { text: 'Add meaningful tags:' });
-		void a3li4.appendText(' Tags influence clustering and can create thematic groupings');
+		void a3li4.appendText(' tags influence clustering and can create thematic groupings');
 
 		const a3li5 = a3ul2.createEl('li');
 		a3li5.createEl('strong', { text: 'Vary content types:' });
-		void a3li5.appendText(' Mix images, PDFs, audio files, and regular notes - different file types add variety');
+		void a3li5.appendText(' mix images, PDFs, audio files, and regular notes - different file types add variety');
 
 		const a3li6 = a3ul2.createEl('li');
 		a3li6.createEl('strong', { text: 'Build hub notes:' });
@@ -5398,7 +5398,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a3li7 = a3ul2.createEl('li');
 		a3li7.createEl('strong', { text: 'Use frontmatter:' });
-		a3li7.appendText(' Add custom metadata for explicit control over musical parameters (see documentation)');
+		a3li7.appendText(' add custom metadata for explicit control over musical parameters (see documentation)');
 
 		const a3p4 = a3.createEl('p');
 		a3p4.createEl('em', { text: 'Important: Heading levels (# vs ## vs ###) do not currently affect musical depth or layering - only the link network structure does. The depth slider controls network exploration radius, not markdown hierarchy.' });
