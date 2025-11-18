@@ -4558,7 +4558,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Show result to user
 			if (result.success) {
 				const message = result.username
-					? `✓ Connected successfully as ${result.username}`
+					? `✓ connected successfully as ${result.username}`
 					: `✓ ${result.message}`;
 				new Notice(message, 5000);
 				logger.info('freesound', `Connection test successful: ${result.message}`);
@@ -4833,7 +4833,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 		// Description
 		content.createEl('p', {
-			text: 'Limit the number of notes per depth level. higher values create longer, more detailed soundscapes but may impact performance.',
+			text: 'Limit the number of notes per depth level. Higher values create longer, more detailed soundscapes but may impact performance.',
 			cls: 'setting-item-description'
 		});
 
@@ -4923,10 +4923,10 @@ All whale samples are authentic recordings from marine research institutions and
 			.setDesc('Choose a pre-configured style, or select custom to fine-tune individual parameters')
 			.addDropdown(dropdown => {
 				dropdown
-					.addOption('conservative', 'Conservative - Subtle, restrained expression')
-					.addOption('balanced', 'Balanced - Current default sound (recommended)')
-					.addOption('adventurous', 'Adventurous - Bold, experimental character')
-					.addOption('custom', 'Custom - Manual control')
+					.addOption('conservative', 'Conservative - subtle, restrained expression')
+					.addOption('balanced', 'Balanced - current default sound (recommended)')
+					.addOption('adventurous', 'Adventurous - bold, experimental character')
+					.addOption('custom', 'Custom - manual control')
 					.setValue(currentPreset)
 					.onChange(async (value) => {
 						// Initialize audioEnhancement if needed
@@ -4980,7 +4980,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Timing Humanization
 			new Setting(customControls)
 				.setName('Timing humanization')
-				.setDesc('Micro-timing variation in milliseconds (50-250ms). Higher values create looser, more organic groove.')
+				.setDesc('Micro-timing variation in milliseconds (50-250ms). higher values create looser, more organic groove.')
 				.addSlider(slider => {
 					slider
 						.setLimits(50, 250, 25)
@@ -5013,7 +5013,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Harmonic Adventurousness
 			new Setting(customControls)
 				.setName('Harmonic adventurousness')
-				.setDesc('Frequency of exotic chords and voice leading (0-100%). Higher values add more chromatic color and jazz harmonies.')
+				.setDesc('Frequency of exotic chords and voice leading (0-100%). higher values add more chromatic color and jazz harmonies.')
 				.addSlider(slider => {
 					slider
 						.setLimits(0, 100, 5)
@@ -5046,12 +5046,12 @@ All whale samples are authentic recordings from marine research institutions and
 			// Dynamic Range
 			new Setting(customControls)
 				.setName('Dynamic range')
-				.setDesc('Velocity variation between notes. Extreme creates dramatic contrasts from whisper-quiet to forte.')
+				.setDesc('Velocity variation between notes. extreme creates dramatic contrasts from whisper-quiet to forte.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('subtle', 'Subtle - Even, balanced dynamics')
-						.addOption('moderate', 'Moderate - Noticeable variation')
-						.addOption('extreme', 'Extreme - Dramatic contrasts')
+						.addOption('subtle', 'Subtle - even, balanced dynamics')
+						.addOption('moderate', 'Moderate - noticeable variation')
+						.addOption('extreme', 'Extreme - dramatic contrasts')
 						.setValue(musicality.dynamicRange || 'extreme')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
@@ -5068,12 +5068,12 @@ All whale samples are authentic recordings from marine research institutions and
 			// Polyphonic Density
 			new Setting(customControls)
 				.setName('Polyphonic density')
-				.setDesc('How much embellishments overlap with the center phrase. Maximum creates rich, layered textures.')
+				.setDesc('How much embellishments overlap with the center phrase. maximum creates rich, layered textures.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('sparse', 'Sparse - Minimal overlap, clear separation')
-						.addOption('moderate', 'Moderate - Some overlap, balanced texture')
-						.addOption('maximum', 'Maximum - Dense overlap, rich polyphony')
+						.addOption('sparse', 'Sparse - minimal overlap, clear separation')
+						.addOption('moderate', 'Moderate - some overlap, balanced texture')
+						.addOption('maximum', 'Maximum - dense overlap, rich polyphony')
 						.setValue(musicality.polyphonicDensity || 'maximum')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
@@ -5123,12 +5123,12 @@ All whale samples are authentic recordings from marine research institutions and
 			// Voice Leading Style
 			new Setting(customControls)
 				.setName('Voice leading style')
-				.setDesc('Approach to harmonic movement between chords. Chromatic creates jazzy, sophisticated progressions.')
+				.setDesc('Approach to harmonic movement between chords. chromatic creates jazzy, sophisticated progressions.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('smooth', 'Smooth - Minimal voice movement, consonant')
-						.addOption('balanced', 'Balanced - Mix of smooth and chromatic')
-						.addOption('chromatic', 'Chromatic - Adventurous, jazzy movement')
+						.addOption('smooth', 'Smooth - minimal voice movement, consonant')
+						.addOption('balanced', 'Balanced - mix of smooth and chromatic')
+						.addOption('chromatic', 'Chromatic - adventurous, jazzy movement')
 						.setValue(musicality.voiceLeadingStyle || 'chromatic')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
@@ -5167,22 +5167,22 @@ All whale samples are authentic recordings from marine research institutions and
 		// Tip 1: Depth settings
 		const tip1 = tipsList.createEl('li');
 		tip1.createEl('strong', { text: 'Start with depth 2:' });
-		void tip1.appendText(' This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.');
+		void tip1.appendText(' this is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.');
 
 		// Tip 2: Musical Enhancements
 		const tip2 = tipsList.createEl('li');
 		tip2.createEl('strong', { text: 'Enable scale quantization:' });
-		tip2.appendText(' This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.');
+		tip2.appendText(' this is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.');
 
 		// Tip 3: Clustering
 		const tip3 = tipsList.createEl('li');
 		tip3.createEl('strong', { text: 'Use clustering to discover patterns:' });
-		void tip3.appendText(' Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.');
+		void tip3.appendText(' switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.');
 
 		// Tip 4: Turn-Taking
 		const tip4 = tipsList.createEl('li');
-		tip4.createEl('strong', { text: 'Reduce Sonic congestion:' });
-		tip4.appendText(' Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.');
+		tip4.createEl('strong', { text: 'Reduce sonic congestion:' });
+		tip4.appendText(' enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.');
 
 		// Tip 5: Filtering
 		const tip5 = tipsList.createEl('li');
@@ -5226,18 +5226,18 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a1p1 = a1.createEl('p');
 		a1p1.createEl('strong', { text: 'A:' });
-		void a1p1.appendText(' By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:');
+		void a1p1.appendText(' by default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:');
 
 		const a1ul1 = a1.createEl('ul');
 		const a1li1 = a1ul1.createEl('li');
 		a1li1.createEl('strong', { text: 'All markdown syntax counts:' });
-		void a1li1.appendText(' Links, headings, callouts, and formatting inflate word counts');
+		void a1li1.appendText(' links, headings, callouts, and formatting inflate word counts');
 		const a1li2 = a1ul1.createEl('li');
 		a1li2.createEl('strong', { text: 'Notes sound similar:' });
-		void a1li2.appendText(' Similar file sizes produce similar durations and pitches');
+		void a1li2.appendText(' similar file sizes produce similar durations and pitches');
 		const a1li3 = a1ul1.createEl('li');
 		a1li3.createEl('strong', { text: 'No content differentiation:' });
-		void a1li3.appendText(' Callouts, code blocks, and lists are treated the same as regular text');
+		void a1li3.appendText(' callouts, code blocks, and lists are treated the same as regular text');
 
 		const a1p2 = a1.createEl('p');
 		a1p2.createEl('strong', { text: 'To get richer, more varied soundscapes:' });
@@ -5245,25 +5245,25 @@ All whale samples are authentic recordings from marine research institutions and
 		const a1ol = a1.createEl('ol');
 		const a1oli1 = a1ol.createEl('li');
 		a1oli1.createEl('strong', { text: 'Enable musical enhancements' });
-		a1oli1.appendText(' (above) - This is the most impactful change:');
+		a1oli1.appendText(' (above) - this is the most impactful change:');
 		const a1oli1ul = a1oli1.createEl('ul');
-		a1oli1ul.createEl('li', { text: 'Scale quantization creates harmonic consonance' });
-		a1oli1ul.createEl('li', { text: 'Chord voicing adds polyphonic richness' });
-		a1oli1ul.createEl('li', { text: 'Rhythmic patterns organize timing musically' });
-		a1oli1ul.createEl('li', { text: 'Tension tracking creates emotional arcs' });
-		a1oli1ul.createEl('li', { text: 'Turn-Taking reduces congestion through dialogue' });
+		a1oli1ul.createEl('li', { text: 'scale quantization creates harmonic consonance' });
+		a1oli1ul.createEl('li', { text: 'chord voicing adds polyphonic richness' });
+		a1oli1ul.createEl('li', { text: 'rhythmic patterns organize timing musically' });
+		a1oli1ul.createEl('li', { text: 'tension tracking creates emotional arcs' });
+		a1oli1ul.createEl('li', { text: 'turn-Taking reduces congestion through dialogue' });
 
 		const a1oli2 = a1ol.createEl('li');
 		a1oli2.createEl('strong', { text: 'Use diverse instruments' });
-		a1oli2.appendText(' - Enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type');
+		a1oli2.appendText(' - enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type');
 
 		const a1oli3 = a1ol.createEl('li');
 		a1oli3.createEl('strong', { text: 'Apply filters' });
-		void a1oli3.appendText(' - Focus on specific tags or folders to create more thematically coherent soundscapes');
+		void a1oli3.appendText(' - focus on specific tags or folders to create more thematically coherent soundscapes');
 
 		const a1oli4 = a1ol.createEl('li');
 		a1oli4.createEl('strong', { text: 'Experiment with clustering' });
-		void a1oli4.appendText(' - Different clustering methods reveal different organizational patterns in your vault');
+		void a1oli4.appendText(' - different clustering methods reveal different organizational patterns in your vault');
 
 		const a1p3 = a1.createEl('p');
 		a1p3.createEl('em', { text: 'Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.' });
@@ -5279,7 +5279,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 		const a2p1 = a2.createEl('p');
 		a2p1.createEl('strong', { text: 'A:' });
-		a2p1.appendText(' Musical Enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.');
+		a2p1.appendText(' musical enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.');
 
 		const a2p2 = a2.createEl('p');
 		a2p2.createEl('strong', { text: 'Why this happens:' });
@@ -5287,13 +5287,13 @@ All whale samples are authentic recordings from marine research institutions and
 		const a2ul1 = a2.createEl('ul');
 		const a2li1 = a2ul1.createEl('li');
 		a2li1.createEl('strong', { text: 'Sparse connections:' });
-		a2li1.appendText(' Your note has few or no links to other notes at shallow depths (1-2)');
+		a2li1.appendText(' your note has few or no links to other notes at shallow depths (1-2)');
 		const a2li2 = a2ul1.createEl('li');
 		a2li2.createEl('strong', { text: 'Low depth setting:' });
-		void a2li2.appendText(' The depth slider is set to 1, limiting the graph to immediate connections only');
+		void a2li2.appendText(' the depth slider is set to 1, limiting the graph to immediate connections only');
 		const a2li3 = a2ul1.createEl('li');
 		a2li3.createEl('strong', { text: 'Filters too restrictive:' });
-		void a2li3.appendText(' Tag/folder filters are excluding connected notes');
+		void a2li3.appendText(' tag/folder filters are excluding connected notes');
 
 		const a2p3 = a2.createEl('p');
 		a2p3.createEl('strong', { text: 'What musical enhancements need to work:' });
@@ -5301,19 +5301,19 @@ All whale samples are authentic recordings from marine research institutions and
 		const a2ul2 = a2.createEl('ul');
 		const a2li4 = a2ul2.createEl('li');
 		a2li4.createEl('strong', { text: 'Turn-Taking:' });
-		void a2li4.appendText(' Needs 3+ notes at different depths to create call-response dialogue');
+		void a2li4.appendText(' needs 3+ notes at different depths to create call-response dialogue');
 		const a2li5 = a2ul2.createEl('li');
 		a2li5.createEl('strong', { text: 'Chord voicing:' });
-		void a2li5.appendText(' Needs 2+ notes at same depth to build harmonies');
+		void a2li5.appendText(' needs 2+ notes at same depth to build harmonies');
 		const a2li6 = a2ul2.createEl('li');
 		a2li6.createEl('strong', { text: 'Rhythmic patterns:' });
-		void a2li6.appendText(' Needs 4+ notes to organize into musical patterns');
+		void a2li6.appendText(' needs 4+ notes to organize into musical patterns');
 		const a2li7 = a2ul2.createEl('li');
 		a2li7.createEl('strong', { text: 'Tension tracking:' });
-		void a2li7.appendText(' Needs 5+ notes to create narrative arcs');
+		void a2li7.appendText(' needs 5+ notes to create narrative arcs');
 		const a2li8 = a2ul2.createEl('li');
 		a2li8.createEl('strong', { text: 'Scale quantization:' });
-		void a2li8.appendText(' Works with any number of notes, but more varied with higher counts');
+		void a2li8.appendText(' works with any number of notes, but more varied with higher counts');
 
 		const a2p4 = a2.createEl('p');
 		a2p4.createEl('strong', { text: 'How to fix:' });
