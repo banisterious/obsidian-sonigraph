@@ -1326,7 +1326,7 @@ export class MaterialControlPanelModal extends Modal {
 		const apiKey = this.plugin.settings.freesoundApiKey;
 
 		if (!apiKey) {
-			new Notice('Please enter your Freesound API key in the Freesound Integration settings first.');
+			new Notice('Please enter your Freesound API key in the Freesound integration settings first.');
 			return;
 		}
 
@@ -1715,7 +1715,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Timing window
 		new Setting(container)
 			.setName('Timing window')
-			.setDesc('Notes arriving within this window are grouped into chords. Start with 50-100ms for simultaneous notes. Warning: values over 200ms will group sequential notes into large chords.')
+			.setDesc('Notes arriving within this window are grouped into chords. Start with 50-100ms for simultaneous notes. Warning: Values over 200ms will group sequential notes into large chords.')
 			.addSlider(slider => slider
 				.setLimits(20, 500, 10)
 				.setValue(this.plugin.settings.audioEnhancement?.chordFusion?.timingWindow || 50)
