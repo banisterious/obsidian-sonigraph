@@ -4,7 +4,7 @@
  * Coordinates the export process: validation, rendering, encoding, and file writing.
  */
 
-import { App, TFile } from 'obsidian';
+import { App, TFile, Platform } from 'obsidian';
 import { AudioEngine } from '../audio/engine';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import {
@@ -22,8 +22,6 @@ import { NoteCentricPlayer } from '../audio/playback/NoteCentricPlayer';
 import { getLogger } from '../logging';
 import type { SonigraphSettings } from '../utils/constants';
 import { getContext } from 'tone';
-import * as fs from 'fs';
-import * as path from 'path';
 import { ExportNoteCreator } from './ExportNoteCreator';
 
 const logger = getLogger('export');
@@ -202,17 +200,16 @@ export class AudioExporter {
                 await this.app.vault.createFolder(config.location);
             }
         } else {
-            // System location - ensure directory exists
-            const dirPath = path.isAbsolute(config.location) ? config.location : path.resolve(config.location);
-
-            if (!fs.existsSync(dirPath)) {
-                fs.mkdirSync(dirPath, { recursive: true });
+            // System location only supported on desktop
+            if (!Platform.isDesktopApp) {
+                throw new Error('System location exports are only supported on desktop');
             }
+            // Directory existence check will be handled by the file system when writing
         }
 
         // Check for file collision
         const fullPath = this.getFullPath(config);
-        const exists = this.fileExists(fullPath);
+        const exists = await this.fileExists(fullPath, config.locationType === 'system');
         if (exists && config.onCollision === 'cancel') {
             throw new Error(`File already exists: ${fullPath}`);
         }
@@ -554,7 +551,7 @@ export class AudioExporter {
         const fullPath = this.getFullPath(config);
 
         // Handle collision
-        if (this.fileExists(fullPath)) {
+        if (await this.fileExists(fullPath, config.locationType === 'system')) {
             switch (config.onCollision) {
                 case 'cancel':
                     throw new Error(`File already exists: ${fullPath}`);
@@ -574,25 +571,9 @@ export class AudioExporter {
             const uint8Array = new Uint8Array(data);
             await this.app.vault.createBinary(fullPath, uint8Array);
         } else {
-            // Write to system location using Node.js fs
-            const uint8Array = new Uint8Array(data);
-
-            // Ensure directory exists
-            const dirPath = path.dirname(fullPath);
-            if (!fs.existsSync(dirPath)) {
-                fs.mkdirSync(dirPath, { recursive: true });
-            }
-
-            // Write file
-            await new Promise<void>((resolve, reject) => {
-                fs.writeFile(fullPath, uint8Array, (err: Error | null) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                });
-            });
+            // Write to system location using vault adapter (desktop only)
+            // Vault adapter handles directory creation automatically
+            await this.app.vault.adapter.writeBinary(fullPath, data);
         }
 
         logger.info('export', `File written: ${fullPath} (${data.byteLength} bytes)`);
@@ -615,9 +596,9 @@ export class AudioExporter {
 
             // Get file size from written file
             if (config.locationType === 'system') {
-                // System location - use fs.statSync
+                // System location - use vault adapter
                 try {
-                    const stats = fs.statSync(filePath);
+                    const stats = await this.app.vault.adapter.stat(filePath);
                     result.fileSize = stats.size;
                 } catch (error) {
                     void logger.warn('export', 'Could not get file size from system location', error);
@@ -664,26 +645,30 @@ export class AudioExporter {
      */
     private getFullPath(config: ExportConfig): string {
         const extension = config.format;
+        const filename = `${config.filename}.${extension}`;
 
-        // Use path.join for system paths to handle path separators correctly
         if (config.locationType === 'system') {
-            return path.join(config.location, `${config.filename}.${extension}`);
+            // System paths: use normalized path separators
+            const normalizedLocation = config.location.replace(/\\/g, '/');
+            return `${normalizedLocation}/${filename}`;
         }
 
         // Vault paths use forward slash
-        return `${config.location}/${config.filename}.${extension}`;
+        return `${config.location}/${filename}`;
     }
 
     /**
      * Check if file exists (supports both vault and system paths)
      */
-    private fileExists(filePath: string): boolean {
-        // Check if it's a vault path (relative) or system path (absolute)
-        const isSystemPath = path.isAbsolute(filePath);
-
+    private async fileExists(filePath: string, isSystemPath: boolean): Promise<boolean> {
         if (isSystemPath) {
-            // System path - use fs
-            return fs.existsSync(filePath);
+            // System path - use vault adapter which works on desktop
+            try {
+                await this.app.vault.adapter.stat(filePath);
+                return true;
+            } catch {
+                return false;
+            }
         } else {
             // Vault path - use Obsidian API
             const file = this.app.vault.getAbstractFileByPath(filePath);

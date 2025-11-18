@@ -6,7 +6,7 @@
  * preset management, and real-time preview capabilities.
  */
 
-import { Setting, DropdownComponent, ToggleComponent } from 'obsidian';
+import { App, Modal, Setting, DropdownComponent, ToggleComponent } from 'obsidian';
 import {
     ConnectionType,
     ConnectionTypeMappingConfig,
@@ -45,6 +45,7 @@ interface PanelState {
 }
 
 export class ConnectionTypeMappingPanel {
+    private app: App;
     private container: HTMLElement;
     private config: ConnectionTypeMappingConfig;
     private callbacks: ConnectionTypeMappingPanelCallbacks;
@@ -59,11 +60,13 @@ export class ConnectionTypeMappingPanel {
     private validationDisplay: HTMLElement | null = null;
 
     constructor(
+        app: App,
         container: HTMLElement,
         config: ConnectionTypeMappingConfig,
         callbacks: ConnectionTypeMappingPanelCallbacks,
         mapper?: ConnectionTypeMapper
     ) {
+        this.app = app;
         this.container = container;
         this.config = { ...config };
         this.callbacks = callbacks;
@@ -946,23 +949,24 @@ export class ConnectionTypeMappingPanel {
     }
 
     private showSavePresetDialog(): void {
-        // In a real implementation, this would show a modal dialog
-        // For now, we'll use a simple prompt
-        const name = prompt('Enter preset name:');
-        const description = prompt('Enter preset description:');
-
-        if (name && description) {
+        const modal = new SavePresetModal(this.app, (name, description) => {
             this.callbacks.onPresetSave(name, description);
-        }
+        });
+        modal.open();
     }
 
     private resetToDefaults(): void {
-        if (confirm('Reset all connection type mappings to default values? This cannot be undone.')) {
-            this.config = { ...DEFAULT_CONNECTION_TYPE_MAPPING_CONFIG };
-            void this.markDirty();
-            this.callbacks.onConfigChange(this.config);
-            void this.render();
-        }
+        const modal = new ConfirmModal(
+            this.app,
+            'Reset all connection type mappings to default values? This cannot be undone.',
+            () => {
+                this.config = { ...DEFAULT_CONNECTION_TYPE_MAPPING_CONFIG };
+                void this.markDirty();
+                this.callbacks.onConfigChange(this.config);
+                void this.render();
+            }
+        );
+        modal.open();
     }
 
     private applyChanges(): void {
@@ -982,11 +986,16 @@ export class ConnectionTypeMappingPanel {
     }
 
     private revertChanges(): void {
-        if (confirm('Revert all unsaved changes? This cannot be undone.')) {
-            // In a real implementation, this would revert to the last saved state
-            this.state.isDirty = false;
-            void this.render();
-        }
+        const modal = new ConfirmModal(
+            this.app,
+            'Revert all unsaved changes? This cannot be undone.',
+            () => {
+                // In a real implementation, this would revert to the last saved state
+                this.state.isDirty = false;
+                void this.render();
+            }
+        );
+        modal.open();
     }
 
     private exportConfiguration(): void {
@@ -1039,5 +1048,105 @@ export class ConnectionTypeMappingPanel {
 
     public getValidationErrors(): string[] {
         return [...this.state.validationErrors];
+    }
+}
+
+/**
+ * Modal for saving presets
+ */
+class SavePresetModal extends Modal {
+    private onSubmit: (name: string, description: string) => void;
+
+    constructor(app: App, onSubmit: (name: string, description: string) => void) {
+        super(app);
+        this.onSubmit = onSubmit;
+    }
+
+    onOpen(): void {
+        const { contentEl } = this;
+        contentEl.empty();
+
+        contentEl.createEl('h2', { text: 'Save preset' });
+
+        let nameValue = '';
+        let descriptionValue = '';
+
+        new Setting(contentEl)
+            .setName('Preset name')
+            .addText(text => text
+                .setPlaceholder('Enter preset name')
+                .onChange(value => {
+                    nameValue = value;
+                }));
+
+        new Setting(contentEl)
+            .setName('Preset description')
+            .addText(text => text
+                .setPlaceholder('Enter preset description')
+                .onChange(value => {
+                    descriptionValue = value;
+                }));
+
+        new Setting(contentEl)
+            .addButton(btn => btn
+                .setButtonText('Save')
+                .setCta()
+                .onClick(() => {
+                    if (nameValue && descriptionValue) {
+                        this.onSubmit(nameValue, descriptionValue);
+                        this.close();
+                    }
+                }))
+            .addButton(btn => btn
+                .setButtonText('Cancel')
+                .onClick(() => {
+                    this.close();
+                }));
+    }
+
+    onClose(): void {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+}
+
+/**
+ * Modal for confirming actions
+ */
+class ConfirmModal extends Modal {
+    private message: string;
+    private onConfirm: () => void;
+
+    constructor(app: App, message: string, onConfirm: () => void) {
+        super(app);
+        this.message = message;
+        this.onConfirm = onConfirm;
+    }
+
+    onOpen(): void {
+        const { contentEl } = this;
+        contentEl.empty();
+
+        contentEl.createEl('h2', { text: 'Confirm action' });
+        contentEl.createEl('p', { text: this.message });
+
+        new Setting(contentEl)
+            .addButton(btn => btn
+                .setButtonText('Confirm')
+                .setCta()
+                .onClick(() => {
+                    this.onConfirm();
+                    this.close();
+                }))
+            .addButton(btn => btn
+                .setButtonText('Cancel')
+                .onClick(() => {
+                    this.close();
+                }));
+    }
+
+    onClose(): void {
+        const { contentEl } = this;
+        contentEl.empty();
     }
 }

@@ -97,7 +97,7 @@ export class SonicGraphFreesoundSettings {
 					const apiKey = this.plugin.settings.freesoundApiKey;
 					if (!apiKey || apiKey.trim().length === 0) {
 						void button.setButtonText('No key');
-						setTimeout(() => button.setButtonText('Test'), 2000);
+						void setTimeout(() => button.setButtonText('Test'), 2000);
 						return;
 					}
 
@@ -123,7 +123,7 @@ export class SonicGraphFreesoundSettings {
 						logger.error('freesound-settings', `API test error: ${error.message}`);
 					} finally {
 						void button.setDisabled(false);
-						setTimeout(() => button.setButtonText('Test'), 3000);
+						void setTimeout(() => button.setButtonText('Test'), 3000);
 					}
 				})
 			);

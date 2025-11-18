@@ -2639,7 +2639,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Start the audio context if suspended
 		if (getContext().state === 'suspended') {
-			getContext().resume();
+			void getContext().resume();
 			void logger.debug('context', 'Resumed suspended audio context for Local Soundscape playback');
 		}
 

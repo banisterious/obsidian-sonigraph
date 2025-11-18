@@ -3,7 +3,7 @@
  * Integrates Freesound API with Sonigraph's audio engine for whale sounds
  */
 
-import { Vault } from 'obsidian';
+import { Vault, requestUrl } from 'obsidian';
 import { FreesoundAPIClient } from './client';
 import {
     WhaleIntegrationSettings,
@@ -726,19 +726,19 @@ export class WhaleAudioManager {
 
         // For other URLs (like Freesound), try direct fetch first
         try {
-            const response = await fetch(url, {
+            const response = await requestUrl({
+                url: url,
                 method: 'GET',
                 headers: {
                     'Accept': 'audio/*'
                 }
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            if (response.status >= 400) {
+                throw new Error(`HTTP ${response.status}`);
             }
 
-            const arrayBuffer = await response.arrayBuffer();
-            return await this.validateAndDecodeAudio(arrayBuffer, url);
+            return await this.validateAndDecodeAudio(response.arrayBuffer, url);
             
         } catch (error) {
             logger.debug('download', 'Direct fetch failed, trying CORS proxy fallback', {
@@ -820,14 +820,15 @@ export class WhaleAudioManager {
                     attempt: proxyIndex,
                     retry: retry + 1
                 });
-                
-                const proxyResponse = await fetch(proxyUrl, {
+
+                const proxyResponse = await requestUrl({
+                    url: proxyUrl,
                     method: 'GET',
                     headers: headers
                 });
 
-                if (proxyResponse.ok) {
-                    const arrayBuffer = await proxyResponse.arrayBuffer();
+                if (proxyResponse.status < 400) {
+                    const arrayBuffer = proxyResponse.arrayBuffer;
                     const arrayBufferSize = arrayBuffer.byteLength; // Store size before detachment
 
                     logger.debug('download', 'CORS proxy response received', {
@@ -884,8 +885,7 @@ export class WhaleAudioManager {
                 } else {
                     logger.debug('download', 'CORS proxy returned error status', {
                         proxy: proxyService,
-                        status: proxyResponse.status,
-                        statusText: proxyResponse.statusText
+                        status: proxyResponse.status
                     });
                     break; // Don't retry for other HTTP errors
                 }
@@ -1108,14 +1108,17 @@ export class WhaleAudioManager {
      * Load sample from direct URL (NOAA PMEL, etc.)
      */
     private async loadDirectUrl(url: string): Promise<AudioBuffer> {
-        const response = await fetch(url);
-        if (!response.ok) {
+        const response = await requestUrl({
+            url: url,
+            method: 'GET'
+        });
+
+        if (response.status >= 400) {
             throw new Error(`Failed to fetch audio: ${response.status}`);
         }
-        
-        const arrayBuffer = await response.arrayBuffer();
+
         const audioContext = new AudioContext();
-        return await audioContext.decodeAudioData(arrayBuffer);
+        return await audioContext.decodeAudioData(response.arrayBuffer);
     }
 
     /**

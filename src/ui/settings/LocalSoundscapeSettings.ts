@@ -205,7 +205,7 @@ export class LocalSoundscapeSettings {
 				.addDropdown(dropdown => {
 					// Add all 12 chromatic keys
 					const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-					keys.forEach(key => dropdown.addOption(key, key));
+					keys.forEach(key => void dropdown.addOption(key, key));
 
 					return dropdown
 						.setValue(keySelection.customKey || 'C')
@@ -577,7 +577,7 @@ export class LocalSoundscapeSettings {
 				.setDesc('The root note of the musical scale')
 				.addDropdown(dropdown => {
 					const rootNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-					rootNotes.forEach(note => dropdown.addOption(note, note));
+					rootNotes.forEach(note => void dropdown.addOption(note, note));
 
 					return dropdown
 						.setValue(enhancements.scaleQuantization?.rootNote || 'C')
@@ -609,7 +609,7 @@ export class LocalSoundscapeSettings {
 						{ value: 'mixolydian', label: 'Mixolydian (folk, bluegrass)' }
 					];
 
-					scales.forEach(scale => dropdown.addOption(scale.value, scale.label));
+					scales.forEach(scale => void dropdown.addOption(scale.value, scale.label));
 
 					return dropdown
 						.setValue(enhancements.scaleQuantization?.scale || 'major')
@@ -761,7 +761,7 @@ export class LocalSoundscapeSettings {
 						{ value: 'plateau', label: 'Plateau (sustained tension)' }
 					];
 
-					shapes.forEach(shape => dropdown.addOption(shape.value, shape.label));
+					shapes.forEach(shape => void dropdown.addOption(shape.value, shape.label));
 
 					return dropdown
 						.setValue(enhancements.tensionTracking?.arcShape || 'rise-fall')
@@ -890,7 +890,7 @@ export class LocalSoundscapeSettings {
 						{ value: 'antiphonal', label: 'Antiphonal (stereo alternation)' }
 					];
 
-					patterns.forEach(pattern => dropdown.addOption(pattern.value, pattern.label));
+					patterns.forEach(pattern => void dropdown.addOption(pattern.value, pattern.label));
 
 					return dropdown
 						.setValue(enhancements.turnTaking?.pattern || 'call-response')

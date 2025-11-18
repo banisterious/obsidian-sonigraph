@@ -991,7 +991,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
         const exportIcon = createLucideIcon('download', 16);
         void exportBtn.insertBefore(exportIcon, exportBtn.firstChild);
-        exportBtn.addEventListener('click', () => this.openExportModal());
+        exportBtn.addEventListener('click', () => void this.openExportModal());
     }
 
     /**

@@ -2403,7 +2403,7 @@ export class MaterialControlPanelModal extends Modal {
 			text: 'Reset to defaults',
 			icon: 'rotate-ccw',
 			variant: 'outlined',
-			onClick: () => this.resetSonicGraphSettings()
+			onClick: () => void this.resetSonicGraphSettings()
 		});
 		resetButtonContainer.appendChild(resetButton.getElement());
 
@@ -4042,9 +4042,9 @@ export class MaterialControlPanelModal extends Modal {
 			qualitySelect.value = usesHighQuality ? 'recording' : 'synthesis';
 			
 			// Handle changes
-			qualitySelect.addEventListener('change', async () => {
+			qualitySelect.addEventListener('change', () => void (async () => {
 				const useRecording = qualitySelect.value === 'recording';
-				
+
 				// Check if recording is available when switching to recording mode
 				if (useRecording && this.instrumentRequiresHighQuality(instrumentName)) {
 					const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
@@ -4055,15 +4055,15 @@ export class MaterialControlPanelModal extends Modal {
 						return;
 					}
 				}
-				
+
 				// Update settings
 				setInstrumentSetting(this.plugin, instrumentName, 'useHighQuality', useRecording);
 				await this.plugin.saveSettings();
-				
+
 				// Show feedback
 				const modeText = useRecording ? 'recording' : 'synthesis';
 				new Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
-			});
+			})());
 			
 			// Disable recording option if not available
 			if (this.instrumentRequiresHighQuality(instrumentName)) {
