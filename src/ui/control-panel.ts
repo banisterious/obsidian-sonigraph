@@ -4552,7 +4552,7 @@ All whale samples are authentic recordings from marine research institutions and
 			logger.debug('freesound', `Connection test result: ${JSON.stringify(result)}`);
 
 			// Restore button state
-			button.textContent = 'Test Connection';
+			button.textContent = 'Test connection';
 			button.disabled = false;
 
 			// Show result to user
@@ -4571,7 +4571,7 @@ All whale samples are authentic recordings from marine research institutions and
 
 		} catch (error) {
 			// Restore button state
-			button.textContent = 'Test Connection';
+			button.textContent = 'Test connection';
 			button.disabled = false;
 
 			const errorMessage = error.message || 'Unknown error';
@@ -4980,7 +4980,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Timing Humanization
 			new Setting(customControls)
 				.setName('Timing humanization')
-				.setDesc('Micro-timing variation in milliseconds (50-250ms). higher values create looser, more organic groove.')
+				.setDesc('Micro-timing variation in milliseconds (50-250ms). Higher values create looser, more organic groove.')
 				.addSlider(slider => {
 					slider
 						.setLimits(50, 250, 25)
