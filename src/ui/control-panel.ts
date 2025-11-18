@@ -955,7 +955,7 @@ export class MaterialControlPanelModal extends Modal {
 					.addOption('adaptive', 'Adaptive (recommended)')
 					.addOption('lru', 'Least recently used')
 					.addOption('lfu', 'Least frequently used')
-					.addOption('predictive', 'Predictive')
+					.addOption('predictive', 'predictive')
 					.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
 					.onChange(async (value) => {
 						this.plugin.settings.freesoundCacheStrategy = value as 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive';
@@ -4922,10 +4922,10 @@ All whale samples are authentic recordings from marine research institutions and
 			.setDesc('Choose a pre-configured style, or select custom to fine-tune individual parameters')
 			.addDropdown(dropdown => {
 				dropdown
-					.addOption('conservative', 'Conservative - subtle, restrained expression')
-					.addOption('balanced', 'Balanced - current default sound (recommended)')
-					.addOption('adventurous', 'Adventurous - bold, experimental character')
-					.addOption('custom', 'Custom - manual control')
+					.addOption('conservative', 'conservative - subtle, restrained expression')
+					.addOption('balanced', 'balanced - current default sound (recommended)')
+					.addOption('adventurous', 'adventurous - bold, experimental character')
+					.addOption('custom', 'custom - manual control')
 					.setValue(currentPreset)
 					.onChange(async (value) => {
 						// Initialize audioEnhancement if needed
@@ -5048,9 +5048,9 @@ All whale samples are authentic recordings from marine research institutions and
 				.setDesc('Velocity variation between notes. extreme creates dramatic contrasts from whisper-quiet to forte.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('subtle', 'Subtle - even, balanced dynamics')
-						.addOption('moderate', 'Moderate - noticeable variation')
-						.addOption('extreme', 'Extreme - dramatic contrasts')
+						.addOption('subtle', 'subtle - even, balanced dynamics')
+						.addOption('moderate', 'moderate - noticeable variation')
+						.addOption('extreme', 'extreme - dramatic contrasts')
 						.setValue(musicality.dynamicRange || 'extreme')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
@@ -5070,9 +5070,9 @@ All whale samples are authentic recordings from marine research institutions and
 				.setDesc('How much embellishments overlap with the center phrase. maximum creates rich, layered textures.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('sparse', 'Sparse - minimal overlap, clear separation')
-						.addOption('moderate', 'Moderate - some overlap, balanced texture')
-						.addOption('maximum', 'Maximum - dense overlap, rich polyphony')
+						.addOption('sparse', 'sparse - minimal overlap, clear separation')
+						.addOption('moderate', 'moderate - some overlap, balanced texture')
+						.addOption('maximum', 'maximum - dense overlap, rich polyphony')
 						.setValue(musicality.polyphonicDensity || 'maximum')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {
@@ -5125,9 +5125,9 @@ All whale samples are authentic recordings from marine research institutions and
 				.setDesc('Approach to harmonic movement between chords. chromatic creates jazzy, sophisticated progressions.')
 				.addDropdown(dropdown => {
 					dropdown
-						.addOption('smooth', 'Smooth - minimal voice movement, consonant')
-						.addOption('balanced', 'Balanced - mix of smooth and chromatic')
-						.addOption('chromatic', 'Chromatic - adventurous, jazzy movement')
+						.addOption('smooth', 'smooth - minimal voice movement, consonant')
+						.addOption('balanced', 'balanced - mix of smooth and chromatic')
+						.addOption('chromatic', 'chromatic - adventurous, jazzy movement')
 						.setValue(musicality.voiceLeadingStyle || 'chromatic')
 						.onChange(async (value) => {
 							if (!this.plugin.settings.audioEnhancement) {

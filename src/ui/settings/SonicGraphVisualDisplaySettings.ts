@@ -81,10 +81,10 @@ export class SonicGraphVisualDisplaySettings {
 			.setName('Visualization mode')
 			.setDesc('Choose how notes are displayed visually')
 			.addDropdown(dropdown => dropdown
-				.addOption('piano-roll', 'Piano Roll (Recommended)')
-				.addOption('spectrum', 'Spectrum Analyzer')
-				.addOption('staff', 'Musical Staff')
-				.addOption('graph-highlight', 'Graph Node Highlighting')
+				.addOption('piano-roll', 'Piano roll (recommended)')
+				.addOption('spectrum', 'Spectrum analyzer')
+				.addOption('staff', 'Musical staff')
+				.addOption('graph-highlight', 'Graph node highlighting')
 				.setValue(this.plugin.settings.sonicGraphSettings?.visualDisplay?.mode || 'piano-roll')
 				.onChange(async (value: 'piano-roll' | 'spectrum' | 'staff' | 'graph-highlight') => {
 					if (!this.plugin.settings.sonicGraphSettings?.visualDisplay) return;
@@ -131,10 +131,10 @@ export class SonicGraphVisualDisplaySettings {
 			.setName('Color scheme')
 			.setDesc('How notes are colored in the visualization')
 			.addDropdown(dropdown => dropdown
-				.addOption('layer', 'By Layer (Recommended)')
-				.addOption('pitch', 'By Pitch')
-				.addOption('intensity', 'By Intensity')
-				.addOption('high-contrast', 'High Contrast (Accessibility)')
+				.addOption('layer', 'By layer (recommended)')
+				.addOption('pitch', 'By pitch')
+				.addOption('intensity', 'By intensity')
+				.addOption('high-contrast', 'High contrast (accessibility)')
 				.setValue(this.plugin.settings.sonicGraphSettings?.visualDisplay?.colorScheme || 'layer')
 				.onChange(async (value: 'layer' | 'pitch' | 'intensity' | 'high-contrast') => {
 					if (!this.plugin.settings.sonicGraphSettings?.visualDisplay) return;

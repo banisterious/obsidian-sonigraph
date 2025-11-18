@@ -212,11 +212,11 @@ export class SonicGraphFreesoundSettings {
 			.setName('Cache strategy')
 			.setDesc('Algorithm for managing cached samples')
 			.addDropdown(dropdown => dropdown
-				.addOption('lru', 'LRU - least recently used')
-				.addOption('lfu', 'LFU - least frequently used')
-				.addOption('fifo', 'FIFO - first in first out')
-				.addOption('adaptive', 'Adaptive - smart balancing')
-				.addOption('predictive', 'Predictive - pattern based')
+				.addOption('lru', 'lru - least recently used')
+				.addOption('lfu', 'lfu - least frequently used')
+				.addOption('fifo', 'fifo - first in first out')
+				.addOption('adaptive', 'adaptive - smart balancing')
+				.addOption('predictive', 'predictive - pattern based')
 				.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
 				.onChange(async (value: 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive') => {
 					this.plugin.settings.freesoundCacheStrategy = value;

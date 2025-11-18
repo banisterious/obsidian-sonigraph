@@ -247,10 +247,10 @@ export class FreesoundSearchModal extends Modal {
 			.setName('License')
 			.setDesc('Filter by creative commons license')
 			.addDropdown(dropdown => dropdown
-				.addOption('any', 'Any license')
-				.addOption('cc0', 'CC0 (Public Domain)')
-				.addOption('cc-by', 'CC BY (Attribution)')
-				.addOption('cc-by-sa', 'CC BY-SA (ShareAlike)')
+				.addOption('any', 'any license')
+				.addOption('cc0', 'CC0 (public domain)')
+				.addOption('cc-by', 'CC BY (attribution)')
+				.addOption('cc-by-sa', 'CC BY-SA (sharealike)')
 				.setValue(this.filters.license)
 				.onChange(value => {
 					this.filters.license = value;

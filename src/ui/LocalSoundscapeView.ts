@@ -735,9 +735,9 @@ export class LocalSoundscapeView extends ItemView {
 
 		const modeSelect = modeSelector.createEl('select', { cls: 'mode-select' });
 		const modes: Array<{value: VisualizationMode, label: string}> = [
-			{ value: 'piano-roll', label: 'Piano Roll' },
-			{ value: 'spectrum', label: 'Spectrum' },
-			{ value: 'staff', label: 'Staff' }
+			{ value: 'piano-roll', label: 'Piano roll' },
+			{ value: 'spectrum', label: 'spectrum' },
+			{ value: 'staff', label: 'staff' }
 		];
 
 		modes.forEach(mode => {
