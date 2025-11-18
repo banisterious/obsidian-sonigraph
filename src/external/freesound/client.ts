@@ -283,13 +283,13 @@ export class FreesoundAPIClient {
     /**
      * Process and validate discovered samples
      */
-    private async processSamples(
-        samples: FreesoundSample[], 
+    private processSamples(
+        samples: FreesoundSample[],
         query: WhaleSearchQuery
-    ): Promise<SampleDiscoveryResult> {
+    ): SampleDiscoveryResult {
         // Remove duplicates
         const uniqueSamples = this.removeDuplicates(samples);
-        
+
         // Apply curation pipeline
         const validated: FreesoundSample[] = [];
         const rejected: FreesoundSample[] = [];

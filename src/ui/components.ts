@@ -88,8 +88,8 @@ export function createObsidianToggle(
 		const originalDisabled = checkbox.disabled;
 		const checkboxId = Math.random().toString(36).substring(2, 11); // Generate unique ID for tracking
 
-		// Use void to explicitly ignore the promise
-		void (async () => {
+		// Execute synchronously
+		void (() => {
 			try {
 				const newValue = checkbox.checked;
 				logger.debug('ui', 'Checkbox change event fired', {

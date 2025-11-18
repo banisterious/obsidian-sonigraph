@@ -393,9 +393,9 @@ export class ProseAnalyzer {
 			// Remove headings markers
 			.replace(/^#+\s/gm, '')
 			// Remove links but keep text
-			.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+			.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
 			// Remove images
-			.replace(/!\[([^\]]*)\]\([^\)]+\)/g, '')
+			.replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
 			// Remove bold/italic markers
 			.replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, '$1')
 			// Remove blockquotes

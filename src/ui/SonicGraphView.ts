@@ -1174,7 +1174,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 excludeFiles: this.graphDataExtractor['excludeFiles']
             });
             
-            const graphData = await this.executeWhenIdle(async () => {
+            const graphData = await this.executeWhenIdle(() => {
                 return this.graphDataExtractor.extractGraphData();
             });
             logger.info('sonic-graph-data', `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
@@ -2445,7 +2445,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated config: ${key} = ${String(value)}`);
+        logger.debug('connection-type-mapping', `Updated config: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -2462,7 +2462,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${String(value)}`);
+        logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -2481,7 +2481,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${String(value)}`);
+        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -4829,12 +4829,12 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const modeSelect = modeItem.createEl('select', {
             cls: 'sonic-graph-dropdown'
         });
-        const modes = [
-            { value: 'graph-position', label: 'Graph Position' },
-            { value: 'folder-based', label: 'Folder Based' },
-            { value: 'cluster-based', label: 'Cluster Based' },
-            { value: 'hybrid', label: 'Hybrid (Recommended)' },
-            { value: 'disabled', label: 'Disabled' }
+        const modes: Array<{ value: PanningMode; label: string }> = [
+            { value: PanningMode.GraphPosition, label: 'Graph Position' },
+            { value: PanningMode.FolderBased, label: 'Folder Based' },
+            { value: PanningMode.ClusterBased, label: 'Cluster Based' },
+            { value: PanningMode.Hybrid, label: 'Hybrid (Recommended)' },
+            { value: PanningMode.Disabled, label: 'Disabled' }
         ];
         modes.forEach(mode => {
             const option = modeSelect.createEl('option', {
@@ -4898,11 +4898,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         const curveSelect = curveItem.createEl('select', {
             cls: 'sonic-graph-dropdown'
         });
-        const curves = [
-            { value: 'linear', label: 'Linear' },
-            { value: 'exponential', label: 'Exponential' },
-            { value: 'sigmoid', label: 'Sigmoid (Recommended)' },
-            { value: 'logarithmic', label: 'Logarithmic' }
+        const curves: Array<{ value: PanningCurve; label: string }> = [
+            { value: PanningCurve.Linear, label: 'Linear' },
+            { value: PanningCurve.Exponential, label: 'Exponential' },
+            { value: PanningCurve.Sigmoid, label: 'Sigmoid (Recommended)' },
+            { value: PanningCurve.Logarithmic, label: 'Logarithmic' }
         ];
         curves.forEach(curve => {
             const option = curveSelect.createEl('option', {
@@ -5402,7 +5402,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         });
 
         exportButton.addEventListener('click', () => {
-            void (async () => {
+            void (() => {
                 const now = new Date();
                 const pad = (n: number) => n.toString().padStart(2, '0');
                 const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
@@ -5608,7 +5608,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Performance optimization: Use debounced settings updates
         this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
 
-        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${String(value)}`);
+        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
     }
 
     /**

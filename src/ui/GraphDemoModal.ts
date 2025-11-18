@@ -24,8 +24,8 @@ interface DemoLink {
 }
 
 export class GraphDemoModal extends Modal {
-	private svg: unknown | null = null;
-	private simulation: unknown | null = null;
+	private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null = null;
+	private simulation: d3.Simulation<DemoNode, DemoLink> | null = null;
 	private nodes: DemoNode[] = [];
 	private links: DemoLink[] = [];
 	private showLabels: boolean = false;

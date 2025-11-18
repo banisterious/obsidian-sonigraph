@@ -2,7 +2,7 @@ import { App, Modal, Setting, Notice, requestUrl } from 'obsidian';
 import SonigraphPlugin from '../main';
 import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
-import { INSTRUMENT_INFO } from '../utils/constants';
+import { INSTRUMENT_INFO, InstrumentSettings } from '../utils/constants';
 import { TAB_CONFIGS, createLucideIcon, setLucideIcon, getFamilyIcon, getInstrumentIcon, LucideIconName } from './lucide-icons';
 import { MaterialCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
 import { PlayButtonManager, PlayButtonState } from './play-button-manager';
@@ -60,7 +60,7 @@ type PolyphonicDensity = 'sparse' | 'moderate' | 'maximum';
 type VoiceLeadingStyle = 'smooth' | 'chromatic' | 'parallel';
 type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
 
-function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): unknown | undefined {
+function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): InstrumentSettings | undefined {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
 		return instruments[instrumentKey as InstrumentKey];
@@ -68,11 +68,11 @@ function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): 
 	return undefined;
 }
 
-function setInstrumentSetting<K extends keyof unknown>(
+function setInstrumentSetting<K extends keyof InstrumentSettings>(
 	plugin: SonigraphPlugin,
 	instrumentKey: string,
 	settingKey: K,
-	value: unknown
+	value: InstrumentSettings[K]
 ): boolean {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
@@ -421,7 +421,6 @@ export class MaterialControlPanelModal extends Modal {
 			case 'strings':
 			case 'woodwinds':
 			case 'brass':
-
 			case 'percussion':
 			case 'electronic':
 			case 'experimental':
@@ -1225,7 +1224,7 @@ export class MaterialControlPanelModal extends Modal {
 				}
 
 				audio.addEventListener('canplay', () => resolve(), { once: true });
-				audio.addEventListener('error', (e) => reject(e), { once: true });
+				audio.addEventListener('error', (e) => reject(new Error(`Audio load error: ${e.type}`)), { once: true });
 				audio.src = blobUrl;
 				void audio.load();
 			});

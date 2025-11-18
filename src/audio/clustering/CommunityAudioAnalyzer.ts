@@ -66,10 +66,10 @@ export class CommunityAudioAnalyzer {
   /**
    * Detect communities from graph data using Louvain algorithm
    */
-  public async detectCommunities(
+  public detectCommunities(
     nodes: GraphNode[],
     links: GraphLink[]
-  ): Promise<Community[]> {
+  ): Community[] {
     if (!this.isInitialized || !this.settings.enabled) {
       return [];
     }

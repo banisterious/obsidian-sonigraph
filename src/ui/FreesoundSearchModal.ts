@@ -564,7 +564,7 @@ export class FreesoundSearchModal extends Modal {
 
 			await new Promise<void>((resolve, reject) => {
 				audio.addEventListener('canplay', () => resolve(), { once: true });
-				audio.addEventListener('error', (e) => reject(e), { once: true });
+				audio.addEventListener('error', (e) => reject(new Error(`Audio load error: ${e.type}`)), { once: true });
 				void audio.load();
 			});
 

@@ -603,11 +603,12 @@ export class LocalSoundscapeRenderer {
 			.translate(translateX, translateY)
 			.scale(scale);
 
+		const zoom = this.zoom;
 		this.svg
 			.transition()
 			.duration(750)
 			.ease(d3.easeCubicInOut)
-			.call(this.zoom.transform, transform);
+			.call((selection) => zoom.transform(selection, transform));
 
 		logger.debug('fit-to-content', 'Graph fitted to content', { scale, translateX, translateY });
 	}
@@ -617,7 +618,8 @@ export class LocalSoundscapeRenderer {
 	 */
 	private resetZoom(): void {
 		const transform = d3.zoomIdentity.translate(0, 0).scale(1);
-		this.svg.call(this.zoom.transform, transform);
+		const zoom = this.zoom;
+		this.svg.call((selection) => zoom.transform(selection, transform));
 	}
 
 	/**

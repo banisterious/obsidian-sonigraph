@@ -169,7 +169,7 @@ export class ContentAwareMapper {
     /**
      * Select instrument based on file characteristics using intelligent mapping
      */
-    async selectInstrumentFromCharacteristics(characteristics: FileCharacteristics): Promise<InstrumentConfig> {
+    selectInstrumentFromCharacteristics(characteristics: FileCharacteristics): InstrumentConfig {
         const startTime = performance.now();
 
         try {
@@ -186,7 +186,7 @@ export class ContentAwareMapper {
 
             // Use InstrumentSelector to get the best instrument
             const instrumentName = this.instrumentSelector.selectInstrument(criteria, this.config);
-            
+
             // Get the instrument configuration
             const instrumentConfig = this.availableInstruments.get(instrumentName);
             if (!instrumentConfig) {
@@ -1617,7 +1617,7 @@ export class ContentAwareMapper {
             testsRun++;
             try {
                 const testPath = 'Projects/Complex/Nested/Structure/test-file.md';
-                const folderCharacteristics = await this.folderHierarchyMapper.analyzeFolderPath(testPath);
+                const folderCharacteristics = this.folderHierarchyMapper.analyzeFolderPath(testPath);
 
                 void logger.info('test', `✅ Folder hierarchy analysis successful`);
                 logger.info('test', `   📁 Instrument Family: ${folderCharacteristics.primaryFamily.name}`);
@@ -1639,7 +1639,7 @@ export class ContentAwareMapper {
         if (this.tagSemanticMapper) {
             testsRun++;
             try {
-                const semanticResult = await this.tagSemanticMapper.performSemanticMapping(testNodes[0]);
+                const semanticResult = this.tagSemanticMapper.performSemanticMapping(testNodes[0]);
 
                 void logger.info('test', `✅ Tag semantic analysis successful`);
                 logger.info('test', `   🎵 Selected Instrument: ${semanticResult.selectedInstrument}`);
@@ -1918,7 +1918,7 @@ export class ContentAwareMapper {
                 const mappingResult = await this.performContentAwareMapping(completeNode);
 
                 // Analyze folder hierarchy specifically
-                const folderAnalysis = await this.folderHierarchyMapper.analyzeFolderPath(completeNode.path);
+                const folderAnalysis = this.folderHierarchyMapper.analyzeFolderPath(completeNode.path);
 
                 void logger.info('test', `✅ Integration test completed`);
                 logger.info('test', `   📁 Folder Family: ${folderAnalysis.primaryFamily.name}`);

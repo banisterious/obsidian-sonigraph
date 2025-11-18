@@ -479,12 +479,12 @@ export class WhaleAudioManager {
     /**
      * Clean up old cache files (LRU-style cleanup)
      */
-    async cleanupCache(maxSizeGB: number = 2): Promise<void> {
+    cleanupCache(maxSizeGB: number = 2): void {
         if (!this.vault) return;
 
         try {
             const cacheStats = this.getCacheStats();
-            
+
             if (cacheStats.totalSizeGB > maxSizeGB) {
                 logger.info('cache-cleanup', 'Starting cache cleanup', {
                     currentSize: `${cacheStats.totalSizeGB.toFixed(2)}GB`,

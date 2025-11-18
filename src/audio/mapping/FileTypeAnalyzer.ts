@@ -149,7 +149,7 @@ export class FileTypeAnalyzer {
     /**
      * Analyze file characteristics comprehensively
      */
-    async analyzeFile(file: TFile, node: EnhancedGraphNode): Promise<FileCharacteristics> {
+    analyzeFile(file: TFile, node: EnhancedGraphNode): FileCharacteristics {
         const cacheKey = `${file.path}-${file.stat.mtime}`;
         
         // Check cache first
