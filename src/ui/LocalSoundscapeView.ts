@@ -1524,7 +1524,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Export soundscape audio
 	 */
-	private exportSoundscapeAudio(): void {
+	private async exportSoundscapeAudio(): Promise<void> {
 		// Check if we have either playback mode's data
 		const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
 		const hasNoteCentricData = this.currentNoteCentricMapping !== null;
