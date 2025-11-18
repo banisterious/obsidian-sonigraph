@@ -1,5 +1,5 @@
 /**
- * Local Soundscape Continuous Layers Settings
+ * Local Soundscape continuous layers settings
  *
  * UI controls for continuous audio layers in Local Soundscape.
  * Provides ambient background that fills out sparse soundscapes.
@@ -27,7 +27,7 @@ export class LocalSoundscapeLayersSettings {
 	public render(container: HTMLElement): void {
 		void logger.debug('layers-settings', 'Rendering Local Soundscape continuous layers settings');
 
-		// Section 1: Enable/Disable Continuous Layers
+		// Section 1: Enable/disable continuous layers
 		void this.renderEnableSection(container);
 
 		// Section 2: Layer controls (only if enabled)
@@ -37,7 +37,7 @@ export class LocalSoundscapeLayersSettings {
 	}
 
 	/**
-	 * Section 1: Enable Continuous Layers
+	 * Section 1: Enable continuous layers
 	 */
 	private renderEnableSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -84,7 +84,7 @@ export class LocalSoundscapeLayersSettings {
 		noteText.createEl('strong', { text: 'Important:' });
 		void noteText.appendText(' Continuous layers require Freesound samples to be enabled. Go to the ');
 		noteText.createEl('strong', { text: 'Layers' });
-		noteText.appendText(' tab and use the Sample Browser to enable at least one sample in each category (Ambient, Harmonic, Rhythmic) you want to use.');
+		noteText.appendText(' tab and use the sample browser to enable at least one sample in each category (Ambient, Harmonic, Rhythmic) you want to use.');
 
 		// Enable toggle
 		new Setting(content)
@@ -122,7 +122,7 @@ export class LocalSoundscapeLayersSettings {
 	}
 
 	/**
-	 * Section 2: Layer Controls
+	 * Section 2: Layer controls
 	 */
 	private renderLayerControlsSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -219,7 +219,7 @@ export class LocalSoundscapeLayersSettings {
 		// Rhythmic layer toggle
 		new Setting(content)
 			.setName('Rhythmic pulse')
-			.setDesc('Subtle beat synchronized with Rhythmic Patterns tempo')
+			.setDesc('Subtle beat synchronized with rhythmic patterns tempo')
 			.addToggle(toggle => toggle
 				.setValue(layers.rhythmicEnabled || false) // Default false (more subtle)
 				.onChange(async (value) => {

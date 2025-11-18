@@ -1,8 +1,8 @@
 /**
- * Sonic Graph Freesound & Presets Settings - Phase 8.1
+ * Sonic Graph Freesound & presets settings - Phase 8.1
  *
  * Phase 7 Freesound integration and preset management for Control Center.
- * Contains: Freesound API, Caching & Preloading, Preset Management.
+ * Contains: Freesound API, Caching & preloading, Preset management.
  */
 
 import { App, Setting } from 'obsidian';
@@ -27,18 +27,18 @@ export class SonicGraphFreesoundSettings {
 	public render(container: HTMLElement): void {
 		void logger.debug('freesound-settings', 'Rendering Freesound & Presets settings');
 
-		// Section 1: Freesound API Integration
+		// Section 1: Freesound API integration
 		void this.renderFreesoundApiSection(container);
 
-		// Section 2: Caching & Preloading
+		// Section 2: Caching & preloading
 		void this.renderCachingSection(container);
 
-		// Section 3: Preset Management
+		// Section 3: Preset management
 		void this.renderPresetManagementSection(container);
 	}
 
 	/**
-	 * Section 1: Freesound API Integration (Phase 7.1)
+	 * Section 1: Freesound API integration (Phase 7.1)
 	 */
 	private renderFreesoundApiSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -145,7 +145,7 @@ export class SonicGraphFreesoundSettings {
 	}
 
 	/**
-	 * Section 2: Caching & Preloading (Phase 7.3)
+	 * Section 2: Caching & preloading (Phase 7.3)
 	 */
 	private renderCachingSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -244,7 +244,7 @@ export class SonicGraphFreesoundSettings {
 	}
 
 	/**
-	 * Section 3: Preset Management
+	 * Section 3: Preset management
 	 */
 	private renderPresetManagementSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -288,7 +288,7 @@ export class SonicGraphFreesoundSettings {
 			fontSize: '12px',
 			marginTop: '0.5rem'
 		});
-		presetP.createEl('strong', { text: 'Custom Presets:' });
+		presetP.createEl('strong', { text: 'Custom presets:' });
 		presetP.appendText(` ${customPresetCount} saved`);
 
 		// Action buttons section

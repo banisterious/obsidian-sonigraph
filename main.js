@@ -61978,13 +61978,13 @@ var init_ExportModal = __esm({
         if (presets.length === 0) {
           this.createPresetButton(presetButtons, {
             id: "high-quality-wav",
-            name: "High Quality WAV",
+            name: "High quality WAV",
             format: "wav",
             quality: { sampleRate: 48e3, bitDepth: 16 }
           });
           this.createPresetButton(presetButtons, {
             id: "compressed-audio",
-            name: "Compressed Audio",
+            name: "Compressed audio",
             format: "mp3",
             quality: { sampleRate: 48e3, bitRate: 192 }
           });

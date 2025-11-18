@@ -1,8 +1,8 @@
 /**
- * Local Soundscape Settings
+ * Local Soundscape settings
  *
  * Comprehensive audio configuration settings for Local Soundscape feature.
- * Contains: Auto-play, Musical Key, Context-Aware Modifiers, and Musical Enhancements.
+ * Contains: Auto-play, Musical key, Context-aware modifiers, and Musical enhancements.
  *
  * This consolidates settings previously scattered across view sidebar and Control Center.
  */
@@ -32,21 +32,21 @@ export class LocalSoundscapeSettings {
 		// Clear container to prevent duplicates on re-render
 		void container.empty();
 
-		// Section 1: Auto-play Settings
+		// Section 1: Auto-play settings
 		void this.renderAutoPlaySettings(container);
 
-		// Section 2: Musical Key Selection
+		// Section 2: Musical key selection
 		void this.renderMusicalKeySettings(container);
 
-		// Section 3: Context-Aware Modifiers
+		// Section 3: Context-aware modifiers
 		void this.renderContextAwareSettings(container);
 
-		// Section 4: Musical Theory & Enhancements (Phase 2/3)
+		// Section 4: Musical enhancements (Phase 2/3)
 		void this.renderMusicalEnhancementsSettings(container);
 	}
 
 	/**
-	 * Section 1: Auto-play Settings
+	 * Section 1: Auto-play settings
 	 */
 	private renderAutoPlaySettings(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -63,8 +63,8 @@ export class LocalSoundscapeSettings {
 			.setName('Playback mode')
 			.setDesc('Choose audio generation approach')
 			.addDropdown(dropdown => dropdown
-				.addOption('note-centric', 'Note-Centric (Rich single-note sonification)')
-				.addOption('graph-centric', 'Graph-Centric (Traditional multi-node approach)')
+				.addOption('note-centric', 'Note-centric (Rich single-note sonification)')
+				.addOption('graph-centric', 'Graph-centric (Traditional multi-node approach)')
 				.setValue(this.plugin.settings.localSoundscape?.playbackMode || 'note-centric')
 				.onChange(async (value: 'graph-centric' | 'note-centric') => {
 					if (!this.plugin.settings.localSoundscape) {
@@ -86,11 +86,11 @@ export class LocalSoundscapeSettings {
 			fontSize: '12px',
 			lineHeight: '1.5'
 		});
-		modeDesc.createEl('strong', { text: 'Note-Centric' });
+		modeDesc.createEl('strong', { text: 'Note-centric' });
 		modeDesc.appendText(' (recommended): Generates rich musical phrases from the center note\'s prose structure. Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.');
 		void modeDesc.createEl('br');
 		void modeDesc.createEl('br');
-		modeDesc.createEl('strong', { text: 'Graph-Centric' });
+		modeDesc.createEl('strong', { text: 'Graph-centric' });
 		modeDesc.appendText(' (traditional): Maps each connected node to individual notes. Requires multiple connections for interesting audio. Best for dense, well-connected graphs.');
 
 		// Add visual separator
@@ -132,7 +132,7 @@ export class LocalSoundscapeSettings {
 	}
 
 	/**
-	 * Section 2: Musical Key Selection
+	 * Section 2: Musical key selection
 	 */
 	private renderMusicalKeySettings(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -232,7 +232,7 @@ export class LocalSoundscapeSettings {
 	}
 
 	/**
-	 * Section 3: Context-Aware Modifiers
+	 * Section 3: Context-aware modifiers
 	 */
 	private renderContextAwareSettings(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -491,7 +491,7 @@ export class LocalSoundscapeSettings {
 	}
 
 	/**
-	 * Section 4: Musical Theory & Enhancements (Phase 2/3)
+	 * Section 4: Musical enhancements (Phase 2/3)
 	 * Scale quantization, chord voicing, adaptive pitch, rhythmic patterns
 	 */
 	private renderMusicalEnhancementsSettings(container: HTMLElement): void {

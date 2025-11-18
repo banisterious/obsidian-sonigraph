@@ -1,7 +1,7 @@
 /**
- * Sonic Graph Audio Layers Settings - Phase 8.1
+ * Sonic Graph audio layers settings - Phase 8.1
  *
- * Phase 3 Continuous Layers settings for Control Center.
+ * Phase 3 Continuous layers settings for Control Center.
  * Contains: Enable toggle, genre selection, layer controls, and intensity settings.
  */
 
@@ -31,7 +31,7 @@ export class SonicGraphLayersSettings {
 	public render(container: HTMLElement): void {
 		void logger.debug('layers-settings', 'Rendering audio layers settings');
 
-		// Section 1: Enable/Disable Continuous Layers
+		// Section 1: Enable/disable continuous layers
 		void this.renderEnableSection(container);
 
 		// Section 2: Additional settings (only if enabled)
@@ -44,7 +44,7 @@ export class SonicGraphLayersSettings {
 	}
 
 	/**
-	 * Section 1: Enable Continuous Layers
+	 * Section 1: Enable continuous layers
 	 */
 	private renderEnableSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -167,7 +167,7 @@ export class SonicGraphLayersSettings {
 	}
 
 	/**
-	 * Section 2: Musical Genre Selection
+	 * Section 2: Musical genre selection
 	 * DEPRECATED: Genre-based organization removed in favor of flat sample library
 	 */
 	/* private renderGenreSection(container: HTMLElement): void {
@@ -216,7 +216,7 @@ export class SonicGraphLayersSettings {
 	} */
 
 	/**
-	 * Section 3: Intensity Controls
+	 * Section 3: Intensity controls
 	 */
 	private renderIntensitySection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -264,7 +264,7 @@ export class SonicGraphLayersSettings {
 	}
 
 	/**
-	 * Section 4: Layer Types (Rhythmic & Harmonic)
+	 * Section 4: Layer types (Rhythmic & Harmonic)
 	 */
 	private renderLayerTypesSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -490,7 +490,7 @@ export class SonicGraphLayersSettings {
 	}
 
 	/**
-	 * Section 5: Musical Settings (Scale & Key)
+	 * Section 5: Musical settings (Scale & Key)
 	 */
 	private renderMusicalSettingsSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -567,7 +567,7 @@ export class SonicGraphLayersSettings {
 	}
 
 	/**
-	 * Section 6: Adaptive Behavior
+	 * Section 6: Adaptive behavior
 	 */
 	private renderAdaptiveSection(container: HTMLElement): void {
 		const card = new MaterialCard({
@@ -602,7 +602,7 @@ export class SonicGraphLayersSettings {
 			lineHeight: '1.5',
 			marginTop: '0.5rem'
 		});
-		noteP.createEl('strong', { text: 'Adaptive Behavior:' });
+		noteP.createEl('strong', { text: 'Adaptive behavior:' });
 		void noteP.appendText(' When enabled, layers respond to:');
 
 		const noteUl = note.createEl('ul');

@@ -50,14 +50,14 @@ export default class SonigraphPlugin extends Plugin {
 		);
 
 		// Add ribbon icon - opens Sonic Graph view
-		this.addRibbonIcon('chart-network', 'Sonigraph: Open Sonic Graph', () => {
+		this.addRibbonIcon('chart-network', 'Sonigraph: Open sonic graph', () => {
 			void this.activateSonicGraphView();
 		});
 
 		// Add command to open Sonic Graph view
 		this.addCommand({
 			id: 'open-sonic-graph-view',
-			name: 'Open Sonic Graph',
+			name: 'Open sonic graph',
 			callback: () => {
 				void this.activateSonicGraphView();
 			}
@@ -66,7 +66,7 @@ export default class SonigraphPlugin extends Plugin {
 		// Add command to open Local Soundscape for active file
 		this.addCommand({
 			id: 'open-local-soundscape',
-			name: 'Open Local Soundscape',
+			name: 'Open local soundscape',
 			callback: () => {
 				void this.activateLocalSoundscapeView();
 			}
@@ -75,7 +75,7 @@ export default class SonigraphPlugin extends Plugin {
 		// Add command to open Control Panel
 		this.addCommand({
 			id: 'open-control-panel',
-			name: 'Open Control Panel',
+			name: 'Open control panel',
 			callback: () => {
 				void this.openControlPanel();
 			}
@@ -89,7 +89,7 @@ export default class SonigraphPlugin extends Plugin {
 					// Add with priority 50 to appear in the middle section, far from "Delete file"
 					menu.addItem((item) => {
 						item
-							.setTitle('Open in Local Soundscape')
+							.setTitle('Open in local soundscape')
 							.setIcon('radio-tower')
 							.setSection('action')  // Place in the action section
 							.onClick(async () => {

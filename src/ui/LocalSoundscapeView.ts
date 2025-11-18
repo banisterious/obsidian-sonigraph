@@ -1317,7 +1317,7 @@ export class LocalSoundscapeView extends ItemView {
 			// Show error in graph container
 			this.graphContainer.empty();
 			const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
-			errorDiv.createEl('p', { text: 'Failed to load graph. container not ready.' });
+			errorDiv.createEl('p', { text: 'Failed to load graph. Container not ready.' });
 			errorDiv.createEl('p', { text: 'Please try connecting again.' });
 		}
 	}
@@ -2113,7 +2113,7 @@ export class LocalSoundscapeView extends ItemView {
 			if (width === 0 || height === 0) {
 				logger.error('render-error', 'Container has no dimensions, cannot render', { width, height });
 				const errorDiv = this.graphContainer.createDiv({ cls: 'error-message' });
-				errorDiv.createEl('p', { text: 'Error: container not ready. please try connecting again.' });
+				errorDiv.createEl('p', { text: 'Error: container not ready. Please try connecting again.' });
 				return;
 			}
 

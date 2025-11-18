@@ -119,14 +119,14 @@ export class ExportModal extends Modal {
             // Show default presets
             this.createPresetButton(presetButtons, {
                 id: 'high-quality-wav',
-                name: 'High Quality WAV',
+                name: 'High quality WAV',
                 format: 'wav',
                 quality: { sampleRate: 48000, bitDepth: 16 }
             });
 
             this.createPresetButton(presetButtons, {
                 id: 'compressed-audio',
-                name: 'Compressed Audio',
+                name: 'Compressed audio',
                 format: 'mp3',
                 quality: { sampleRate: 48000, bitRate: 192 }
             });
@@ -146,7 +146,7 @@ export class ExportModal extends Modal {
 
         // Save current as preset button
         const savePresetBtn = presetButtons.createEl('button', {
-            text: '💾 save current as preset',
+            text: '💾 Save current as preset',
             cls: 'sonigraph-export-preset-save'
         });
         savePresetBtn.addEventListener('click', () => void this.saveCurrentAsPreset());
@@ -320,12 +320,12 @@ export class ExportModal extends Modal {
                 // Only show timeline options if animator is available
                 if (this.animator) {
                     dropdown
-                        .addOption('full-timeline', `Full Timeline Animation (${this.animator.config.duration}s)`)
-                        .addOption('custom-range', 'Custom Time Range');
+                        .addOption('full-timeline', `Full timeline animation (${this.animator.config.duration}s)`)
+                        .addOption('custom-range', 'Custom time range');
                 }
 
                 // Always show static graph option
-                void dropdown.addOption('static-graph', 'Current Static Graph');
+                void dropdown.addOption('static-graph', 'Current static graph');
 
                 dropdown
                     .setValue(this.config.scope || 'static-graph')
@@ -380,8 +380,8 @@ export class ExportModal extends Modal {
                 this.formatDropdown = dropdown;
 
                 dropdown
-                    .addOption('wav', 'WAV (Lossless Audio)')
-                    .addOption('mp3', 'Compressed Audio (M4A/WebM/OGG)')
+                    .addOption('wav', 'WAV (Lossless audio)')
+                    .addOption('mp3', 'Compressed audio (M4A/WebM/OGG)')
                     // Phase 2 (optional):
                     // .addOption('ogg', 'OGG Vorbis')
                     // .addOption('flac', 'FLAC (Lossless Compressed)')
@@ -401,7 +401,7 @@ export class ExportModal extends Modal {
                 this.qualityDropdown = dropdown;
 
                 dropdown
-                    .addOption('high', 'High Quality (48kHz, 16-bit)')
+                    .addOption('high', 'High quality (48kHz, 16-bit)')
                     .addOption('lossless', 'Lossless (48kHz, 24-bit)')
                     .addOption('standard', 'Standard (44.1kHz, 16-bit)')
                     .setValue('high')
@@ -427,8 +427,8 @@ export class ExportModal extends Modal {
                 this.locationTypeDropdown = dropdown;
 
                 dropdown
-                    .addOption('vault', 'Vault Folder')
-                    .addOption('system', 'System Location')
+                    .addOption('vault', 'Vault folder')
+                    .addOption('system', 'System location')
                     .setValue(this.config.locationType || 'vault')
                     .onChange(value => {
                         this.config.locationType = value as ExportLocationType;
@@ -542,10 +542,10 @@ export class ExportModal extends Modal {
             const isVisible = this.metadataContainer.hasClass('sonigraph-export-metadata-content--visible');
             if (isVisible) {
                 this.metadataContainer.removeClass('sonigraph-export-metadata-content--visible');
-                header.textContent = 'Metadata (Optional) ▼';
+                header.textContent = 'Metadata (optional) ▼';
             } else {
                 this.metadataContainer.addClass('sonigraph-export-metadata-content--visible');
-                header.textContent = 'Metadata (Optional) ▲';
+                header.textContent = 'Metadata (optional) ▲';
             }
         });
 
@@ -805,16 +805,16 @@ export class ExportModal extends Modal {
 
         if (format === 'wav') {
             this.qualityDropdown
-                .addOption('high', 'High Quality (48kHz, 16-bit)')
+                .addOption('high', 'High quality (48kHz, 16-bit)')
                 .addOption('lossless', 'Lossless (48kHz, 24-bit)')
                 .addOption('standard', 'Standard (44.1kHz, 16-bit)')
                 .setValue('high');
             this.config.quality = this.getQualityFromPreset('high');
         } else if (format === 'mp3') {
             this.qualityDropdown
-                .addOption('high', 'High Quality (320 kbps)')
+                .addOption('high', 'High quality (320 kbps)')
                 .addOption('standard', 'Standard (192 kbps)')
-                .addOption('small', 'Small Size (128 kbps)')
+                .addOption('small', 'Small size (128 kbps)')
                 .setValue('high');
             this.config.quality = this.getQualityFromPreset('high');
         }

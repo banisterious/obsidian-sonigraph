@@ -195,7 +195,7 @@ export class SampleTableBrowser {
 		const headerRow = thead.createEl('tr');
 
 		void this.renderColumnHeader(headerRow, 'name', 'Sample');
-		void this.renderColumnHeader(headerRow, 'author', 'Author / License');
+		void this.renderColumnHeader(headerRow, 'author', 'Author / license');
 		void this.renderColumnHeader(headerRow, 'tags', 'Tags');
 		headerRow.createEl('th', { text: 'Actions' });
 

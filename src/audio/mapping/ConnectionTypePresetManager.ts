@@ -141,7 +141,7 @@ export class ConnectionTypePresetManager {
             });
 
             // Show success notice
-            new Notice(`Connection Type Preset '${presetName}' loaded successfully`);
+            new Notice(`Connection type preset '${presetName}' loaded successfully`);
 
             return {
                 success: true,
@@ -508,7 +508,7 @@ export class ConnectionTypePresetManager {
 
             void logger.info('connection-type-preset-manager', 'Configuration reset to defaults');
 
-            new Notice('Connection Type Mapping reset to default configuration');
+            new Notice('Connection type mapping reset to default configuration');
 
             return {
                 success: true,

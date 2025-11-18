@@ -99,7 +99,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 
 		// Adaptive Detail Levels - Main Toggle
 		new Setting(sonicGraphSection)
-			.setName('Enable Adaptive Detail Levels')
+			.setName('Enable adaptive detail levels')
 			.setDesc('Automatically show/hide elements based on zoom level for better performance and visual clarity. Reduces clutter when zoomed out, shows more detail when zoomed in.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.sonicGraphSettings?.adaptiveDetail?.enabled || false)
@@ -137,7 +137,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 		// Adaptive Detail Mode (only show when enabled)
 		if (this.plugin.settings.sonicGraphSettings?.adaptiveDetail?.enabled) {
 			new Setting(sonicGraphSection)
-				.setName('Adaptive Detail Mode')
+				.setName('Adaptive detail mode')
 				.setDesc('Automatic: Changes based on zoom level. Performance: Optimized for large vaults. Manual: User controls via buttons.')
 				.addDropdown(dropdown => dropdown
 					.addOption('automatic', 'Automatic (Recommended)')
@@ -188,7 +188,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 
 		// Content-Aware Positioning - Main Toggle
 		new Setting(sonicGraphSection)
-			.setName('Enable Content-Aware Positioning')
+			.setName('Enable content-aware positioning')
 			.setDesc('Use semantic relationships (tags, creation time, connections) to influence graph layout for more meaningful positioning.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.sonicGraphSettings?.contentAwarePositioning?.enabled || false)
@@ -223,7 +223,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 
 		// Smart Clustering Algorithms - Main Toggle
 		new Setting(sonicGraphSection)
-			.setName('Enable Smart Clustering Algorithms')
+			.setName('Enable smart clustering algorithms')
 			.setDesc('Automatically group related nodes using community detection and multi-factor analysis. Combines link strength, shared tags, folder hierarchy, and temporal proximity.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.sonicGraphSettings?.smartClustering?.enabled || false)
@@ -264,7 +264,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 		// Smart Clustering Algorithm Selection (only show when enabled)
 		if (this.plugin.settings.sonicGraphSettings?.smartClustering?.enabled) {
 			new Setting(sonicGraphSection)
-				.setName('Clustering Algorithm')
+				.setName('Clustering algorithm')
 				.setDesc('Louvain: Fast community detection. Modularity: High-quality academic clustering. Hybrid: Combines both with multi-factor refinement.')
 				.addDropdown(dropdown => dropdown
 					.addOption('louvain', 'Louvain (Fast)')

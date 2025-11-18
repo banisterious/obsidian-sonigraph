@@ -431,7 +431,7 @@ export class SonicGraphAdvancedSettings {
 				.setName('Orchestration mode')
 				.setDesc('How hubs interact with other nodes')
 				.addDropdown(dropdown => dropdown
-					.addOption('hub-led', 'Hub-Led - Hubs dominate')
+					.addOption('hub-led', 'Hub-led - Hubs dominate')
 					.addOption('balanced', 'Balanced - Moderate emphasis')
 					.addOption('democratic', 'Democratic - Subtle emphasis')
 					.setValue(this.plugin.settings.hubOrchestration?.orchestrationMode || 'balanced')
@@ -537,7 +537,7 @@ export class SonicGraphAdvancedSettings {
 				lineHeight: '1.5',
 				marginTop: '1rem'
 			});
-			instrumentsP.createEl('strong', { text: 'Hub Instrument Preference:' });
+			instrumentsP.createEl('strong', { text: 'Hub instrument preference:' });
 			instrumentsP.appendText(' Hub nodes will preferentially use piano, strings, ' +
 				'and brass instruments to emphasize their prominence in the network.');
 		}
@@ -695,7 +695,7 @@ export class SonicGraphAdvancedSettings {
 				lineHeight: '1.5',
 				marginTop: '1rem'
 			});
-			noteP.createEl('strong', { text: 'Complexity Tiers:' });
+			noteP.createEl('strong', { text: 'Complexity tiers:' });
 			void noteP.appendText(' The system automatically adjusts orchestration based on vault size:');
 			void noteP.createEl('br');
 			noteP.appendText('• Minimal (0-100 nodes): Basic instruments only');
@@ -810,8 +810,8 @@ export class SonicGraphAdvancedSettings {
 				.setDesc('How node positions map to stereo panning')
 				.addDropdown(dropdown => dropdown
 					.addOption('geometric', 'Geometric - Based on X position')
-					.addOption('cluster-based', 'Cluster-Based - By cluster')
-					.addOption('folder-based', 'Folder-Based - By folder')
+					.addOption('cluster-based', 'Cluster-based - By cluster')
+					.addOption('folder-based', 'Folder-based - By folder')
 					.addOption('hybrid', 'Hybrid - Combined approach')
 					.setValue(this.plugin.settings.spatialAudio?.mode || 'hybrid')
 					.onChange(async (value: string) => {

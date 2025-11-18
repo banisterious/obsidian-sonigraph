@@ -62,14 +62,14 @@ export class TemplateTabsModal extends Modal {
             void contentEl.addClass('template-tabs-modal');
             
             // Create header
-            contentEl.createEl('h1', { 
-                text: 'Template tabs modal', 
-                cls: 'template-tabs-header' 
+            contentEl.createEl('h1', {
+                text: 'Template tabs modal',
+                cls: 'template-tabs-header'
             });
             
             // Create description
             contentEl.createEl('p', {
-                text: 'This is a template modal with tabbed interface. replace this with your modal description.',
+                text: 'This is a template modal with tabbed interface. Replace this with your modal description.',
                 cls: 'template-tabs-description'
             });
             
@@ -142,9 +142,9 @@ export class TemplateTabsModal extends Modal {
             attr: { 'data-tab-id': 'data' }
         });
         
-        dataTab.createDiv({ 
-            text: 'Data management', 
-            cls: 'template-tab-label' 
+        dataTab.createDiv({
+            text: 'Data management',
+            cls: 'template-tab-label'
         });
         
         dataTab.addEventListener('click', () => {
@@ -176,9 +176,9 @@ export class TemplateTabsModal extends Modal {
             attr: { 'data-tab-id': 'tools' }
         });
         
-        toolsTab.createDiv({ 
-            text: 'Tools & utilities', 
-            cls: 'template-tab-label' 
+        toolsTab.createDiv({
+            text: 'Tools and utilities',
+            cls: 'template-tab-label'
         });
         
         toolsTab.addEventListener('click', () => {
@@ -193,9 +193,9 @@ export class TemplateTabsModal extends Modal {
             attr: { 'data-tab-id': 'help' }
         });
         
-        helpTab.createDiv({ 
-            text: 'Help & documentation', 
-            cls: 'template-tab-label' 
+        helpTab.createDiv({
+            text: 'Help and documentation',
+            cls: 'template-tab-label'
         });
         
         helpTab.addEventListener('click', () => {
@@ -273,13 +273,13 @@ export class TemplateTabsModal extends Modal {
     private loadDashboardContent() {
         this.contentContainer.empty();
         
-        this.contentContainer.createEl('h2', { 
-            text: 'Dashboard overview', 
-            cls: 'template-content-header' 
+        this.contentContainer.createEl('h2', {
+            text: 'Dashboard overview',
+            cls: 'template-content-header'
         });
         
         this.contentContainer.createEl('p', {
-            text: 'Welcome to the template dashboard! this is where you would show overview information, statistics, or quick actions.',
+            text: 'Welcome to the template dashboard! This is where you would show overview information, statistics, or quick actions.',
             cls: 'template-content-description'
         });
         
@@ -311,13 +311,13 @@ export class TemplateTabsModal extends Modal {
     private loadDataContent() {
         this.contentContainer.empty();
         
-        this.contentContainer.createEl('h2', { 
-            text: 'Data management', 
-            cls: 'template-content-header' 
+        this.contentContainer.createEl('h2', {
+            text: 'Data management',
+            cls: 'template-content-header'
         });
         
         this.contentContainer.createEl('p', {
-            text: 'Manage your data items here. this is an example of a data management interface.',
+            text: 'Manage your data items here. This is an example of a data management interface.',
             cls: 'template-content-description'
         });
         
@@ -427,9 +427,9 @@ export class TemplateTabsModal extends Modal {
     private loadToolsContent() {
         this.contentContainer.empty();
         
-        this.contentContainer.createEl('h2', { 
-            text: 'Tools & utilities', 
-            cls: 'template-content-header' 
+        this.contentContainer.createEl('h2', {
+            text: 'Tools and utilities',
+            cls: 'template-content-header'
         });
         
         this.contentContainer.createEl('p', {
@@ -481,9 +481,9 @@ export class TemplateTabsModal extends Modal {
     private loadHelpContent() {
         this.contentContainer.empty();
         
-        this.contentContainer.createEl('h2', { 
-            text: 'Help & documentation', 
-            cls: 'template-content-header' 
+        this.contentContainer.createEl('h2', {
+            text: 'Help and documentation',
+            cls: 'template-content-header'
         });
         
         const helpContent = `

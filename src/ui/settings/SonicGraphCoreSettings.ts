@@ -180,9 +180,9 @@ export class SonicGraphCoreSettings {
 			.setDesc('Override automatic temporal clustering detection')
 			.addDropdown(dropdown => dropdown
 				.addOption('auto', 'Auto (detect from timeline)')
-				.addOption('dense', 'Force Dense')
-				.addOption('balanced', 'Force Balanced')
-				.addOption('sparse', 'Force Sparse')
+				.addOption('dense', 'Force dense')
+				.addOption('balanced', 'Force balanced')
+				.addOption('sparse', 'Force sparse')
 				.setValue(this.plugin.settings.sonicGraphSettings?.audio.autoDetectionOverride || 'auto')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.sonicGraphSettings) return;
