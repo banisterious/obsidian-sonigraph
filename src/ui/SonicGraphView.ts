@@ -3532,27 +3532,29 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         enabledToggle.checked = this.plugin.settings.hubOrchestration?.enabled || false;
-        enabledToggle.addEventListener('change', async () => {
-            if (!this.plugin.settings.hubOrchestration) {
-                this.plugin.settings.hubOrchestration = {
-                    enabled: enabledToggle.checked,
-                    hubThreshold: 0.6,
-                    prominenceMultiplier: 2.0,
-                    orchestrationMode: 'balanced',
-                    transitionsEnabled: true,
-                    centralityWeights: {
-                        degree: 0.3,
-                        betweenness: 0.3,
-                        eigenvector: 0.2,
-                        pageRank: 0.2
-                    },
-                    hubInstrumentPreference: ['piano', 'trumpet', 'violin', 'lead-synth']
-                };
-            } else {
-                this.plugin.settings.hubOrchestration.enabled = enabledToggle.checked;
-            }
-            await this.plugin.saveSettings();
-            void this.refreshHubOrchestrationSettings();
+        enabledToggle.addEventListener('change', () => {
+            void (async () => {
+                if (!this.plugin.settings.hubOrchestration) {
+                    this.plugin.settings.hubOrchestration = {
+                        enabled: enabledToggle.checked,
+                        hubThreshold: 0.6,
+                        prominenceMultiplier: 2.0,
+                        orchestrationMode: 'balanced',
+                        transitionsEnabled: true,
+                        centralityWeights: {
+                            degree: 0.3,
+                            betweenness: 0.3,
+                            eigenvector: 0.2,
+                            pageRank: 0.2
+                        },
+                        hubInstrumentPreference: ['piano', 'trumpet', 'violin', 'lead-synth']
+                    };
+                } else {
+                    this.plugin.settings.hubOrchestration.enabled = enabledToggle.checked;
+                }
+                await this.plugin.saveSettings();
+                void this.refreshHubOrchestrationSettings();
+            })();
         });
 
         // Show detailed settings if enabled
@@ -3590,9 +3592,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 option.selected = true;
             }
         });
-        modeSelect.addEventListener('change', async () => {
-            settings.orchestrationMode = modeSelect.value as 'hub-led' | 'democratic' | 'balanced';
-            await this.plugin.saveSettings();
+        modeSelect.addEventListener('change', () => {
+            void (async () => {
+                settings.orchestrationMode = modeSelect.value as 'hub-led' | 'democratic' | 'balanced';
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Hub Threshold Slider
@@ -3621,11 +3625,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-slider-value'
         });
 
-        thresholdSlider.addEventListener('input', async () => {
-            const value = parseFloat(thresholdSlider.value);
-            thresholdValue.textContent = `${(value * 100).toFixed(0)}%`;
-            settings.hubThreshold = value;
-            await this.plugin.saveSettings();
+        thresholdSlider.addEventListener('input', () => {
+            void (async () => {
+                const value = parseFloat(thresholdSlider.value);
+                thresholdValue.textContent = `${(value * 100).toFixed(0)}%`;
+                settings.hubThreshold = value;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Prominence Multiplier Slider
@@ -3654,11 +3660,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-slider-value'
         });
 
-        prominenceSlider.addEventListener('input', async () => {
-            const value = parseFloat(prominenceSlider.value);
-            prominenceValue.textContent = `${value.toFixed(1)}x`;
-            settings.prominenceMultiplier = value;
-            await this.plugin.saveSettings();
+        prominenceSlider.addEventListener('input', () => {
+            void (async () => {
+                const value = parseFloat(prominenceSlider.value);
+                prominenceValue.textContent = `${value.toFixed(1)}x`;
+                settings.prominenceMultiplier = value;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Centrality Weights Header
@@ -3676,9 +3684,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.createWeightSlider(container, 'Degree Centrality',
             'Based on direct connection count',
             settings.centralityWeights.degree, 0, 1, 0.05,
-            async (value) => {
-                settings.centralityWeights.degree = value;
-                await this.plugin.saveSettings();
+            (value) => {
+                void (async () => {
+                    settings.centralityWeights.degree = value;
+                    await this.plugin.saveSettings();
+                })();
             }
         );
 
@@ -3686,9 +3696,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.createWeightSlider(container, 'Betweenness Centrality',
             'Based on how often node appears on shortest paths',
             settings.centralityWeights.betweenness, 0, 1, 0.05,
-            async (value) => {
-                settings.centralityWeights.betweenness = value;
-                await this.plugin.saveSettings();
+            (value) => {
+                void (async () => {
+                    settings.centralityWeights.betweenness = value;
+                    await this.plugin.saveSettings();
+                })();
             }
         );
 
@@ -3696,9 +3708,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.createWeightSlider(container, 'Eigenvector Centrality',
             'Based on connections to well-connected nodes',
             settings.centralityWeights.eigenvector, 0, 1, 0.05,
-            async (value) => {
-                settings.centralityWeights.eigenvector = value;
-                await this.plugin.saveSettings();
+            (value) => {
+                void (async () => {
+                    settings.centralityWeights.eigenvector = value;
+                    await this.plugin.saveSettings();
+                })();
             }
         );
 
@@ -3706,9 +3720,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.createWeightSlider(container, 'PageRank',
             'Based on Google\'s authority algorithm',
             settings.centralityWeights.pageRank, 0, 1, 0.05,
-            async (value) => {
-                settings.centralityWeights.pageRank = value;
-                await this.plugin.saveSettings();
+            (value) => {
+                void (async () => {
+                    settings.centralityWeights.pageRank = value;
+                    await this.plugin.saveSettings();
+                })();
             }
         );
 
@@ -3728,9 +3744,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         transitionsToggle.checked = settings.transitionsEnabled;
-        transitionsToggle.addEventListener('change', async () => {
-            settings.transitionsEnabled = transitionsToggle.checked;
-            await this.plugin.saveSettings();
+        transitionsToggle.addEventListener('change', () => {
+            void (async () => {
+                settings.transitionsEnabled = transitionsToggle.checked;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Performance note
@@ -4190,24 +4208,26 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         enabledToggle.checked = this.plugin.settings.musicalTheory?.enabled || false;
-        enabledToggle.addEventListener('change', async () => {
-            if (!this.plugin.settings.musicalTheory) {
-                this.plugin.settings.musicalTheory = {
-                    enabled: enabledToggle.checked,
-                    scale: 'major',
-                    rootNote: 'C',
-                    enforceHarmony: true,
-                    allowChromaticPassing: false,
-                    dissonanceThreshold: 0.3,
-                    quantizationStrength: 0.8,
-                    preferredChordProgression: 'I-IV-V-I',
-                    dynamicScaleModulation: false
-                };
-            } else {
-                this.plugin.settings.musicalTheory.enabled = enabledToggle.checked;
-            }
-            await this.plugin.saveSettings();
-            void this.refreshMusicalTheorySettings();
+        enabledToggle.addEventListener('change', () => {
+            void (async () => {
+                if (!this.plugin.settings.musicalTheory) {
+                    this.plugin.settings.musicalTheory = {
+                        enabled: enabledToggle.checked,
+                        scale: 'major',
+                        rootNote: 'C',
+                        enforceHarmony: true,
+                        allowChromaticPassing: false,
+                        dissonanceThreshold: 0.3,
+                        quantizationStrength: 0.8,
+                        preferredChordProgression: 'I-IV-V-I',
+                        dynamicScaleModulation: false
+                    };
+                } else {
+                    this.plugin.settings.musicalTheory.enabled = enabledToggle.checked;
+                }
+                await this.plugin.saveSettings();
+                void this.refreshMusicalTheorySettings();
+            })();
         });
 
         // Show detailed settings if enabled
@@ -4245,9 +4265,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 option.selected = true;
             }
         });
-        rootNoteSelect.addEventListener('change', async () => {
-            settings.rootNote = rootNoteSelect.value;
-            await this.plugin.saveSettings();
+        rootNoteSelect.addEventListener('change', () => {
+            void (async () => {
+                settings.rootNote = rootNoteSelect.value;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Scale Type Dropdown
@@ -4288,9 +4310,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 option.selected = true;
             }
         });
-        scaleSelect.addEventListener('change', async () => {
-            settings.scale = scaleSelect.value;
-            await this.plugin.saveSettings();
+        scaleSelect.addEventListener('change', () => {
+            void (async () => {
+                settings.scale = scaleSelect.value;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Quantization Strength Slider
@@ -4325,9 +4349,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             quantStrengthValue.textContent = value.toFixed(2);
         });
 
-        quantStrengthSlider.addEventListener('change', async () => {
-            settings.quantizationStrength = parseFloat(quantStrengthSlider.value);
-            await this.plugin.saveSettings();
+        quantStrengthSlider.addEventListener('change', () => {
+            void (async () => {
+                settings.quantizationStrength = parseFloat(quantStrengthSlider.value);
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Dissonance Threshold Slider
@@ -4362,9 +4388,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             dissonanceValue.textContent = value.toFixed(2);
         });
 
-        dissonanceSlider.addEventListener('change', async () => {
-            settings.dissonanceThreshold = parseFloat(dissonanceSlider.value);
-            await this.plugin.saveSettings();
+        dissonanceSlider.addEventListener('change', () => {
+            void (async () => {
+                settings.dissonanceThreshold = parseFloat(dissonanceSlider.value);
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Enforce Harmony Toggle
@@ -4383,9 +4411,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         enforceHarmonyToggle.checked = settings.enforceHarmony;
-        enforceHarmonyToggle.addEventListener('change', async () => {
-            settings.enforceHarmony = enforceHarmonyToggle.checked;
-            await this.plugin.saveSettings();
+        enforceHarmonyToggle.addEventListener('change', () => {
+            void (async () => {
+                settings.enforceHarmony = enforceHarmonyToggle.checked;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Allow Chromatic Passing Toggle
@@ -4404,9 +4434,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         chromaticToggle.checked = settings.allowChromaticPassing;
-        chromaticToggle.addEventListener('change', async () => {
-            settings.allowChromaticPassing = chromaticToggle.checked;
-            await this.plugin.saveSettings();
+        chromaticToggle.addEventListener('change', () => {
+            void (async () => {
+                settings.allowChromaticPassing = chromaticToggle.checked;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Dynamic Scale Modulation Toggle
@@ -4425,9 +4457,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         modulationToggle.checked = settings.dynamicScaleModulation;
-        modulationToggle.addEventListener('change', async () => {
-            settings.dynamicScaleModulation = modulationToggle.checked;
-            await this.plugin.saveSettings();
+        modulationToggle.addEventListener('change', () => {
+            void (async () => {
+                settings.dynamicScaleModulation = modulationToggle.checked;
+                await this.plugin.saveSettings();
+            })();
         });
     }
 
@@ -4490,22 +4524,24 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         enabledToggle.checked = this.plugin.settings.dynamicOrchestration?.enabled || false;
-        enabledToggle.addEventListener('change', async () => {
-            if (!this.plugin.settings.dynamicOrchestration) {
-                this.plugin.settings.dynamicOrchestration = {
-                    enabled: enabledToggle.checked,
-                    customThresholds: false,
-                    temporalInfluenceEnabled: true,
-                    timeOfDayInfluence: 0.5,
-                    seasonalInfluence: 0.3,
-                    transitionDuration: 3.0,
-                    autoAdjust: true
-                };
-            } else {
-                this.plugin.settings.dynamicOrchestration.enabled = enabledToggle.checked;
-            }
-            await this.plugin.saveSettings();
-            void this.refreshDynamicOrchestrationSettings();
+        enabledToggle.addEventListener('change', () => {
+            void (async () => {
+                if (!this.plugin.settings.dynamicOrchestration) {
+                    this.plugin.settings.dynamicOrchestration = {
+                        enabled: enabledToggle.checked,
+                        customThresholds: false,
+                        temporalInfluenceEnabled: true,
+                        timeOfDayInfluence: 0.5,
+                        seasonalInfluence: 0.3,
+                        transitionDuration: 3.0,
+                        autoAdjust: true
+                    };
+                } else {
+                    this.plugin.settings.dynamicOrchestration.enabled = enabledToggle.checked;
+                }
+                await this.plugin.saveSettings();
+                void this.refreshDynamicOrchestrationSettings();
+            })();
         });
 
         // Show detailed settings if enabled
@@ -4536,9 +4572,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         temporalToggle.checked = settings.temporalInfluenceEnabled;
-        temporalToggle.addEventListener('change', async () => {
-            settings.temporalInfluenceEnabled = temporalToggle.checked;
-            await this.plugin.saveSettings();
+        temporalToggle.addEventListener('change', () => {
+            void (async () => {
+                settings.temporalInfluenceEnabled = temporalToggle.checked;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Time of Day Influence Slider
@@ -4562,13 +4600,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             }
         });
         timeSlider.value = settings.timeOfDayInfluence.toString();
-        timeSlider.addEventListener('input', async () => {
-            settings.timeOfDayInfluence = parseFloat(timeSlider.value);
-            const descriptionEl = timeOfDayItem.querySelector('.sonic-graph-setting-description');
-            if (descriptionEl) {
-                descriptionEl.textContent = `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
-            }
-            await this.plugin.saveSettings();
+        timeSlider.addEventListener('input', () => {
+            void (async () => {
+                settings.timeOfDayInfluence = parseFloat(timeSlider.value);
+                const descriptionEl = timeOfDayItem.querySelector('.sonic-graph-setting-description');
+                if (descriptionEl) {
+                    descriptionEl.textContent = `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
+                }
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Seasonal Influence Slider
@@ -4592,13 +4632,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             }
         });
         seasonSlider.value = settings.seasonalInfluence.toString();
-        seasonSlider.addEventListener('input', async () => {
-            settings.seasonalInfluence = parseFloat(seasonSlider.value);
-            const descriptionEl = seasonalItem.querySelector('.sonic-graph-setting-description');
-            if (descriptionEl) {
-                descriptionEl.textContent = `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
-            }
-            await this.plugin.saveSettings();
+        seasonSlider.addEventListener('input', () => {
+            void (async () => {
+                settings.seasonalInfluence = parseFloat(seasonSlider.value);
+                const descriptionEl = seasonalItem.querySelector('.sonic-graph-setting-description');
+                if (descriptionEl) {
+                    descriptionEl.textContent = `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
+                }
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Transition Duration Slider
@@ -4622,13 +4664,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             }
         });
         transitionSlider.value = settings.transitionDuration.toString();
-        transitionSlider.addEventListener('input', async () => {
-            settings.transitionDuration = parseFloat(transitionSlider.value);
-            const descriptionEl = transitionItem.querySelector('.sonic-graph-setting-description');
-            if (descriptionEl) {
-                descriptionEl.textContent = `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
-            }
-            await this.plugin.saveSettings();
+        transitionSlider.addEventListener('input', () => {
+            void (async () => {
+                settings.transitionDuration = parseFloat(transitionSlider.value);
+                const descriptionEl = transitionItem.querySelector('.sonic-graph-setting-description');
+                if (descriptionEl) {
+                    descriptionEl.textContent = `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
+                }
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Auto Adjust Toggle
@@ -4647,9 +4691,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         autoAdjustToggle.checked = settings.autoAdjust;
-        autoAdjustToggle.addEventListener('change', async () => {
-            settings.autoAdjust = autoAdjustToggle.checked;
-            await this.plugin.saveSettings();
+        autoAdjustToggle.addEventListener('change', () => {
+            void (async () => {
+                settings.autoAdjust = autoAdjustToggle.checked;
+                await this.plugin.saveSettings();
+            })();
         });
     }
 
@@ -4712,47 +4758,49 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         enabledToggle.checked = this.plugin.settings.spatialAudio?.enabled || false;
-        enabledToggle.addEventListener('change', async () => {
-            if (!this.plugin.settings.spatialAudio) {
-                this.plugin.settings.spatialAudio = {
-                    enabled: enabledToggle.checked,
-                    mode: PanningMode.Hybrid,
-                    graphPositionSettings: {
-                        curve: PanningCurve.Sigmoid,
-                        intensity: 0.7,
-                        smoothingFactor: 0.5,
-                        updateThrottleMs: 100
-                    },
-                    folderSettings: {
-                        enabled: true,
-                        customMappings: [],
-                        autoDetectTopLevel: true,
-                        spreadFactor: 0.3
-                    },
-                    clusterSettings: {
-                        enabled: true,
-                        useCentroid: true,
-                        individualSpread: 0.2,
-                        clusterSeparation: 0.5
-                    },
-                    hybridWeights: {
-                        graphPosition: 0.5,
-                        folderBased: 0.3,
-                        clusterBased: 0.2
-                    },
-                    advanced: {
-                        enableDepthMapping: false,
-                        depthInfluence: 0.3,
-                        boundaryPadding: 0.1,
-                        velocityDamping: true,
-                        dampingFactor: 0.7
-                    }
-                };
-            } else {
-                this.plugin.settings.spatialAudio.enabled = enabledToggle.checked;
-            }
-            await this.plugin.saveSettings();
-            void this.refreshSpatialAudioSettings();
+        enabledToggle.addEventListener('change', () => {
+            void (async () => {
+                if (!this.plugin.settings.spatialAudio) {
+                    this.plugin.settings.spatialAudio = {
+                        enabled: enabledToggle.checked,
+                        mode: PanningMode.Hybrid,
+                        graphPositionSettings: {
+                            curve: PanningCurve.Sigmoid,
+                            intensity: 0.7,
+                            smoothingFactor: 0.5,
+                            updateThrottleMs: 100
+                        },
+                        folderSettings: {
+                            enabled: true,
+                            customMappings: [],
+                            autoDetectTopLevel: true,
+                            spreadFactor: 0.3
+                        },
+                        clusterSettings: {
+                            enabled: true,
+                            useCentroid: true,
+                            individualSpread: 0.2,
+                            clusterSeparation: 0.5
+                        },
+                        hybridWeights: {
+                            graphPosition: 0.5,
+                            folderBased: 0.3,
+                            clusterBased: 0.2
+                        },
+                        advanced: {
+                            enableDepthMapping: false,
+                            depthInfluence: 0.3,
+                            boundaryPadding: 0.1,
+                            velocityDamping: true,
+                            dampingFactor: 0.7
+                        }
+                    };
+                } else {
+                    this.plugin.settings.spatialAudio.enabled = enabledToggle.checked;
+                }
+                await this.plugin.saveSettings();
+                void this.refreshSpatialAudioSettings();
+            })();
         });
 
         // Show detailed settings if enabled
@@ -4797,9 +4845,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 option.selected = true;
             }
         });
-        modeSelect.addEventListener('change', async () => {
-            settings.mode = modeSelect.value as PanningMode;
-            await this.plugin.saveSettings();
+        modeSelect.addEventListener('change', () => {
+            void (async () => {
+                settings.mode = modeSelect.value as PanningMode;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Pan Intensity
@@ -4823,13 +4873,15 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             }
         });
         intensitySlider.value = settings.graphPositionSettings.intensity.toString();
-        intensitySlider.addEventListener('input', async () => {
-            settings.graphPositionSettings.intensity = parseFloat(intensitySlider.value);
-            const descriptionEl = intensityItem.querySelector('.sonic-graph-setting-description');
-            if (descriptionEl) {
-                descriptionEl.textContent = `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
-            }
-            await this.plugin.saveSettings();
+        intensitySlider.addEventListener('input', () => {
+            void (async () => {
+                settings.graphPositionSettings.intensity = parseFloat(intensitySlider.value);
+                const descriptionEl = intensityItem.querySelector('.sonic-graph-setting-description');
+                if (descriptionEl) {
+                    descriptionEl.textContent = `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
+                }
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Panning Curve
@@ -4861,9 +4913,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 option.selected = true;
             }
         });
-        curveSelect.addEventListener('change', async () => {
-            settings.graphPositionSettings.curve = curveSelect.value as PanningCurve;
-            await this.plugin.saveSettings();
+        curveSelect.addEventListener('change', () => {
+            void (async () => {
+                settings.graphPositionSettings.curve = curveSelect.value as PanningCurve;
+                await this.plugin.saveSettings();
+            })();
         });
 
         // Velocity Damping Toggle
@@ -4882,9 +4936,11 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-toggle'
         });
         dampingToggle.checked = settings.advanced.velocityDamping;
-        dampingToggle.addEventListener('change', async () => {
-            settings.advanced.velocityDamping = dampingToggle.checked;
-            await this.plugin.saveSettings();
+        dampingToggle.addEventListener('change', () => {
+            void (async () => {
+                settings.advanced.velocityDamping = dampingToggle.checked;
+                await this.plugin.saveSettings();
+            })();
         });
     }
 
@@ -5344,22 +5400,24 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             text: 'Export logs',
             cls: 'sonic-graph-export-logs-btn' 
         });
-        
-        exportButton.addEventListener('click', async () => {
-            const now = new Date();
-            const pad = (n: number) => n.toString().padStart(2, '0');
-            const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
-            const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
-            const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            void a.click();
-            document.body.removeChild(a);
-            void URL.revokeObjectURL(url);
-            logger.info('export', 'Logs exported', { filename });
+
+        exportButton.addEventListener('click', () => {
+            void (async () => {
+                const now = new Date();
+                const pad = (n: number) => n.toString().padStart(2, '0');
+                const filename = `osp-logs-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+                const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
+                const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                void a.click();
+                document.body.removeChild(a);
+                void URL.revokeObjectURL(url);
+                logger.info('export', 'Logs exported', { filename });
+            })();
         });
     }
 
@@ -6034,31 +6092,33 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             cls: 'sonic-graph-error-retry'
         });
         
-        retryBtn.addEventListener('click', async () => {
-            void logger.debug('ui', 'Retry button clicked - attempting to reinitialize graph');
-            
-            try {
-                // Show loading state
-                retryBtn.textContent = 'Retrying...';
-                retryBtn.disabled = true;
-                
-                // Clear current error
-                void errorContainer.remove();
-                
-                // Add loading indicator back
-                const loadingIndicator = this.graphContainer.createDiv({ cls: 'sonic-graph-loading' });
-                const loadingIcon = createLucideIcon('loader-2', 24);
-                void loadingIcon.addClass('sonic-graph-loading-icon');
-                void loadingIndicator.appendChild(loadingIcon);
-                loadingIndicator.createSpan({ text: 'Retrying...', cls: 'sonic-graph-loading-text' });
-                
-                // Attempt to reinitialize
-                await this.initializeGraph();
-                
-            } catch (retryError) {
-                logger.error('ui', 'Retry failed:', (retryError as Error).message);
-                // The initializeGraph catch block will handle showing error state again
-            }
+        retryBtn.addEventListener('click', () => {
+            void (async () => {
+                void logger.debug('ui', 'Retry button clicked - attempting to reinitialize graph');
+
+                try {
+                    // Show loading state
+                    retryBtn.textContent = 'Retrying...';
+                    retryBtn.disabled = true;
+
+                    // Clear current error
+                    void errorContainer.remove();
+
+                    // Add loading indicator back
+                    const loadingIndicator = this.graphContainer.createDiv({ cls: 'sonic-graph-loading' });
+                    const loadingIcon = createLucideIcon('loader-2', 24);
+                    void loadingIcon.addClass('sonic-graph-loading-icon');
+                    void loadingIndicator.appendChild(loadingIcon);
+                    loadingIndicator.createSpan({ text: 'Retrying...', cls: 'sonic-graph-loading-text' });
+
+                    // Attempt to reinitialize
+                    await this.initializeGraph();
+
+                } catch (retryError) {
+                    logger.error('ui', 'Retry failed:', (retryError as Error).message);
+                    // The initializeGraph catch block will handle showing error state again
+                }
+            })();
         });
         
         // Add debug information button

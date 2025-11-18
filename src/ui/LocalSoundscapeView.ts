@@ -1546,14 +1546,15 @@ export class LocalSoundscapeView extends ItemView {
 		});
 
 		// Use the existing export modal - pass null for animator since Local Soundscape is static
-		const modal = await import('../export/ExportModal').then(m => new m.ExportModal(
+		const { ExportModal } = await import('../export/ExportModal');
+		const modal = new ExportModal(
 			this.app,
 			this.plugin,
 			this.plugin.audioEngine,
 			null,  // No temporal animator for Local Soundscape (static graph)
 			this.currentNoteCentricMapping  // Pass note-centric mapping if available
-		));
-		void modal.open();
+		);
+		modal.open();
 	}
 
 	/**
@@ -1852,11 +1853,10 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Open Control Center
 	 */
-	private openControlCenter(): void {
-		void import('./control-panel').then(({ MaterialControlPanelModal }) => {
-			const controlCenter = new MaterialControlPanelModal(this.app, this.plugin);
-			void controlCenter.open();
-		});
+	private async openControlCenter(): Promise<void> {
+		const { MaterialControlPanelModal } = await import('./control-panel');
+		const controlCenter = new MaterialControlPanelModal(this.app, this.plugin);
+		controlCenter.open();
 	}
 
 	/**

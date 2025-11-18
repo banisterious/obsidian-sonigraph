@@ -291,15 +291,15 @@ export class SampleTableBrowser {
 			attr: { 'aria-label': sample.enabled === false ? 'Enable' : 'Disable' }
 		});
 		setIcon(toggleBtn, sample.enabled === false ? 'toggle-left' : 'toggle-right');
-		toggleBtn.addEventListener('click', async () => {
-			await this.toggleSampleEnabled(sample.id);
+		toggleBtn.addEventListener('click', () => {
+			void this.toggleSampleEnabled(sample.id);
 		});
 
 		// Remove button
 		const removeBtn = actionsCell.createEl('button', { cls: 'sonigraph-remove-btn', attr: { 'aria-label': 'Remove sample' } });
 		setIcon(removeBtn, 'trash-2');
-		removeBtn.addEventListener('click', async () => {
-			await this.removeSample(sample.id);
+		removeBtn.addEventListener('click', () => {
+			void this.removeSample(sample.id);
 		});
 	}
 
@@ -732,10 +732,12 @@ class TagEditorModal extends Modal {
 			text: 'Save',
 			cls: 'mod-cta'
 		});
-		saveBtn.addEventListener('click', async () => {
-			await this.onSave(this.currentTags);
-			new Notice('Tags updated');
-			void this.close();
+		saveBtn.addEventListener('click', () => {
+			void (async () => {
+				await this.onSave(this.currentTags);
+				new Notice('Tags updated');
+				this.close();
+			})();
 		});
 
 		const cancelBtn = btnContainer.createEl('button', {

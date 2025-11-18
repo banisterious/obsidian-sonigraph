@@ -160,10 +160,12 @@ export class LocalSoundscapeLayersSettings {
 				.setLimits(-24, 0, 1)
 				.setValue(layers.volume || -12)
 				.setDynamicTooltip()
-				.onChange(async (value) => {
-					layers.volume = value;
-					await this.plugin.saveSettings();
-					logger.info('layers-settings', `Layer volume: ${value}dB`);
+				.onChange((value) => {
+					void (async () => {
+						layers.volume = value;
+						await this.plugin.saveSettings();
+						logger.info('layers-settings', `Layer volume: ${value}dB`);
+					})();
 				})
 			);
 

@@ -261,7 +261,7 @@ export class MaterialControlPanelModal extends Modal {
 		// Enhanced Play Button: Connect to audio engine events
 		void this.setupAudioEngineEventListeners();
 		
-		playBtn.addEventListener('click', () => this.handlePlay());
+		playBtn.addEventListener('click', () => { void this.handlePlay(); });
 
 		// Stop button (second)
 		const stopBtn = container.createEl('button', { cls: 'osp-header-btn osp-header-btn--secondary' });
@@ -1102,8 +1102,8 @@ export class MaterialControlPanelModal extends Modal {
 			text: 'Preview',
 			cls: 'osp-sample-action-btn osp-preview-btn'
 		});
-		previewBtn.addEventListener('click', async () => {
-			await this.previewSample(sample, previewBtn);
+		previewBtn.addEventListener('click', () => {
+			void this.previewSample(sample, previewBtn);
 		});
 
 		// Info button (opens Freesound page)
@@ -1131,8 +1131,8 @@ export class MaterialControlPanelModal extends Modal {
 				text: isEnabled ? 'Disable' : 'Enable',
 				cls: `osp-sample-action-btn ${isEnabled ? 'osp-disable-btn' : 'osp-enable-btn'}`
 			});
-			toggleBtn.addEventListener('click', async () => {
-				await this.toggleSampleEnabled(sample.id);
+			toggleBtn.addEventListener('click', () => {
+				void this.toggleSampleEnabled(sample.id);
 			});
 
 			// Remove button
@@ -1140,8 +1140,8 @@ export class MaterialControlPanelModal extends Modal {
 				text: 'Remove',
 				cls: 'osp-sample-action-btn osp-remove-btn'
 			});
-			removeBtn.addEventListener('click', async () => {
-				await this.removeSampleFromLibrary(sample.id);
+			removeBtn.addEventListener('click', () => {
+				void this.removeSampleFromLibrary(sample.id);
 			});
 		}
 	}
@@ -1333,7 +1333,7 @@ export class MaterialControlPanelModal extends Modal {
 		const modal = new FreesoundSearchModal(
 			this.app,
 			apiKey,
-			(sample: FreesoundSample) => this.addSampleToLibrary(sample)
+			(sample: FreesoundSample) => { void this.addSampleToLibrary(sample); }
 		);
 
 		void modal.open();
@@ -1463,13 +1463,15 @@ export class MaterialControlPanelModal extends Modal {
 			}
 		});
 
-		scaleSelect.addEventListener('change', async () => {
-			if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
-			this.plugin.settings.audioEnhancement.musicalTheory.scale = scaleSelect.value;
-			await this.plugin.saveSettings();
-			if (this.plugin.audioEngine) {
-				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-			}
+		scaleSelect.addEventListener('change', () => {
+			void (async () => {
+				if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
+				this.plugin.settings.audioEnhancement.musicalTheory.scale = scaleSelect.value;
+				await this.plugin.saveSettings();
+				if (this.plugin.audioEngine) {
+					await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+				}
+			})();
 		});
 
 		// Key selection
@@ -1485,13 +1487,15 @@ export class MaterialControlPanelModal extends Modal {
 			}
 		});
 
-		keySelect.addEventListener('change', async () => {
-			if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
-			this.plugin.settings.audioEnhancement.musicalTheory.rootNote = keySelect.value;
-			await this.plugin.saveSettings();
-			if (this.plugin.audioEngine) {
-				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-			}
+		keySelect.addEventListener('change', () => {
+			void (async () => {
+				if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
+				this.plugin.settings.audioEnhancement.musicalTheory.rootNote = keySelect.value;
+				await this.plugin.saveSettings();
+				if (this.plugin.audioEngine) {
+					await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+				}
+			})();
 		});
 
 		void content.appendChild(settingsGrid);
@@ -1674,13 +1678,15 @@ export class MaterialControlPanelModal extends Modal {
 			}
 		});
 
-		modeSelect.addEventListener('change', async () => {
-			if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
-			this.plugin.settings.audioEnhancement.chordFusion.mode = modeSelect.value as 'smart' | 'direct';
-			await this.plugin.saveSettings();
-			if (this.plugin.audioEngine) {
-				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-			}
+		modeSelect.addEventListener('change', () => {
+			void (async () => {
+				if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+				this.plugin.settings.audioEnhancement.chordFusion.mode = modeSelect.value as 'smart' | 'direct';
+				await this.plugin.saveSettings();
+				if (this.plugin.audioEngine) {
+					await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+				}
+			})();
 		});
 
 		// Minimum notes
@@ -1695,13 +1701,15 @@ export class MaterialControlPanelModal extends Modal {
 			}
 		});
 
-		minNotesSelect.addEventListener('change', async () => {
-			if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
-			this.plugin.settings.audioEnhancement.chordFusion.minimumNotes = parseInt(minNotesSelect.value);
-			await this.plugin.saveSettings();
-			if (this.plugin.audioEngine) {
-				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-			}
+		minNotesSelect.addEventListener('change', () => {
+			void (async () => {
+				if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+				this.plugin.settings.audioEnhancement.chordFusion.minimumNotes = parseInt(minNotesSelect.value);
+				await this.plugin.saveSettings();
+				if (this.plugin.audioEngine) {
+					await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+				}
+			})();
 		});
 
 		// Timing window
@@ -1874,13 +1882,15 @@ export class MaterialControlPanelModal extends Modal {
 			}
 		});
 
-		voicingSelect.addEventListener('change', async () => {
-			if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
-			this.plugin.settings.audioEnhancement.chordFusion.voicingStrategy = voicingSelect.value as VoicingStrategy;
-			await this.plugin.saveSettings();
-			if (this.plugin.audioEngine) {
-				await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-			}
+		voicingSelect.addEventListener('change', () => {
+			void (async () => {
+				if (!this.plugin.settings.audioEnhancement?.chordFusion) return;
+				this.plugin.settings.audioEnhancement.chordFusion.voicingStrategy = voicingSelect.value as VoicingStrategy;
+				await this.plugin.saveSettings();
+				if (this.plugin.audioEngine) {
+					await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+				}
+			})();
 		});
 
 		// Connection-based chords
@@ -2127,17 +2137,19 @@ export class MaterialControlPanelModal extends Modal {
 			if (option.value === LoggerFactory.getLogLevel()) optionEl.selected = true;
 		});
 		
-		logLevelSelect.addEventListener('change', async () => {
-			const newLevel = logLevelSelect.value as LogLevel;
-			void LoggerFactory.setLogLevel(newLevel);
-			
-			// Save to plugin settings for persistence
-			await this.plugin.updateSettings({ logLevel: newLevel });
-			
-			logger.info('settings-change', 'Log level changed from Control Center', { 
-				level: newLevel,
-				persisted: true 
-			});
+		logLevelSelect.addEventListener('change', () => {
+			void (async () => {
+				const newLevel = logLevelSelect.value as LogLevel;
+				void LoggerFactory.setLogLevel(newLevel);
+
+				// Save to plugin settings for persistence
+				await this.plugin.updateSettings({ logLevel: newLevel });
+
+				logger.info('settings-change', 'Log level changed from Control Center', {
+					level: newLevel,
+					persisted: true
+				});
+			})();
 		});
 		
 		// Export Logs Action Chip
@@ -3028,7 +3040,7 @@ export class MaterialControlPanelModal extends Modal {
 		createObsidianToggle(
 			content,
 			whaleIntegration.enabled,
-			(enabled) => this.handleWhaleIntegrationToggle(enabled),
+			(enabled) => { void this.handleWhaleIntegrationToggle(enabled); },
 			{
 				name: 'Use external whale samples',
 				description: 'Replace synthesis with authentic whale recordings from NOAA, MBARI, and marine research institutions'
@@ -3070,14 +3082,14 @@ export class MaterialControlPanelModal extends Modal {
 			cls: 'osp-action-btn osp-action-btn--primary',
 			text: 'Download samples'
 		});
-		downloadBtn.addEventListener('click', () => this.handleWhaleDownload());
+		downloadBtn.addEventListener('click', () => { void this.handleWhaleDownload(); });
 
 		// Preview random sample button
 		const previewBtn = actionsRow.createEl('button', {
 			cls: 'osp-action-btn osp-action-btn--secondary',
 			text: 'Preview sample'
 		});
-		previewBtn.addEventListener('click', () => this.handleWhalePreview());
+		previewBtn.addEventListener('click', () => { void this.handleWhalePreview(); });
 
 		// View attribution info button
 		const attributionBtn = actionsRow.createEl('button', {
