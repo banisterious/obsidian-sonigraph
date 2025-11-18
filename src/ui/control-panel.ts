@@ -5218,7 +5218,7 @@ All whale samples are authentic recordings from marine research institutions and
 		// FAQ 1: Why does the music sound simplistic?
 		const faq1 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q1 = faq1.createEl('h4', { cls: 'osp-faq-question' });
-		q1.createEl('strong', { text: 'Q: why does the music sound simplistic or repetitive?' });
+		q1.createEl('strong', { text: 'Q: Why does the music sound simplistic or repetitive?' });
 		void q1.appendText(' ');
 		q1.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
@@ -5266,12 +5266,12 @@ All whale samples are authentic recordings from marine research institutions and
 		void a1oli4.appendText(' - Different clustering methods reveal different organizational patterns in your vault');
 
 		const a1p3 = a1.createEl('p');
-		a1p3.createEl('em', { text: 'Note: the plugin reads content inside callouts and includes it in word counts when using accurate parsing (sonic Graph mode). callout markers are stripped but the text content is counted.' });
+		a1p3.createEl('em', { text: 'Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted.' });
 
 		// FAQ 2: Why only one node / sparse vault issue
 		const faq2 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q2 = faq2.createEl('h4', { cls: 'osp-faq-question' });
-		q2.createEl('strong', { text: 'Q: I only see one node, or my soundscapes are simple even with musical enhancements enabled. why?' });
+		q2.createEl('strong', { text: 'Q: I only see one node, or my soundscapes are simple even with musical enhancements enabled. Why?' });
 		void q2.appendText(' ');
 		q2.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
@@ -5354,7 +5354,7 @@ All whale samples are authentic recordings from marine research institutions and
 		// FAQ 3: How to create musically rich notes
 		const faq3 = content.createEl('div', { cls: 'osp-faq-item' });
 		const q3 = faq3.createEl('h4', { cls: 'osp-faq-question' });
-		q3.createEl('strong', { text: 'Q: how do I create musically rich notes for playback?' });
+		q3.createEl('strong', { text: 'Q: How do I create musically rich notes for playback?' });
 		void q3.appendText(' ');
 		q3.createEl('span', { text: '[Local Soundscape]', cls: 'osp-faq-view-label' });
 
@@ -5401,7 +5401,7 @@ All whale samples are authentic recordings from marine research institutions and
 		a3li7.appendText(' Add custom metadata for explicit control over musical parameters (see documentation)');
 
 		const a3p4 = a3.createEl('p');
-		a3p4.createEl('em', { text: 'Important: heading levels (# vs ## vs ###) do not currently affect musical depth or layering - only the link network structure does. the depth slider controls network exploration radius, not markdown hierarchy.' });
+		a3p4.createEl('em', { text: 'Important: Heading levels (# vs ## vs ###) do not currently affect musical depth or layering - only the link network structure does. The depth slider controls network exploration radius, not markdown hierarchy.' });
 
 		this.contentContainer.appendChild(card.getElement());
 	}

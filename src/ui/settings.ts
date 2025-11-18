@@ -140,9 +140,9 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.setName('Adaptive detail mode')
 				.setDesc('Automatic: Changes based on zoom level. Performance: Optimized for large vaults. Manual: User controls via buttons.')
 				.addDropdown(dropdown => dropdown
-					.addOption('automatic', 'Automatic (Recommended)')
-					.addOption('performance', 'Performance Optimized')
-					.addOption('manual', 'Manual Control')
+					.addOption('automatic', 'Automatic (recommended)')
+					.addOption('performance', 'Performance optimized')
+					.addOption('manual', 'Manual control')
 					.setValue(this.plugin.settings.sonicGraphSettings.adaptiveDetail.mode)
 					.onChange(async (value: 'automatic' | 'performance' | 'manual') => {
 						if (this.plugin.settings.sonicGraphSettings) {
@@ -267,9 +267,9 @@ export class SonigraphSettingTab extends PluginSettingTab {
 				.setName('Clustering algorithm')
 				.setDesc('Louvain: Fast community detection. Modularity: High-quality academic clustering. Hybrid: Combines both with multi-factor refinement.')
 				.addDropdown(dropdown => dropdown
-					.addOption('louvain', 'Louvain (Fast)')
-					.addOption('modularity', 'Modularity (Quality)')
-					.addOption('hybrid', 'Hybrid (Recommended)')
+					.addOption('louvain', 'Louvain (fast)')
+					.addOption('modularity', 'Modularity (quality)')
+					.addOption('hybrid', 'Hybrid (recommended)')
 					.setValue(this.plugin.settings.sonicGraphSettings.smartClustering.algorithm)
 					.onChange(async (value: 'louvain' | 'modularity' | 'hybrid') => {
 						if (this.plugin.settings.sonicGraphSettings) {
@@ -342,7 +342,7 @@ export class SonigraphSettingTab extends PluginSettingTab {
 			.setDesc('Control the verbosity of plugin logs. Default is "Warnings".')
 			.addDropdown(dropdown => dropdown
 				.addOption('off', 'Off')
-				.addOption('error', 'Errors Only')
+				.addOption('error', 'Errors only')
 				.addOption('warn', 'Warnings')
 				.addOption('info', 'Info')
 				.addOption('debug', 'Debug')
