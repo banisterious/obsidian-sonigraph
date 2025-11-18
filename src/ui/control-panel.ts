@@ -3130,7 +3130,7 @@ export class MaterialControlPanelModal extends Modal {
 			enabled: this.getFamilyEffectState(familyId, 'reverb'),
 			parameters: [
 				{
-					name: 'Decay Time',
+					name: 'Decay time',
 					value: 2.5,
 					min: 0.1,
 					max: 10,
@@ -3139,7 +3139,7 @@ export class MaterialControlPanelModal extends Modal {
 					onChange: (value) => this.handleEffectParameterChange(familyId, 'reverb', 'decay', value)
 				},
 				{
-					name: 'Wet Level',
+					name: 'Wet level',
 					value: 0.3,
 					min: 0,
 					max: 1,
