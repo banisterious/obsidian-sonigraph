@@ -5013,7 +5013,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Harmonic Adventurousness
 			new Setting(customControls)
 				.setName('Harmonic adventurousness')
-				.setDesc('Frequency of exotic chords and voice leading (0-100%). higher values add more chromatic color and jazz harmonies.')
+				.setDesc('Frequency of exotic chords and voice leading (0-100%). Higher values add more chromatic color and jazz harmonies.')
 				.addSlider(slider => {
 					slider
 						.setLimits(0, 100, 5)
@@ -5046,7 +5046,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Dynamic Range
 			new Setting(customControls)
 				.setName('Dynamic range')
-				.setDesc('Velocity variation between notes. extreme creates dramatic contrasts from whisper-quiet to forte.')
+				.setDesc('Velocity variation between notes. Extreme creates dramatic contrasts from whisper-quiet to forte.')
 				.addDropdown(dropdown => {
 					dropdown
 						.addOption('subtle', 'Subtle - Even, balanced dynamics')
@@ -5068,7 +5068,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Polyphonic Density
 			new Setting(customControls)
 				.setName('Polyphonic density')
-				.setDesc('How much embellishments overlap with the center phrase. maximum creates rich, layered textures.')
+				.setDesc('How much embellishments overlap with the center phrase. Maximum creates rich, layered textures.')
 				.addDropdown(dropdown => {
 					dropdown
 						.addOption('sparse', 'Sparse - Minimal overlap, clear separation')
@@ -5090,7 +5090,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Melodic Independence
 			new Setting(customControls)
 				.setName('Melodic independence')
-				.setDesc('How freely embellishments deviate from center melody (0-100%). higher values create more independent counterpoint.')
+				.setDesc('How freely embellishments deviate from center melody (0-100%). Higher values create more independent counterpoint.')
 				.addSlider(slider => {
 					slider
 						.setLimits(0, 100, 5)
@@ -5123,7 +5123,7 @@ All whale samples are authentic recordings from marine research institutions and
 			// Voice Leading Style
 			new Setting(customControls)
 				.setName('Voice leading style')
-				.setDesc('Approach to harmonic movement between chords. chromatic creates jazzy, sophisticated progressions.')
+				.setDesc('Approach to harmonic movement between chords. Chromatic creates jazzy, sophisticated progressions.')
 				.addDropdown(dropdown => {
 					dropdown
 						.addOption('smooth', 'Smooth - Minimal voice movement, consonant')
