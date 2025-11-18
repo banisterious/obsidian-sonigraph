@@ -179,7 +179,7 @@ export class ExportModal extends Modal {
         }
 
         // Update UI
-        if (this.formatDropdown) {
+        if (this.formatDropdown !== undefined) {
             this.formatDropdown.setValue(preset.format);
         }
 
@@ -188,12 +188,12 @@ export class ExportModal extends Modal {
 
         // Update metadata inputs if present
         if (preset.metadata && this.metadataInputs) {
-            if (this.metadataInputs.title) this.metadataInputs.title.setValue(preset.metadata.title || '');
-            if (this.metadataInputs.artist) this.metadataInputs.artist.setValue(preset.metadata.artist || '');
-            if (this.metadataInputs.album) this.metadataInputs.album.setValue(preset.metadata.album || '');
-            if (this.metadataInputs.year) this.metadataInputs.year.setValue(preset.metadata.year?.toString() || '');
-            if (this.metadataInputs.genre) this.metadataInputs.genre.setValue(preset.metadata.genre || '');
-            if (this.metadataInputs.comment) this.metadataInputs.comment.setValue(preset.metadata.comment || '');
+            if (this.metadataInputs.title !== undefined) this.metadataInputs.title.setValue(preset.metadata.title || '');
+            if (this.metadataInputs.artist !== undefined) this.metadataInputs.artist.setValue(preset.metadata.artist || '');
+            if (this.metadataInputs.album !== undefined) this.metadataInputs.album.setValue(preset.metadata.album || '');
+            if (this.metadataInputs.year !== undefined) this.metadataInputs.year.setValue(preset.metadata.year?.toString() || '');
+            if (this.metadataInputs.genre !== undefined) this.metadataInputs.genre.setValue(preset.metadata.genre || '');
+            if (this.metadataInputs.comment !== undefined) this.metadataInputs.comment.setValue(preset.metadata.comment || '');
         }
 
         new Notice(`Loaded preset: ${preset.name}`);
@@ -797,7 +797,7 @@ export class ExportModal extends Modal {
      * Update quality dropdown options based on selected format
      */
     private updateQualityOptions(): void {
-        if (!this.qualityDropdown) return;
+        if (this.qualityDropdown === undefined) return;
 
         // Clear existing options
         this.qualityDropdown.selectEl.empty();
@@ -827,7 +827,7 @@ export class ExportModal extends Modal {
      * Update location input based on location type
      */
     private updateLocationInput(): void {
-        if (this.locationInput) {
+        if (this.locationInput !== undefined) {
             if (this.config.locationType === 'vault') {
                 this.locationInput.setValue(this.config.location || 'Sonigraph Exports');
             } else {
@@ -841,7 +841,7 @@ export class ExportModal extends Modal {
      * Update estimate display
      */
     private updateEstimate(): void {
-        if (!this.estimateDisplay) return;
+        if (this.estimateDisplay === undefined) return;
 
         const duration = this.estimateDuration();
         const fileSize = this.estimateFileSize(duration);
@@ -1060,7 +1060,7 @@ export class ExportModal extends Modal {
      * Update custom range in config based on input values
      */
     private updateCustomRange(): void {
-        if (!this.startTimeInput || !this.endTimeInput) return;
+        if (this.startTimeInput === undefined || this.endTimeInput === undefined) return;
 
         const startValue = this.startTimeInput.getValue().trim();
         const endValue = this.endTimeInput.getValue().trim();

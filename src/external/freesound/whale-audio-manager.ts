@@ -528,7 +528,7 @@ export class WhaleAudioManager {
      * This is now opt-in to avoid console errors on startup
      */
     async manuallyDownloadSamples(): Promise<void> {
-        if (!this.initializationPromise) {
+        if (this.initializationPromise === null) {
             void logger.info('manual-download', 'Starting manual whale sample download');
 
             // Add timeout to prevent hanging
@@ -984,7 +984,7 @@ export class WhaleAudioManager {
         });
 
         // Wait for initialization to complete if still in progress
-        if (this.initializationPromise) {
+        if (this.initializationPromise !== null) {
             try {
                 await this.initializationPromise;
             } catch (error) {
