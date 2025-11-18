@@ -3073,7 +3073,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 .addOption('electronic', 'Electronic - Synthesized pads and evolving textures')
                 .addOption('minimal', 'Minimal - Sparse, contemplative elements')
                 .addOption('oceanic', 'Oceanic - Whale songs and ocean sounds')
-                .addOption('sci-fi', 'Sci-Fi - Futuristic atmospheric sounds')
+                .addOption('sci-fi', 'Sci-fi - Futuristic atmospheric sounds')
                 .addOption('experimental', 'Experimental - Unconventional sound design')
                 .addOption('industrial', 'Industrial - Mechanical drones and factory ambience')
                 .addOption('urban', 'Urban - City soundscapes and human activity')
@@ -3177,10 +3177,10 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 .setDesc('Scale for harmonic progressions')
                 .addDropdown(dropdown => dropdown
                     .addOption('major', 'Major - Bright and uplifting')
-                    .addOption('minor', 'Minor - Contemplative and introspective') 
+                    .addOption('minor', 'Minor - Contemplative and introspective')
                     .addOption('dorian', 'Dorian - Medieval and mysterious')
-                    .addOption('pentatonic_major', 'Pentatonic Major - Simple and peaceful')
-                    .addOption('pentatonic_minor', 'Pentatonic Minor - Eastern and meditative')
+                    .addOption('pentatonic_major', 'Pentatonic major - Simple and peaceful')
+                    .addOption('pentatonic_minor', 'Pentatonic minor - Eastern and meditative')
                     .setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.scale || 'major')
                     .onChange(async (value) => {
                         if (!this.plugin.settings.audioEnhancement?.continuousLayers) {
@@ -3221,8 +3221,8 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Performance note
         const performanceNote = container.createDiv({ cls: 'sonic-graph-setting-item' });
         performanceNote.createEl('div', {
-            text: 'Continuous layers target <5% additional cpu usage and work alongside existing node-based audio', 
-            cls: 'sonic-graph-setting-description sonic-graph-info' 
+            text: 'Continuous layers target <5% additional CPU usage and work alongside existing node-based audio',
+            cls: 'sonic-graph-setting-description sonic-graph-info'
         });
     }
 
