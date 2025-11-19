@@ -149,7 +149,7 @@ export class ContentAwareMapper {
             }
 
             // Delegate to FileTypeAnalyzer for detailed analysis
-            const characteristics = await this.fileTypeAnalyzer.analyzeFile(file, node);
+            const characteristics = this.fileTypeAnalyzer.analyzeFile(file, node);
             
             const analysisTime = performance.now() - startTime;
             logger.debug('file-characteristics-analysis', `Analyzed characteristics for ${node.path}`, {
@@ -244,8 +244,8 @@ export class ContentAwareMapper {
 
             // Step 4: Combine all analysis results
             void reasoning.push('Combining content, semantic, and hierarchy analysis');
-            const { finalInstrument, finalConfig, combinedConfidence, combinedProperties } = 
-                void this.combineAllAnalysisResults(characteristics, semanticResult, folderResult, node, context);
+            const { finalInstrument, finalConfig, combinedConfidence, combinedProperties } =
+                this.combineAllAnalysisResults(characteristics, semanticResult, folderResult, node, context);
 
             // Step 5: Generate fallbacks from combined analysis
             void reasoning.push('Generating fallback options');

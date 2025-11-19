@@ -1012,7 +1012,7 @@ export class ClusterAudioMapper {
       });
 
       // Detect communities
-      const communities = await this.communityAnalyzer.detectCommunities(nodes, links);
+      const communities = this.communityAnalyzer.detectCommunities(nodes, links);
 
       // Analyze hierarchy if enabled
       const hierarchicalCommunities = this.communityAnalyzer.analyzeCommunityHierarchy(communities);

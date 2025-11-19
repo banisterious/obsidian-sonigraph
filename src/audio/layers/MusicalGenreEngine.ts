@@ -371,7 +371,7 @@ export class MusicalGenreEngine {
     
     // Load samples if available
     if (this.sampleLoader) {
-      await this.loadGenreSamples(genreConfig.sampleCategories);
+      this.loadGenreSamples(genreConfig.sampleCategories);
     }
   }
   

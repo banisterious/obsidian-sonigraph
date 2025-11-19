@@ -147,10 +147,10 @@ export class ContinuousLayerManager {
       this.modLFO.start();
       
       // Initialize sub-engines
-      await this.genreEngine.initialize();
-      await this.sampleLoader.initialize();
-      await this.rhythmicLayer.initialize();
-      await this.harmonicLayer.initialize();
+      this.genreEngine.initialize();
+      this.sampleLoader.initialize();
+      this.rhythmicLayer.initialize();
+      this.harmonicLayer.initialize();
 
       // Connect sample loader to genre engine
       this.genreEngine.setSampleLoader(this.sampleLoader);

@@ -72,7 +72,7 @@ export class NoteCentricPlayer {
 
 		// Play center phrase with lead instrument
 		void logger.debug('play-center', 'Playing center phrase');
-		await this.playPhrase(mapping.centerPhrase, 'center', 0);
+		this.playPhrase(mapping.centerPhrase, 'center', 0);
 
 		// Play embellishments with appropriate instruments
 		logger.debug('play-embellishments', 'Playing embellishments', {
@@ -80,7 +80,7 @@ export class NoteCentricPlayer {
 		});
 		for (const embellishment of mapping.embellishments) {
 			const delay = this.getDelayForEmbellishment(embellishment.type);
-			await this.playPhrase(embellishment.phrase, embellishment.type, delay);
+			this.playPhrase(embellishment.phrase, embellishment.type, delay);
 		}
 
 		// Start animation loop to clean up finished notes

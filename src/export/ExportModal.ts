@@ -251,7 +251,7 @@ export class ExportModal extends Modal {
                 .setName('Preset name')
                 .addText(text => {
                     nameInput = text;
-                    void text.setPlaceholder('My Preset');
+                    void text.setPlaceholder('My preset');
                 });
 
             const buttonContainer = content.createDiv('modal-button-container');
@@ -290,7 +290,7 @@ export class ExportModal extends Modal {
             format: exportSettings?.defaultFormat || 'wav',
             quality: this.getQualityForFormat(exportSettings?.defaultFormat || 'wav', exportSettings),
             locationType: exportSettings?.lastExportType || 'vault',
-            location: exportSettings?.exportFolder || 'Sonigraph Exports',
+            location: exportSettings?.exportFolder || 'Sonigraph exports',
             filename: this.generateFilename(),
             onCollision: 'cancel',
             includeContinuousLayers: true,
@@ -375,12 +375,12 @@ export class ExportModal extends Modal {
         // Format
         new Setting(section)
             .setName('Format')
-            .setDesc('Audio file format. compressed audio uses native platform codecs (m4a/aac, webm/opus, or ogg/vorbis).')
+            .setDesc('Audio file format. Compressed audio uses native platform codecs (m4a/aac, webm/opus, or ogg/vorbis).')
             .addDropdown(dropdown => {
                 this.formatDropdown = dropdown;
 
                 dropdown
-                    .addOption('wav', 'WAV (Lossless audio)')
+                    .addOption('wav', 'WAV (lossless audio)')
                     .addOption('mp3', 'Compressed audio (M4A/WebM/OGG)')
                     // Phase 2 (optional):
                     // .addOption('ogg', 'OGG Vorbis')
@@ -444,8 +444,8 @@ export class ExportModal extends Modal {
                 this.locationInput = text;
 
                 text
-                    .setPlaceholder('Sonigraph Exports')
-                    .setValue(this.config.location || 'Sonigraph Exports')
+                    .setPlaceholder('Sonigraph exports')
+                    .setValue(this.config.location || 'Sonigraph exports')
                     .onChange(value => {
                         this.config.location = value;
                     });
@@ -558,7 +558,7 @@ export class ExportModal extends Modal {
             .setDesc('Song or export title')
             .addText(text => {
                 this.metadataInputs.title = text;
-                text.setPlaceholder('Sonic Graph Export')
+                text.setPlaceholder('Sonic Graph export')
                     .setValue(lastMetadata?.title || '')
                     .onChange(value => {
                         if (!this.config.metadata) this.config.metadata = {};
@@ -572,7 +572,7 @@ export class ExportModal extends Modal {
             .setDesc('Artist or creator name')
             .addText(text => {
                 this.metadataInputs.artist = text;
-                text.setPlaceholder('Your Name')
+                text.setPlaceholder('Your name')
                     .setValue(lastMetadata?.artist || '')
                     .onChange(value => {
                         if (!this.config.metadata) this.config.metadata = {};
@@ -586,7 +586,7 @@ export class ExportModal extends Modal {
             .setDesc('Album or collection name')
             .addText(text => {
                 this.metadataInputs.album = text;
-                text.setPlaceholder('Vault Soundscapes')
+                text.setPlaceholder('Vault soundscapes')
                     .setValue(lastMetadata?.album || '')
                     .onChange(value => {
                         if (!this.config.metadata) this.config.metadata = {};
@@ -616,7 +616,7 @@ export class ExportModal extends Modal {
             .setDesc('Musical genre or category')
             .addText(text => {
                 this.metadataInputs.genre = text;
-                text.setPlaceholder('Ambient, Generative')
+                text.setPlaceholder('Ambient, generative')
                     .setValue(lastMetadata?.genre || '')
                     .onChange(value => {
                         if (!this.config.metadata) this.config.metadata = {};
@@ -828,7 +828,7 @@ export class ExportModal extends Modal {
     private updateLocationInput(): void {
         if (this.locationInput !== undefined) {
             if (this.config.locationType === 'vault') {
-                this.locationInput.setValue(this.config.location || 'Sonigraph Exports');
+                this.locationInput.setValue(this.config.location || 'Sonigraph exports');
             } else {
                 // System location
                 this.locationInput.setValue(''); // User will need to browse

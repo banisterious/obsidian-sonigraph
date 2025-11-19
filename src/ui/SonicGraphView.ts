@@ -2445,7 +2445,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated config: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
+        logger.debug('connection-type-mapping', `Updated config: ${String(key)} = ${typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -2462,7 +2462,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated global setting: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
+        logger.debug('connection-type-mapping', `Updated global setting: ${String(key)} = ${typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -2481,7 +2481,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         this.plugin.settings.sonicGraphSettings = settings;
         void this.plugin.saveSettings();
 
-        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${key} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
+        logger.debug('connection-type-mapping', `Updated ${connectionType} mapping: ${String(key)} = ${typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -5608,7 +5608,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         // Performance optimization: Use debounced settings updates
         this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
 
-        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
+        logger.debug('layout-setting', `Scheduled layout setting update: ${String(key)} = ${typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value)}`);
     }
 
     /**
@@ -6146,13 +6146,13 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Initialize temporal animator for timeline animation
      */
-    private async initializeTemporalAnimator(): Promise<void> {
+    private initializeTemporalAnimator(): void {
         try {
             void logger.debug('ui', 'Initializing temporal animator');
-            
+
             // Extract graph data if not already done
             const graphData = this.graphDataExtractor.extractGraphData();
-            
+
             // Get spacing configuration based on user selection
             const spacingConfig = this.getSpacingConfiguration();
 

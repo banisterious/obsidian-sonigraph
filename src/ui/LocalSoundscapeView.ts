@@ -158,7 +158,7 @@ export class LocalSoundscapeView extends ItemView {
 		return 'radio-tower';
 	}
 
-	async onOpen(): Promise<void> {
+	onOpen(): void {
 		void logger.info('view-open', 'Opening Local Soundscape view');
 
 		const container = this.containerEl;
@@ -596,7 +596,7 @@ export class LocalSoundscapeView extends ItemView {
 			cls: 'setting-description'
 		});
 		infoText.createEl('p', {
-			text: 'Use depth control to explore connections. apply filters to focus on specific content. enable clustering to visualize groups.',
+			text: 'Use depth control to explore connections. Apply filters to focus on specific content. Enable clustering to visualize groups.',
 			cls: 'setting-description'
 		});
 

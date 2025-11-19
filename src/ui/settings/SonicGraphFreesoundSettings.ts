@@ -93,7 +93,7 @@ export class SonicGraphFreesoundSettings {
 			.addButton(button => button
 				.setButtonText('Test')
 				.setTooltip('Test API key connection')
-				.onClick(async () => {
+				.onClick(() => void (async () => {
 					const apiKey = this.plugin.settings.freesoundApiKey;
 					if (!apiKey || apiKey.trim().length === 0) {
 						void button.setButtonText('No key');
@@ -125,7 +125,7 @@ export class SonicGraphFreesoundSettings {
 						void button.setDisabled(false);
 						void setTimeout(() => button.setButtonText('Test'), 3000);
 					}
-				})
+				})())
 			);
 
 		// Enable Freesound samples toggle

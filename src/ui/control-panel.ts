@@ -2453,17 +2453,17 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Initialize graph preview visualization
 	 */
-	private async initializeGraphPreview(container: HTMLElement, loadingDiv: HTMLElement): Promise<void> {
+	private initializeGraphPreview(container: HTMLElement, loadingDiv: HTMLElement): void {
 		try {
 			const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache, {
 				excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
 				excludeFiles: this.plugin.settings.sonicGraphExcludeFiles || []
 			});
 			const graphData = extractor.extractGraphData();
-			
+
 			// Remove loading indicator
 			void loadingDiv.remove();
-			
+
 			// Create graph renderer
 			this.graphRenderer = new GraphRenderer(container, {
 				width: container.clientWidth,
@@ -2471,10 +2471,10 @@ export class MaterialControlPanelModal extends Modal {
 				enableZoom: true, // Enable zoom for interactive preview
 				showLabels: this.showFileNames // Use stored toggle state
 			});
-			
+
 			this.graphRenderer.render(graphData.nodes, graphData.links);
 			logger.debug('ui', `Graph renderer initialized with showLabels: ${this.showFileNames}`);
-			
+
 		} catch (error) {
 			void logger.error('ui', 'Failed to initialize graph preview:', error);
 			loadingDiv.textContent = 'Failed to load graph preview';
@@ -2484,7 +2484,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Update stats for Sonic Graph controls
 	 */
-	private async updateSonicGraphStats(filesEl: HTMLElement, linksEl: HTMLElement): Promise<void> {
+	private updateSonicGraphStats(filesEl: HTMLElement, linksEl: HTMLElement): void {
 		try {
 			const extractor = new GraphDataExtractor(this.app.vault, this.app.metadataCache, {
 				excludeFolders: this.plugin.settings.sonicGraphExcludeFolders || [],
