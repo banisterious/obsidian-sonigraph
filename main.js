@@ -10,9 +10,6 @@ var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
-var __commonJS = (cb, mod) => function __require() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -3441,7 +3438,7 @@ function createObsidianToggle(container, initialValue, onChange, options) {
   checkbox.addEventListener("change", () => {
     const originalDisabled = checkbox.disabled;
     const checkboxId = Math.random().toString(36).substring(2, 11);
-    void (async () => {
+    void (() => {
       try {
         const newValue = checkbox.checked;
         logger3.debug("ui", "Checkbox change event fired", {
@@ -3806,7 +3803,7 @@ var init_material_components = __esm({
         const card = document.createElement("div");
         card.className = `ospcc-card ${options.elevation ? `ospcc-elevation-${options.elevation}` : ""} ${options.className || ""}`;
         if (options.onClick) {
-          card.style.cursor = "pointer";
+          card.setCssProps({ cursor: "pointer" });
           void card.addEventListener("click", options.onClick);
         }
         return card;
@@ -13310,7 +13307,8 @@ var init_GraphRenderer = __esm({
        */
       setZoomTransform(transform2) {
         if (this.config.enableZoom && this.zoom) {
-          this.svg.call(this.zoom.transform, transform2);
+          const zoom = this.zoom;
+          this.svg.call((selection2) => zoom.transform(selection2, transform2));
           logger11.info("zoom-set", `Zoom transform set externally: scale=${transform2.k}, translate=(${transform2.x}, ${transform2.y})`);
         }
       }
@@ -13716,7 +13714,7 @@ var init_GraphRenderer = __esm({
       /**
        * Apply Smart Clustering and render cluster visualization
        */
-      async applySmartClustering() {
+      applySmartClustering() {
         var _a, _b, _c;
         if (!this.smartClustering || !((_a = this.smartClusteringSettings) == null ? void 0 : _a.enabled)) {
           void this.clearClusterVisualization();
@@ -14401,7 +14399,7 @@ var init_SonicGraphCoreSettings = __esm({
         new import_obsidian7.Setting(content).setName("Audio detection").setDesc("Override automatic temporal clustering detection").addDropdown(
           (dropdown) => {
             var _a;
-            return dropdown.addOption("auto", "Auto (detect from timeline)").addOption("dense", "Force Dense").addOption("balanced", "Force Balanced").addOption("sparse", "Force Sparse").setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.audio.autoDetectionOverride) || "auto").onChange(async (value) => {
+            return dropdown.addOption("auto", "Auto (detect from timeline)").addOption("dense", "force dense").addOption("balanced", "force balanced").addOption("sparse", "force sparse").setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.audio.autoDetectionOverride) || "auto").onChange(async (value) => {
               if (!this.plugin.settings.sonicGraphSettings)
                 return;
               this.plugin.settings.sonicGraphSettings.audio.autoDetectionOverride = value;
@@ -14449,7 +14447,7 @@ var init_SonicGraphCoreSettings = __esm({
         new import_obsidian7.Setting(content).setName("Event spreading").setDesc("Prevent audio crackling by spacing simultaneous events").addDropdown(
           (dropdown) => {
             var _a;
-            return dropdown.addOption("none", "None - No spreading").addOption("gentle", "Gentle - Light spreading").addOption("aggressive", "Aggressive - Heavy spreading").setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.timeline.eventSpreadingMode) || "gentle").onChange(async (value) => {
+            return dropdown.addOption("none", "none - no spreading").addOption("gentle", "gentle - light spreading").addOption("aggressive", "aggressive - heavy spreading").setValue(((_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.timeline.eventSpreadingMode) || "gentle").onChange(async (value) => {
               if (!this.plugin.settings.sonicGraphSettings)
                 return;
               this.plugin.settings.sonicGraphSettings.timeline.eventSpreadingMode = value;
@@ -14586,7 +14584,7 @@ var init_SonicGraphCoreSettings = __esm({
         new import_obsidian7.Setting(content).setName("Instrument distribution").setDesc("How to distribute instruments across similar files").addDropdown(
           (dropdown) => {
             var _a, _b;
-            return dropdown.addOption("balanced", "Balanced - Prevent clustering").addOption("random", "Random - Natural variation").addOption("semantic", "Semantic - Based on content").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.contentAwareMapping) == null ? void 0 : _b.distributionStrategy) || "balanced").onChange(async (value) => {
+            return dropdown.addOption("balanced", "balanced - prevent clustering").addOption("random", "random - natural variation").addOption("semantic", "semantic - based on content").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.contentAwareMapping) == null ? void 0 : _b.distributionStrategy) || "balanced").onChange(async (value) => {
               var _a2;
               if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping))
                 return;
@@ -14767,7 +14765,7 @@ var init_SonicGraphAdvancedSettings = __esm({
         new import_obsidian8.Setting(content).setName("Musical scale").setDesc("Constrain generated notes to a specific scale").addDropdown(
           (dropdown) => {
             var _a, _b;
-            return dropdown.addOption("major", "Major - Bright, happy").addOption("minor", "Minor - Dark, melancholic").addOption("dorian", "Dorian - Modal, jazzy").addOption("phrygian", "Phrygian - Spanish, exotic").addOption("lydian", "Lydian - Dreamy, ethereal").addOption("mixolydian", "Mixolydian - Folk, bluesy").addOption("pentatonic", "Pentatonic - Asian, simple").addOption("chromatic", "Chromatic - All notes").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.scale) || "major").onChange(async (value) => {
+            return dropdown.addOption("major", "major - bright, happy").addOption("minor", "minor - dark, melancholic").addOption("dorian", "dorian - modal, jazzy").addOption("phrygian", "phrygian - spanish, exotic").addOption("lydian", "lydian - dreamy, ethereal").addOption("mixolydian", "mixolydian - folk, bluesy").addOption("pentatonic", "pentatonic - asian, simple").addOption("chromatic", "chromatic - all notes").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.scale) || "major").onChange(async (value) => {
               var _a2;
               if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.musicalTheory))
                 return;
@@ -14941,7 +14939,7 @@ var init_SonicGraphAdvancedSettings = __esm({
           new import_obsidian8.Setting(content).setName("Orchestration mode").setDesc("How hubs interact with other nodes").addDropdown(
             (dropdown) => {
               var _a2;
-              return dropdown.addOption("hub-led", "Hub-Led - Hubs dominate").addOption("balanced", "Balanced - Moderate emphasis").addOption("democratic", "Democratic - Subtle emphasis").setValue(((_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.orchestrationMode) || "balanced").onChange(async (value) => {
+              return dropdown.addOption("hub-led", "hub-led - hubs dominate").addOption("balanced", "balanced - moderate emphasis").addOption("democratic", "democratic - subtle emphasis").setValue(((_a2 = this.plugin.settings.hubOrchestration) == null ? void 0 : _a2.orchestrationMode) || "balanced").onChange(async (value) => {
                 if (this.plugin.settings.hubOrchestration) {
                   this.plugin.settings.hubOrchestration.orchestrationMode = value;
                   await this.plugin.saveSettings();
@@ -15018,7 +15016,7 @@ var init_SonicGraphAdvancedSettings = __esm({
             lineHeight: "1.5",
             marginTop: "1rem"
           });
-          instrumentsP.createEl("strong", { text: "Hub Instrument Preference:" });
+          instrumentsP.createEl("strong", { text: "Hub instrument preference:" });
           instrumentsP.appendText(" Hub nodes will preferentially use piano, strings, and brass instruments to emphasize their prominence in the network.");
         }
         cardContainer.appendChild(card.getElement());
@@ -15138,7 +15136,7 @@ var init_SonicGraphAdvancedSettings = __esm({
             lineHeight: "1.5",
             marginTop: "1rem"
           });
-          noteP.createEl("strong", { text: "Complexity Tiers:" });
+          noteP.createEl("strong", { text: "Complexity tiers:" });
           void noteP.appendText(" The system automatically adjusts orchestration based on vault size:");
           void noteP.createEl("br");
           noteP.appendText("\u2022 Minimal (0-100 nodes): Basic instruments only");
@@ -15230,7 +15228,7 @@ var init_SonicGraphAdvancedSettings = __esm({
           new import_obsidian8.Setting(content).setName("Panning mode").setDesc("How node positions map to stereo panning").addDropdown(
             (dropdown) => {
               var _a2;
-              return dropdown.addOption("geometric", "Geometric - Based on X position").addOption("cluster-based", "Cluster-Based - By cluster").addOption("folder-based", "Folder-Based - By folder").addOption("hybrid", "Hybrid - Combined approach").setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.mode) || "hybrid").onChange(async (value) => {
+              return dropdown.addOption("geometric", "geometric - based on X position").addOption("cluster-based", "cluster-based - by cluster").addOption("folder-based", "folder-based - by folder").addOption("hybrid", "hybrid - combined approach").setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.mode) || "hybrid").onChange(async (value) => {
                 if (this.plugin.settings.spatialAudio) {
                   this.plugin.settings.spatialAudio.mode = value;
                   await this.plugin.saveSettings();
@@ -15270,7 +15268,7 @@ var init_SonicGraphAdvancedSettings = __esm({
           new import_obsidian8.Setting(content).setName("Panning curve").setDesc("Curve type for position-to-pan mapping").addDropdown(
             (dropdown) => {
               var _a2;
-              return dropdown.addOption("linear" /* Linear */, "Linear - Direct proportion").addOption("exponential" /* Exponential */, "Exponential - Emphasize extremes").addOption("sigmoid" /* Sigmoid */, "Sigmoid - Smooth S-curve").addOption("logarithmic" /* Logarithmic */, "Logarithmic - Compress extremes").setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.graphPositionSettings.curve) || "sigmoid" /* Sigmoid */).onChange(async (value) => {
+              return dropdown.addOption("linear" /* Linear */, "linear - direct proportion").addOption("exponential" /* Exponential */, "exponential - emphasize extremes").addOption("sigmoid" /* Sigmoid */, "sigmoid - smooth S-curve").addOption("logarithmic" /* Logarithmic */, "logarithmic - compress extremes").setValue(((_a2 = this.plugin.settings.spatialAudio) == null ? void 0 : _a2.graphPositionSettings.curve) || "sigmoid" /* Sigmoid */).onChange(async (value) => {
                 var _a3;
                 if ((_a3 = this.plugin.settings.spatialAudio) == null ? void 0 : _a3.graphPositionSettings) {
                   this.plugin.settings.spatialAudio.graphPositionSettings.curve = value;
@@ -15632,7 +15630,7 @@ var init_SonicGraphVisualDisplaySettings = __esm({
         new import_obsidian9.Setting(content).setName("Visualization mode").setDesc("Choose how notes are displayed visually").addDropdown(
           (dropdown) => {
             var _a, _b;
-            return dropdown.addOption("piano-roll", "Piano Roll (Recommended)").addOption("spectrum", "Spectrum Analyzer").addOption("staff", "Musical Staff").addOption("graph-highlight", "Graph Node Highlighting").setValue(((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay) == null ? void 0 : _b.mode) || "piano-roll").onChange(async (value) => {
+            return dropdown.addOption("piano-roll", "Piano roll (recommended)").addOption("spectrum", "Spectrum analyzer").addOption("staff", "Musical staff").addOption("graph-highlight", "Graph node highlighting").setValue(((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay) == null ? void 0 : _b.mode) || "piano-roll").onChange(async (value) => {
               var _a2;
               if (!((_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.visualDisplay))
                 return;
@@ -15671,7 +15669,7 @@ var init_SonicGraphVisualDisplaySettings = __esm({
         new import_obsidian9.Setting(content).setName("Color scheme").setDesc("How notes are colored in the visualization").addDropdown(
           (dropdown) => {
             var _a, _b;
-            return dropdown.addOption("layer", "By Layer (Recommended)").addOption("pitch", "By Pitch").addOption("intensity", "By Intensity").addOption("high-contrast", "High Contrast (Accessibility)").setValue(((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay) == null ? void 0 : _b.colorScheme) || "layer").onChange(async (value) => {
+            return dropdown.addOption("layer", "By layer (recommended)").addOption("pitch", "By pitch").addOption("intensity", "By intensity").addOption("high-contrast", "High contrast (accessibility)").setValue(((_b = (_a = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a.visualDisplay) == null ? void 0 : _b.colorScheme) || "layer").onChange(async (value) => {
               var _a2;
               if (!((_a2 = this.plugin.settings.sonicGraphSettings) == null ? void 0 : _a2.visualDisplay))
                 return;
@@ -16174,7 +16172,7 @@ var init_client = __esm({
       /**
        * Process and validate discovered samples
        */
-      async processSamples(samples, query) {
+      processSamples(samples, query) {
         const uniqueSamples = this.removeDuplicates(samples);
         const validated = [];
         const rejected = [];
@@ -16371,9 +16369,10 @@ var init_client = __esm({
 });
 
 // src/external/freesound/whale-audio-manager.ts
-var logger19, WhaleAudioManager;
+var import_obsidian11, logger19, WhaleAudioManager;
 var init_whale_audio_manager = __esm({
   "src/external/freesound/whale-audio-manager.ts"() {
+    import_obsidian11 = require("obsidian");
     init_client();
     init_logging();
     logger19 = getLogger("whale-audio-manager");
@@ -16755,7 +16754,7 @@ var init_whale_audio_manager = __esm({
       /**
        * Clean up old cache files (LRU-style cleanup)
        */
-      async cleanupCache(maxSizeGB = 2) {
+      cleanupCache(maxSizeGB = 2) {
         if (!this.vault)
           return;
         try {
@@ -16792,7 +16791,7 @@ var init_whale_audio_manager = __esm({
        * This is now opt-in to avoid console errors on startup
        */
       async manuallyDownloadSamples() {
-        if (!this.initializationPromise) {
+        if (this.initializationPromise === null) {
           void logger19.info("manual-download", "Starting manual whale sample download");
           const downloadPromise = this.downloadAndCacheSamples();
           const timeoutPromise = new Promise((resolve) => {
@@ -16950,17 +16949,17 @@ var init_whale_audio_manager = __esm({
           return await this.downloadWithCorsProxy(url, species);
         }
         try {
-          const response = await fetch(url, {
+          const response = await (0, import_obsidian11.requestUrl)({
+            url,
             method: "GET",
             headers: {
               "Accept": "audio/*"
             }
           });
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          if (response.status >= 400) {
+            throw new Error(`HTTP ${response.status}`);
           }
-          const arrayBuffer = await response.arrayBuffer();
-          return await this.validateAndDecodeAudio(arrayBuffer, url);
+          return await this.validateAndDecodeAudio(response.arrayBuffer, url);
         } catch (error) {
           logger19.debug("download", "Direct fetch failed, trying CORS proxy fallback", {
             url: url.substring(0, 60) + "...",
@@ -17017,12 +17016,13 @@ var init_whale_audio_manager = __esm({
               attempt: proxyIndex,
               retry: retry + 1
             });
-            const proxyResponse = await fetch(proxyUrl, {
+            const proxyResponse = await (0, import_obsidian11.requestUrl)({
+              url: proxyUrl,
               method: "GET",
               headers
             });
-            if (proxyResponse.ok) {
-              const arrayBuffer = await proxyResponse.arrayBuffer();
+            if (proxyResponse.status < 400) {
+              const arrayBuffer = proxyResponse.arrayBuffer;
               const arrayBufferSize = arrayBuffer.byteLength;
               logger19.debug("download", "CORS proxy response received", {
                 proxy: proxyService,
@@ -17069,8 +17069,7 @@ var init_whale_audio_manager = __esm({
             } else {
               logger19.debug("download", "CORS proxy returned error status", {
                 proxy: proxyService,
-                status: proxyResponse.status,
-                statusText: proxyResponse.statusText
+                status: proxyResponse.status
               });
               break;
             }
@@ -17148,7 +17147,7 @@ var init_whale_audio_manager = __esm({
           targetSpecies,
           hasFrequency: !!frequency
         });
-        if (this.initializationPromise) {
+        if (this.initializationPromise !== null) {
           try {
             await this.initializationPromise;
           } catch (error) {
@@ -17246,13 +17245,15 @@ var init_whale_audio_manager = __esm({
        * Load sample from direct URL (NOAA PMEL, etc.)
        */
       async loadDirectUrl(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
+        const response = await (0, import_obsidian11.requestUrl)({
+          url,
+          method: "GET"
+        });
+        if (response.status >= 400) {
           throw new Error(`Failed to fetch audio: ${response.status}`);
         }
-        const arrayBuffer = await response.arrayBuffer();
         const audioContext = new AudioContext();
-        return await audioContext.decodeAudioData(arrayBuffer);
+        return await audioContext.decodeAudioData(response.arrayBuffer);
       }
       /**
        * Discover new whale samples (Phase 2 - Manual Discovery)
@@ -17711,13 +17712,13 @@ var FreesoundSearchModal_exports = {};
 __export(FreesoundSearchModal_exports, {
   FreesoundSearchModal: () => FreesoundSearchModal
 });
-var import_obsidian11, logger21, FreesoundSearchModal;
+var import_obsidian12, logger21, FreesoundSearchModal;
 var init_FreesoundSearchModal = __esm({
   "src/ui/FreesoundSearchModal.ts"() {
-    import_obsidian11 = require("obsidian");
+    import_obsidian12 = require("obsidian");
     init_logging();
     logger21 = getLogger("FreesoundSearchModal");
-    FreesoundSearchModal = class extends import_obsidian11.Modal {
+    FreesoundSearchModal = class extends import_obsidian12.Modal {
       // Default genre for suggestions
       constructor(app, apiKey, onAddSample) {
         super(app);
@@ -17783,7 +17784,7 @@ var init_FreesoundSearchModal = __esm({
             "aria-label": "Clear search"
           }
         });
-        (0, import_obsidian11.setIcon)(clearButton, "x");
+        (0, import_obsidian12.setIcon)(clearButton, "x");
         clearButton.addEventListener("click", () => {
           if (this.searchInput) {
             this.searchInput.value = "";
@@ -17795,7 +17796,7 @@ var init_FreesoundSearchModal = __esm({
           cls: "freesound-search-button",
           attr: { "aria-label": "Search" }
         });
-        (0, import_obsidian11.setIcon)(searchButton, "search");
+        (0, import_obsidian12.setIcon)(searchButton, "search");
         searchButton.createSpan({ text: "Search" });
         searchButton.addEventListener("click", () => void this.performSearch());
         const suggestionsEl = searchSection.createDiv({ cls: "freesound-search-suggestions" });
@@ -17809,7 +17810,7 @@ var init_FreesoundSearchModal = __esm({
           });
           const iconName = this.getSearchIconName(suggestion);
           if (iconName) {
-            (0, import_obsidian11.setIcon)(suggestionBtn, iconName);
+            (0, import_obsidian12.setIcon)(suggestionBtn, iconName);
           }
           suggestionBtn.createSpan({ text: suggestion });
           suggestionBtn.addEventListener("click", () => {
@@ -17850,7 +17851,7 @@ var init_FreesoundSearchModal = __esm({
           attr: { "aria-expanded": "true", "aria-label": "Toggle filters" }
         });
         const chevronIcon = headerButton.createDiv({ cls: "freesound-chevron" });
-        (0, import_obsidian11.setIcon)(chevronIcon, "chevron-down");
+        (0, import_obsidian12.setIcon)(chevronIcon, "chevron-down");
         headerButton.createEl("h3", { text: "Filters" });
         headerButton.createSpan({ text: "0", cls: "freesound-filter-badge" });
         headerButton.addEventListener("click", () => {
@@ -17876,19 +17877,19 @@ var init_FreesoundSearchModal = __esm({
         });
         clearFiltersBtn.addEventListener("click", () => this.clearFilters());
         const filtersGrid = this.filtersSection.createDiv({ cls: "freesound-filters-grid" });
-        new import_obsidian11.Setting(filtersGrid).setName("License").setDesc("Filter by creative commons license").addDropdown(
-          (dropdown) => dropdown.addOption("any", "Any license").addOption("cc0", "CC0 (Public Domain)").addOption("cc-by", "CC BY (Attribution)").addOption("cc-by-sa", "CC BY-SA (ShareAlike)").setValue(this.filters.license).onChange((value) => {
+        new import_obsidian12.Setting(filtersGrid).setName("License").setDesc("Filter by creative commons license").addDropdown(
+          (dropdown) => dropdown.addOption("any", "any license").addOption("cc0", "CC0 (public domain)").addOption("cc-by", "CC BY (attribution)").addOption("cc-by-sa", "CC BY-SA (sharealike)").setValue(this.filters.license).onChange((value) => {
             this.filters.license = value;
             void this.updateFilterCount();
           })
         );
-        new import_obsidian11.Setting(filtersGrid).setName("Min duration").setDesc("Minimum sample length in seconds").addText(
+        new import_obsidian12.Setting(filtersGrid).setName("Min duration").setDesc("Minimum sample length in seconds").addText(
           (text) => text.setPlaceholder("10").setValue(String(this.filters.minDuration)).onChange((value) => {
             this.filters.minDuration = parseInt(value) || 10;
             void this.updateFilterCount();
           })
         );
-        new import_obsidian11.Setting(filtersGrid).setName("Max duration").setDesc("Maximum sample length in seconds").addText(
+        new import_obsidian12.Setting(filtersGrid).setName("Max duration").setDesc("Maximum sample length in seconds").addText(
           (text) => text.setPlaceholder("300").setValue(String(this.filters.maxDuration)).onChange((value) => {
             this.filters.maxDuration = parseInt(value) || 300;
             void this.updateFilterCount();
@@ -17931,7 +17932,7 @@ var init_FreesoundSearchModal = __esm({
         if (durationInputs[1])
           durationInputs[1].value = "300";
         void this.updateFilterCount();
-        new import_obsidian11.Notice("Filters cleared");
+        new import_obsidian12.Notice("Filters cleared");
       }
       createResultsSection(container) {
         const resultsSection = container.createDiv({ cls: "freesound-results-section" });
@@ -17947,7 +17948,7 @@ var init_FreesoundSearchModal = __esm({
           return;
         const query = this.searchInput.value.trim();
         if (!query) {
-          new import_obsidian11.Notice("Please enter a search query");
+          new import_obsidian12.Notice("Please enter a search query");
           return;
         }
         this.filters.query = query;
@@ -17957,14 +17958,14 @@ var init_FreesoundSearchModal = __esm({
         try {
           logger21.info("search", `Searching Freesound for: ${query}`);
           const url = this.buildSearchUrl();
-          const response = await (0, import_obsidian11.requestUrl)({ url });
+          const response = await (0, import_obsidian12.requestUrl)({ url });
           const data = response.json;
           this.searchResults = data.results || [];
           logger21.info("search", `Found ${this.searchResults.length} results`);
           void this.displayResults();
         } catch (error) {
           void logger21.error("search", "Search failed", error);
-          new import_obsidian11.Notice("Search failed. Check your API key and connection.");
+          new import_obsidian12.Notice("Search failed. Check your API key and connection.");
           void this.displayError(error);
         } finally {
           this.isSearching = false;
@@ -17991,7 +17992,7 @@ var init_FreesoundSearchModal = __esm({
         this.resultsContainer.empty();
         if (this.searchResults.length === 0) {
           const emptyState = this.resultsContainer.createDiv({ cls: "freesound-empty-state" });
-          (0, import_obsidian11.setIcon)(emptyState, "search");
+          (0, import_obsidian12.setIcon)(emptyState, "search");
           emptyState.createEl("p", { text: "No results found" });
           emptyState.createEl("span", { text: "Try different search terms or adjust your filters" });
           return;
@@ -18001,13 +18002,13 @@ var init_FreesoundSearchModal = __esm({
         this.searchResults.forEach((result) => {
           const resultItem = this.resultsContainer.createDiv({ cls: "freesound-result-item" });
           const thumbnail = resultItem.createDiv({ cls: "freesound-result-thumbnail" });
-          (0, import_obsidian11.setIcon)(thumbnail, "volume-2");
+          (0, import_obsidian12.setIcon)(thumbnail, "volume-2");
           const contentSection = resultItem.createDiv({ cls: "freesound-result-content" });
           const headerSection = contentSection.createDiv({ cls: "freesound-result-header" });
           headerSection.createEl("h4", { text: result.name, cls: "freesound-result-title" });
           const badgesEl = headerSection.createDiv({ cls: "freesound-result-badges" });
           const durationBadge = badgesEl.createDiv({ cls: "freesound-badge freesound-badge-duration" });
-          (0, import_obsidian11.setIcon)(durationBadge, "clock");
+          (0, import_obsidian12.setIcon)(durationBadge, "clock");
           durationBadge.createSpan({ text: `${result.duration.toFixed(1)}s` });
           const licenseBadge = badgesEl.createDiv({ cls: "freesound-badge freesound-badge-license" });
           licenseBadge.textContent = this.formatLicense(result.license);
@@ -18025,21 +18026,21 @@ var init_FreesoundSearchModal = __esm({
             }
           }
           const footerEl = contentSection.createDiv({ cls: "freesound-result-footer" });
-          (0, import_obsidian11.setIcon)(footerEl, "user");
+          (0, import_obsidian12.setIcon)(footerEl, "user");
           footerEl.createSpan({ text: `by ${result.username}` });
           const actionsSection = resultItem.createDiv({ cls: "freesound-result-actions" });
           const previewBtn = actionsSection.createEl("button", {
             cls: "freesound-action-btn freesound-preview-btn",
             attr: { "aria-label": `Preview ${result.name}` }
           });
-          (0, import_obsidian11.setIcon)(previewBtn, "play");
+          (0, import_obsidian12.setIcon)(previewBtn, "play");
           previewBtn.createSpan({ text: "Preview" });
           previewBtn.addEventListener("click", () => void this.previewSample(result, previewBtn));
           const addBtn = actionsSection.createEl("button", {
             cls: "freesound-action-btn freesound-add-btn",
             attr: { "aria-label": `Add ${result.name} to library` }
           });
-          (0, import_obsidian11.setIcon)(addBtn, "plus");
+          (0, import_obsidian12.setIcon)(addBtn, "plus");
           addBtn.createSpan({ text: "Add to library" });
           addBtn.addEventListener("click", () => this.addSampleToLibrary(result));
         });
@@ -18080,7 +18081,7 @@ var init_FreesoundSearchModal = __esm({
         void button.empty();
         switch (state) {
           case "play":
-            (0, import_obsidian11.setIcon)(button, "play");
+            (0, import_obsidian12.setIcon)(button, "play");
             button.createSpan({ text: "Preview" });
             button.disabled = false;
             void button.removeClass("freesound-btn-loading");
@@ -18088,20 +18089,20 @@ var init_FreesoundSearchModal = __esm({
             void button.removeClass("freesound-btn-error");
             break;
           case "stop":
-            (0, import_obsidian11.setIcon)(button, "square");
+            (0, import_obsidian12.setIcon)(button, "square");
             button.createSpan({ text: "Stop" });
             button.disabled = false;
             void button.removeClass("freesound-btn-loading");
             void button.addClass("freesound-btn-playing");
             break;
           case "loading":
-            (0, import_obsidian11.setIcon)(button, "loader-2");
+            (0, import_obsidian12.setIcon)(button, "loader-2");
             button.createSpan({ text: "Loading..." });
             button.disabled = true;
             void button.addClass("freesound-btn-loading");
             break;
           case "error":
-            (0, import_obsidian11.setIcon)(button, "alert-circle");
+            (0, import_obsidian12.setIcon)(button, "alert-circle");
             button.createSpan({ text: "Error" });
             void button.addClass("freesound-btn-error");
             break;
@@ -18122,7 +18123,7 @@ var init_FreesoundSearchModal = __esm({
           this.currentPreviewButton = button;
           await new Promise((resolve, reject) => {
             audio.addEventListener("canplay", () => resolve(), { once: true });
-            audio.addEventListener("error", (e) => reject(e), { once: true });
+            audio.addEventListener("error", (e) => reject(new Error(`Audio load error: ${e.type}`)), { once: true });
             void audio.load();
           });
           await audio.play();
@@ -18168,7 +18169,7 @@ var init_FreesoundSearchModal = __esm({
           fadeOut: 3
         };
         void this.onAddSample(sample);
-        new import_obsidian11.Notice(`Added "${result.name}" to library`);
+        new import_obsidian12.Notice(`Added "${result.name}" to library`);
         logger21.info("library", `Added sample ${result.id} to library`);
       }
       displayError(error) {
@@ -18176,7 +18177,7 @@ var init_FreesoundSearchModal = __esm({
           return;
         this.resultsContainer.empty();
         const errorState = this.resultsContainer.createDiv({ cls: "freesound-error-state" });
-        (0, import_obsidian11.setIcon)(errorState, "alert-circle");
+        (0, import_obsidian12.setIcon)(errorState, "alert-circle");
         errorState.createEl("p", { text: "Search error" });
         const errorMessage = error instanceof Error ? error.message : "Failed to search Freesound. Please check your API key and connection.";
         errorState.createEl("span", {
@@ -18193,11 +18194,11 @@ var init_FreesoundSearchModal = __esm({
         if (button) {
           void button.empty();
           if (this.isSearching) {
-            (0, import_obsidian11.setIcon)(button, "loader-2");
+            (0, import_obsidian12.setIcon)(button, "loader-2");
             button.createSpan({ text });
             void button.addClass("freesound-btn-loading");
           } else {
-            (0, import_obsidian11.setIcon)(button, "search");
+            (0, import_obsidian12.setIcon)(button, "search");
             button.createSpan({ text });
             void button.removeClass("freesound-btn-loading");
           }
@@ -18249,10 +18250,10 @@ var init_FreesoundSearchModal = __esm({
 });
 
 // src/ui/SampleTableBrowser.ts
-var import_obsidian12, logger22, SampleTableBrowser, TagEditorModal;
+var import_obsidian13, logger22, SampleTableBrowser, TagEditorModal;
 var init_SampleTableBrowser = __esm({
   "src/ui/SampleTableBrowser.ts"() {
-    import_obsidian12 = require("obsidian");
+    import_obsidian13 = require("obsidian");
     init_logging();
     logger22 = getLogger("SampleTableBrowser");
     SampleTableBrowser = class {
@@ -18285,7 +18286,7 @@ var init_SampleTableBrowser = __esm({
           text: "Search Freesound",
           cls: "sonigraph-sample-table-search-btn"
         });
-        searchBtn.addEventListener("click", () => this.openFreesoundSearch());
+        searchBtn.addEventListener("click", () => void this.openFreesoundSearch());
       }
       /**
        * Render filter controls
@@ -18377,7 +18378,7 @@ var init_SampleTableBrowser = __esm({
         const thead = table.createEl("thead");
         const headerRow = thead.createEl("tr");
         void this.renderColumnHeader(headerRow, "name", "Sample");
-        void this.renderColumnHeader(headerRow, "author", "Author / License");
+        void this.renderColumnHeader(headerRow, "author", "Author / license");
         void this.renderColumnHeader(headerRow, "tags", "Tags");
         headerRow.createEl("th", { text: "Actions" });
         const tbody = table.createEl("tbody");
@@ -18434,15 +18435,15 @@ var init_SampleTableBrowser = __esm({
         }
         const actionsCell = row.createEl("td", { cls: "sonigraph-sample-actions" });
         const previewBtn = actionsCell.createEl("button", { cls: "sonigraph-preview-btn", attr: { "aria-label": "Preview sample" } });
-        (0, import_obsidian12.setIcon)(previewBtn, "play");
+        (0, import_obsidian13.setIcon)(previewBtn, "play");
         previewBtn.addEventListener("click", () => void this.previewSample(sample, previewBtn));
         const infoBtn = actionsCell.createEl("button", { cls: "sonigraph-info-btn", attr: { "aria-label": "View on Freesound" } });
-        (0, import_obsidian12.setIcon)(infoBtn, "info");
+        (0, import_obsidian13.setIcon)(infoBtn, "info");
         infoBtn.addEventListener("click", () => {
           window.open(`https://freesound.org/s/${sample.id}/`, "_blank");
         });
         const editTagsBtn = actionsCell.createEl("button", { cls: "sonigraph-edit-tags-btn", attr: { "aria-label": "Edit tags" } });
-        (0, import_obsidian12.setIcon)(editTagsBtn, "tag");
+        (0, import_obsidian13.setIcon)(editTagsBtn, "tag");
         editTagsBtn.addEventListener("click", () => {
           void this.openTagEditor(sample);
         });
@@ -18450,14 +18451,14 @@ var init_SampleTableBrowser = __esm({
           cls: sample.enabled === false ? "sonigraph-enable-btn" : "sonigraph-disable-btn",
           attr: { "aria-label": sample.enabled === false ? "Enable" : "Disable" }
         });
-        (0, import_obsidian12.setIcon)(toggleBtn, sample.enabled === false ? "toggle-left" : "toggle-right");
-        toggleBtn.addEventListener("click", async () => {
-          await this.toggleSampleEnabled(sample.id);
+        (0, import_obsidian13.setIcon)(toggleBtn, sample.enabled === false ? "toggle-left" : "toggle-right");
+        toggleBtn.addEventListener("click", () => {
+          void this.toggleSampleEnabled(sample.id);
         });
         const removeBtn = actionsCell.createEl("button", { cls: "sonigraph-remove-btn", attr: { "aria-label": "Remove sample" } });
-        (0, import_obsidian12.setIcon)(removeBtn, "trash-2");
-        removeBtn.addEventListener("click", async () => {
-          await this.removeSample(sample.id);
+        (0, import_obsidian13.setIcon)(removeBtn, "trash-2");
+        removeBtn.addEventListener("click", () => {
+          void this.removeSample(sample.id);
         });
       }
       /**
@@ -18556,13 +18557,13 @@ var init_SampleTableBrowser = __esm({
             throw new Error("Freesound API key not configured");
           }
           const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}`;
-          const soundResponse = await (0, import_obsidian12.requestUrl)({ url: soundUrl, method: "GET" });
+          const soundResponse = await (0, import_obsidian13.requestUrl)({ url: soundUrl, method: "GET" });
           const soundData = JSON.parse(soundResponse.text);
           const previewUrl = ((_a = soundData.previews) == null ? void 0 : _a["preview-hq-mp3"]) || ((_b = soundData.previews) == null ? void 0 : _b["preview-lq-mp3"]);
           if (!previewUrl) {
             throw new Error("No preview URL available");
           }
-          const response = await (0, import_obsidian12.requestUrl)({ url: previewUrl, method: "GET" });
+          const response = await (0, import_obsidian13.requestUrl)({ url: previewUrl, method: "GET" });
           const blob = new Blob([response.arrayBuffer], { type: "audio/mpeg" });
           const blobUrl = URL.createObjectURL(blob);
           const audio = new Audio(blobUrl);
@@ -18575,13 +18576,13 @@ var init_SampleTableBrowser = __esm({
           this.currentPreviewAudio = audio;
           this.currentPreviewButton = button;
           void button.empty();
-          (0, import_obsidian12.setIcon)(button, "square");
+          (0, import_obsidian13.setIcon)(button, "square");
           button.disabled = false;
           audio.addEventListener("ended", () => {
             void URL.revokeObjectURL(blobUrl);
             if (this.currentPreviewButton) {
               this.currentPreviewButton.empty();
-              (0, import_obsidian12.setIcon)(this.currentPreviewButton, "play");
+              (0, import_obsidian13.setIcon)(this.currentPreviewButton, "play");
             }
             this.currentPreviewAudio = null;
             this.currentPreviewButton = null;
@@ -18593,7 +18594,7 @@ var init_SampleTableBrowser = __esm({
           button.disabled = false;
           setTimeout(() => {
             void button.empty();
-            (0, import_obsidian12.setIcon)(button, "play");
+            (0, import_obsidian13.setIcon)(button, "play");
           }, 2e3);
         }
       }
@@ -18607,7 +18608,7 @@ var init_SampleTableBrowser = __esm({
             void URL.revokeObjectURL(this.currentPreviewAudio.src);
           }
           this.currentPreviewButton.empty();
-          (0, import_obsidian12.setIcon)(this.currentPreviewButton, "play");
+          (0, import_obsidian13.setIcon)(this.currentPreviewButton, "play");
           this.currentPreviewAudio = null;
           this.currentPreviewButton = null;
         }
@@ -18629,7 +18630,7 @@ var init_SampleTableBrowser = __esm({
         }
         await this.plugin.saveSettings();
         void this.renderTable();
-        new import_obsidian12.Notice(`Sample ${sample.enabled ? "enabled" : "disabled"}`);
+        new import_obsidian13.Notice(`Sample ${sample.enabled ? "enabled" : "disabled"}`);
       }
       /**
        * Remove sample from library
@@ -18645,35 +18646,36 @@ var init_SampleTableBrowser = __esm({
         void samples.splice(index2, 1);
         await this.plugin.saveSettings();
         void this.renderTable();
-        new import_obsidian12.Notice(`Removed "${sample.title || sample.name}"`);
+        new import_obsidian13.Notice(`Removed "${sample.title || sample.name}"`);
       }
       /**
        * Open Freesound search modal
        */
-      openFreesoundSearch() {
+      async openFreesoundSearch() {
         const apiKey = this.plugin.settings.freesoundApiKey;
         if (!apiKey) {
-          new import_obsidian12.Notice("Please configure your Freesound API key in settings");
+          new import_obsidian13.Notice("Please configure your Freesound API key in settings");
           return;
         }
-        const modal = new (init_FreesoundSearchModal(), __toCommonJS(FreesoundSearchModal_exports)).FreesoundSearchModal(
+        const { FreesoundSearchModal: FreesoundSearchModal2 } = await Promise.resolve().then(() => (init_FreesoundSearchModal(), FreesoundSearchModal_exports));
+        const modal = new FreesoundSearchModal2(
           this.app,
           apiKey,
-          async (sample) => {
+          (sample) => void (async () => {
             if (!this.plugin.settings.freesoundSamples) {
               this.plugin.settings.freesoundSamples = [];
             }
             const exists = this.plugin.settings.freesoundSamples.some((s) => s.id === sample.id);
             if (exists) {
-              new import_obsidian12.Notice(`Sample "${sample.title}" is already in your library`);
+              new import_obsidian13.Notice(`Sample "${sample.title}" is already in your library`);
               return;
             }
             const sampleWithEnabled = { ...sample, enabled: true };
             this.plugin.settings.freesoundSamples.push(sampleWithEnabled);
             await this.plugin.saveSettings();
             this.render();
-            new import_obsidian12.Notice(`Added "${sample.title}" to library`);
-          }
+            new import_obsidian13.Notice(`Added "${sample.title}" to library`);
+          })()
         );
         void modal.open();
       }
@@ -18700,7 +18702,7 @@ var init_SampleTableBrowser = __esm({
         void modal.open();
       }
     };
-    TagEditorModal = class extends import_obsidian12.Modal {
+    TagEditorModal = class extends import_obsidian13.Modal {
       constructor(app, plugin, sample, onSave) {
         super(app);
         this.tagInput = null;
@@ -18827,10 +18829,12 @@ var init_SampleTableBrowser = __esm({
           text: "Save",
           cls: "mod-cta"
         });
-        saveBtn.addEventListener("click", async () => {
-          await this.onSave(this.currentTags);
-          new import_obsidian12.Notice("Tags updated");
-          void this.close();
+        saveBtn.addEventListener("click", () => {
+          void (async () => {
+            await this.onSave(this.currentTags);
+            new import_obsidian13.Notice("Tags updated");
+            this.close();
+          })();
         });
         const cancelBtn = btnContainer.createEl("button", {
           text: "Cancel"
@@ -18892,10 +18896,10 @@ var LocalSoundscapeSettings_exports = {};
 __export(LocalSoundscapeSettings_exports, {
   LocalSoundscapeSettings: () => LocalSoundscapeSettings
 });
-var import_obsidian13, logger23, LocalSoundscapeSettings;
+var import_obsidian14, logger23, LocalSoundscapeSettings;
 var init_LocalSoundscapeSettings = __esm({
   "src/ui/settings/LocalSoundscapeSettings.ts"() {
-    import_obsidian13 = require("obsidian");
+    import_obsidian14 = require("obsidian");
     init_material_components();
     init_logging();
     logger23 = getLogger("LocalSoundscapeSettings");
@@ -18916,7 +18920,7 @@ var init_LocalSoundscapeSettings = __esm({
         void this.renderMusicalEnhancementsSettings(container);
       }
       /**
-       * Section 1: Auto-play Settings
+       * Section 1: Auto-play settings
        */
       renderAutoPlaySettings(container) {
         const card = new MaterialCard({
@@ -18926,10 +18930,10 @@ var init_LocalSoundscapeSettings = __esm({
           elevation: 1
         });
         const content = card.getContent();
-        new import_obsidian13.Setting(content).setName("Playback mode").setDesc("Choose audio generation approach").addDropdown(
+        new import_obsidian14.Setting(content).setName("Playback mode").setDesc("Choose audio generation approach").addDropdown(
           (dropdown) => {
             var _a;
-            return dropdown.addOption("note-centric", "Note-Centric (Rich single-note sonification)").addOption("graph-centric", "Graph-Centric (Traditional multi-node approach)").setValue(((_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.playbackMode) || "note-centric").onChange(async (value) => {
+            return dropdown.addOption("note-centric", "Note-centric (rich single-note sonification)").addOption("graph-centric", "Graph-centric (traditional multi-node approach)").setValue(((_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.playbackMode) || "note-centric").onChange(async (value) => {
               if (!this.plugin.settings.localSoundscape) {
                 this.plugin.settings.localSoundscape = {};
               }
@@ -18948,14 +18952,14 @@ var init_LocalSoundscapeSettings = __esm({
           fontSize: "12px",
           lineHeight: "1.5"
         });
-        modeDesc.createEl("strong", { text: "Note-Centric" });
+        modeDesc.createEl("strong", { text: "Note-centric" });
         modeDesc.appendText(" (recommended): Generates rich musical phrases from the center note's prose structure. Creates compelling audio even for isolated notes with zero connections. Connected nodes add optional embellishments.");
         void modeDesc.createEl("br");
         void modeDesc.createEl("br");
-        modeDesc.createEl("strong", { text: "Graph-Centric" });
+        modeDesc.createEl("strong", { text: "Graph-centric" });
         modeDesc.appendText(" (traditional): Maps each connected node to individual notes. Requires multiple connections for interesting audio. Best for dense, well-connected graphs.");
         content.createEl("hr", { cls: "osp-settings-separator" });
-        new import_obsidian13.Setting(content).setName("Auto-play when opening").setDesc("Automatically start playback when opening Local Soundscape view").addToggle(
+        new import_obsidian14.Setting(content).setName("Auto-play when opening").setDesc("Automatically start playback when opening Local Soundscape view").addToggle(
           (toggle) => {
             var _a;
             return toggle.setValue(((_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.autoPlay) || false).onChange(async (value) => {
@@ -18968,7 +18972,7 @@ var init_LocalSoundscapeSettings = __esm({
             });
           }
         );
-        new import_obsidian13.Setting(content).setName("Auto-play active note").setDesc("Automatically play the currently active note when it changes").addToggle(
+        new import_obsidian14.Setting(content).setName("Auto-play active note").setDesc("Automatically play the currently active note when it changes").addToggle(
           (toggle) => {
             var _a;
             return toggle.setValue(((_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.autoPlayActiveNote) || false).onChange(async (value) => {
@@ -18984,7 +18988,7 @@ var init_LocalSoundscapeSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 2: Musical Key Selection
+       * Section 2: Musical key selection
        */
       renderMusicalKeySettings(container) {
         var _a;
@@ -19006,7 +19010,7 @@ var init_LocalSoundscapeSettings = __esm({
           };
         }
         const keySelection = this.plugin.settings.localSoundscape.keySelection;
-        new import_obsidian13.Setting(content).setName("Key based on").setDesc("How to determine the musical key for the soundscape").addDropdown(
+        new import_obsidian14.Setting(content).setName("Key based on").setDesc("How to determine the musical key for the soundscape").addDropdown(
           (dropdown) => dropdown.addOption("vault-name", "Vault name").addOption("root-folder", "Root folder").addOption("folder-path", "Folder path").addOption("full-path", "Full path").addOption("file-name", "File name").addOption("custom", "Custom key").setValue(keySelection.mode || "vault-name").onChange(async (value) => {
             keySelection.mode = value;
             await this.plugin.saveSettings();
@@ -19015,7 +19019,7 @@ var init_LocalSoundscapeSettings = __esm({
           })
         );
         if (keySelection.mode === "folder-path") {
-          new import_obsidian13.Setting(content).setName("Folder depth").setDesc("Which level of folder to use for key selection").addSlider(
+          new import_obsidian14.Setting(content).setName("Folder depth").setDesc("Which level of folder to use for key selection").addSlider(
             (slider) => slider.setLimits(1, 5, 1).setValue(keySelection.folderDepth || 1).setDynamicTooltip().onChange(async (value) => {
               keySelection.folderDepth = value;
               await this.plugin.saveSettings();
@@ -19024,9 +19028,9 @@ var init_LocalSoundscapeSettings = __esm({
           );
         }
         if (keySelection.mode === "custom") {
-          new import_obsidian13.Setting(content).setName("Custom key").setDesc("Select a specific musical key").addDropdown((dropdown) => {
+          new import_obsidian14.Setting(content).setName("Custom key").setDesc("Select a specific musical key").addDropdown((dropdown) => {
             const keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-            keys.forEach((key) => dropdown.addOption(key, key));
+            keys.forEach((key) => void dropdown.addOption(key, key));
             return dropdown.setValue(keySelection.customKey || "C").onChange(async (value) => {
               keySelection.customKey = value;
               await this.plugin.saveSettings();
@@ -19046,7 +19050,7 @@ var init_LocalSoundscapeSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 3: Context-Aware Modifiers
+       * Section 3: Context-aware modifiers
        */
       renderContextAwareSettings(container) {
         var _a, _b;
@@ -19072,7 +19076,7 @@ var init_LocalSoundscapeSettings = __esm({
           };
         }
         const contextAware = this.plugin.settings.localSoundscape.contextAware;
-        new import_obsidian13.Setting(content).setName("Enable context-aware audio").setDesc("Modify audio parameters based on contextual factors").addToggle(
+        new import_obsidian14.Setting(content).setName("Enable context-aware audio").setDesc("Modify audio parameters based on contextual factors").addToggle(
           (toggle) => toggle.setValue(contextAware.enabled || false).onChange(async (value) => {
             contextAware.enabled = value;
             await this.plugin.saveSettings();
@@ -19081,15 +19085,15 @@ var init_LocalSoundscapeSettings = __esm({
           })
         );
         if (contextAware.enabled) {
-          new import_obsidian13.Setting(content).setName("Context mode").setDesc("How contextual factors affect audio").addDropdown(
-            (dropdown) => dropdown.addOption("influenced", "Influenced - Blend with base values").addOption("only", "Only - Use context exclusively").setValue(contextAware.mode || "influenced").onChange(async (value) => {
+          new import_obsidian14.Setting(content).setName("Context mode").setDesc("How contextual factors affect audio").addDropdown(
+            (dropdown) => dropdown.addOption("influenced", "influenced - blend with base values").addOption("only", "only - use context exclusively").setValue(contextAware.mode || "influenced").onChange(async (value) => {
               contextAware.mode = value;
               await this.plugin.saveSettings();
               logger23.info("context-aware", `Mode: ${value}`);
             })
           );
           if (contextAware.mode === "influenced") {
-            new import_obsidian13.Setting(content).setName("Influence weight").setDesc("How much context affects the audio (0% = ignore, 100% = dominant)").addSlider(
+            new import_obsidian14.Setting(content).setName("Influence weight").setDesc("How much context affects the audio (0% = ignore, 100% = dominant)").addSlider(
               (slider) => slider.setLimits(0, 100, 5).setValue((contextAware.influenceWeight || 0.3) * 100).setDynamicTooltip().onChange(async (value) => {
                 contextAware.influenceWeight = value / 100;
                 await this.plugin.saveSettings();
@@ -19097,28 +19101,28 @@ var init_LocalSoundscapeSettings = __esm({
               })
             );
           }
-          new import_obsidian13.Setting(content).setName("Season influence").setDesc("Modify audio based on current season").addToggle(
+          new import_obsidian14.Setting(content).setName("Season influence").setDesc("Modify audio based on current season").addToggle(
             (toggle) => toggle.setValue(contextAware.season !== false).onChange(async (value) => {
               contextAware.season = value;
               await this.plugin.saveSettings();
               logger23.info("context-aware", `Season: ${value}`);
             })
           );
-          new import_obsidian13.Setting(content).setName("Time of day influence").setDesc("Modify audio based on current time (morning/day/evening/night)").addToggle(
+          new import_obsidian14.Setting(content).setName("Time of day influence").setDesc("Modify audio based on current time (morning/day/evening/night)").addToggle(
             (toggle) => toggle.setValue(contextAware.timeOfDay !== false).onChange(async (value) => {
               contextAware.timeOfDay = value;
               await this.plugin.saveSettings();
               logger23.info("context-aware", `Time of day: ${value}`);
             })
           );
-          new import_obsidian13.Setting(content).setName("Weather influence").setDesc("Modify audio based on weather conditions (requires external data)").addToggle(
+          new import_obsidian14.Setting(content).setName("Weather influence").setDesc("Modify audio based on weather conditions (requires external data)").addToggle(
             (toggle) => toggle.setValue(contextAware.weather || false).onChange(async (value) => {
               contextAware.weather = value;
               await this.plugin.saveSettings();
               logger23.info("context-aware", `Weather: ${value}`);
             })
           );
-          new import_obsidian13.Setting(content).setName("Theme influence").setDesc("Modify audio based on Obsidian theme (light/dark)").addToggle(
+          new import_obsidian14.Setting(content).setName("Theme influence").setDesc("Modify audio based on Obsidian theme (light/dark)").addToggle(
             (toggle) => toggle.setValue(contextAware.theme || false).onChange(async (value) => {
               contextAware.theme = value;
               await this.plugin.saveSettings();
@@ -19141,7 +19145,7 @@ var init_LocalSoundscapeSettings = __esm({
             marginBottom: "var(--size-4-3)"
           });
           proseDesc.textContent = "Analyze note content (density, structure, linguistic features) to create more expressive, content-aware soundscapes.";
-          new import_obsidian13.Setting(content).setName("Enable prose analysis").setDesc("Analyze content structure to modulate musical parameters").addToggle(
+          new import_obsidian14.Setting(content).setName("Enable prose analysis").setDesc("Analyze content structure to modulate musical parameters").addToggle(
             (toggle) => {
               var _a2;
               return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -19164,7 +19168,7 @@ var init_LocalSoundscapeSettings = __esm({
             }
           );
           if ((_b = contextAware.proseStructure) == null ? void 0 : _b.enabled) {
-            new import_obsidian13.Setting(content).setName("Analysis sensitivity").setDesc("How strongly prose structure affects audio (0% = minimal, 100% = strong)").addSlider(
+            new import_obsidian14.Setting(content).setName("Analysis sensitivity").setDesc("How strongly prose structure affects audio (0% = minimal, 100% = strong)").addSlider(
               (slider) => {
                 var _a2;
                 return slider.setLimits(0, 100, 5).setValue((((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.sensitivity) || 0.5) * 100).setDynamicTooltip().onChange(async (value) => {
@@ -19176,7 +19180,7 @@ var init_LocalSoundscapeSettings = __esm({
                 });
               }
             );
-            new import_obsidian13.Setting(content).setName("Affect pitch range").setDesc("Content complexity modulates pitch range width").addToggle(
+            new import_obsidian14.Setting(content).setName("Affect pitch range").setDesc("Content complexity modulates pitch range width").addToggle(
               (toggle) => {
                 var _a2;
                 return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.affectPitch) !== false).onChange(async (value) => {
@@ -19188,7 +19192,7 @@ var init_LocalSoundscapeSettings = __esm({
                 });
               }
             );
-            new import_obsidian13.Setting(content).setName("Affect note duration").setDesc("Prose density modulates note lengths (dense = longer)").addToggle(
+            new import_obsidian14.Setting(content).setName("Affect note duration").setDesc("Prose density modulates note lengths (dense = longer)").addToggle(
               (toggle) => {
                 var _a2;
                 return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.affectDuration) !== false).onChange(async (value) => {
@@ -19200,7 +19204,7 @@ var init_LocalSoundscapeSettings = __esm({
                 });
               }
             );
-            new import_obsidian13.Setting(content).setName("Affect velocity").setDesc("Content expressiveness modulates note dynamics").addToggle(
+            new import_obsidian14.Setting(content).setName("Affect velocity").setDesc("Content expressiveness modulates note dynamics").addToggle(
               (toggle) => {
                 var _a2;
                 return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.affectVelocity) !== false).onChange(async (value) => {
@@ -19212,7 +19216,7 @@ var init_LocalSoundscapeSettings = __esm({
                 });
               }
             );
-            new import_obsidian13.Setting(content).setName("Affect timbre").setDesc("Content type influences instrument selection preference").addToggle(
+            new import_obsidian14.Setting(content).setName("Affect timbre").setDesc("Content type influences instrument selection preference").addToggle(
               (toggle) => {
                 var _a2;
                 return toggle.setValue(((_a2 = contextAware.proseStructure) == null ? void 0 : _a2.affectTimbre) || false).onChange(async (value) => {
@@ -19229,7 +19233,7 @@ var init_LocalSoundscapeSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 4: Musical Theory & Enhancements (Phase 2/3)
+       * Section 4: Musical enhancements (Phase 2/3)
        * Scale quantization, chord voicing, adaptive pitch, rhythmic patterns
        */
       renderMusicalEnhancementsSettings(container) {
@@ -19282,7 +19286,7 @@ var init_LocalSoundscapeSettings = __esm({
           };
         }
         const enhancements = this.plugin.settings.localSoundscape.musicalEnhancements;
-        new import_obsidian13.Setting(content).setName("Scale quantization").setDesc("Constrain pitches to musical scales for harmonic consonance").addToggle(
+        new import_obsidian14.Setting(content).setName("Scale quantization").setDesc("Constrain pitches to musical scales for harmonic consonance").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = enhancements.scaleQuantization) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -19299,10 +19303,10 @@ var init_LocalSoundscapeSettings = __esm({
           }
         );
         if ((_b = enhancements.scaleQuantization) == null ? void 0 : _b.enabled) {
-          new import_obsidian13.Setting(content).setName("Root note").setDesc("The root note of the musical scale").addDropdown((dropdown) => {
+          new import_obsidian14.Setting(content).setName("Root note").setDesc("The root note of the musical scale").addDropdown((dropdown) => {
             var _a2;
             const rootNotes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-            rootNotes.forEach((note) => dropdown.addOption(note, note));
+            rootNotes.forEach((note) => void dropdown.addOption(note, note));
             return dropdown.setValue(((_a2 = enhancements.scaleQuantization) == null ? void 0 : _a2.rootNote) || "C").onChange(async (value) => {
               if (enhancements.scaleQuantization) {
                 enhancements.scaleQuantization.rootNote = value;
@@ -19311,7 +19315,7 @@ var init_LocalSoundscapeSettings = __esm({
               logger23.info("musical-enhancements", `Root note: ${value}`);
             });
           });
-          new import_obsidian13.Setting(content).setName("Scale type").setDesc("The type of musical scale to use").addDropdown((dropdown) => {
+          new import_obsidian14.Setting(content).setName("Scale type").setDesc("The type of musical scale to use").addDropdown((dropdown) => {
             var _a2;
             const scales = [
               { value: "major", label: "Major (bright, happy)" },
@@ -19326,7 +19330,7 @@ var init_LocalSoundscapeSettings = __esm({
               { value: "lydian", label: "Lydian (dreamy, floating)" },
               { value: "mixolydian", label: "Mixolydian (folk, bluegrass)" }
             ];
-            scales.forEach((scale) => dropdown.addOption(scale.value, scale.label));
+            scales.forEach((scale) => void dropdown.addOption(scale.value, scale.label));
             return dropdown.setValue(((_a2 = enhancements.scaleQuantization) == null ? void 0 : _a2.scale) || "major").onChange(async (value) => {
               if (enhancements.scaleQuantization) {
                 enhancements.scaleQuantization.scale = value;
@@ -19335,7 +19339,7 @@ var init_LocalSoundscapeSettings = __esm({
               logger23.info("musical-enhancements", `Scale type: ${value}`);
             });
           });
-          new import_obsidian13.Setting(content).setName("Quantization strength").setDesc("How strongly pitches are pulled to scale notes (0% = off, 100% = strict)").addSlider(
+          new import_obsidian14.Setting(content).setName("Quantization strength").setDesc("How strongly pitches are pulled to scale notes (0% = off, 100% = strict)").addSlider(
             (slider) => {
               var _a2;
               return slider.setLimits(0, 100, 5).setValue((((_a2 = enhancements.scaleQuantization) == null ? void 0 : _a2.quantizationStrength) || 0.8) * 100).setDynamicTooltip().onChange(async (value) => {
@@ -19348,7 +19352,7 @@ var init_LocalSoundscapeSettings = __esm({
             }
           );
         }
-        new import_obsidian13.Setting(content).setName("Adaptive pitch ranges").setDesc("Pitch ranges adapt to selected key for better harmonic integration").addToggle(
+        new import_obsidian14.Setting(content).setName("Adaptive pitch ranges").setDesc("Pitch ranges adapt to selected key for better harmonic integration").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = enhancements.adaptivePitch) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -19359,7 +19363,7 @@ var init_LocalSoundscapeSettings = __esm({
             });
           }
         );
-        new import_obsidian13.Setting(content).setName("Chord voicing").setDesc("Add harmonic richness with depth-based polyphonic voicing").addToggle(
+        new import_obsidian14.Setting(content).setName("Chord voicing").setDesc("Add harmonic richness with depth-based polyphonic voicing").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = enhancements.chordVoicing) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -19372,7 +19376,7 @@ var init_LocalSoundscapeSettings = __esm({
           }
         );
         if ((_c = enhancements.chordVoicing) == null ? void 0 : _c.enabled) {
-          new import_obsidian13.Setting(content).setName("Voicing density").setDesc("How many additional harmonic notes to add (0% = minimal, 100% = full)").addSlider(
+          new import_obsidian14.Setting(content).setName("Voicing density").setDesc("How many additional harmonic notes to add (0% = minimal, 100% = full)").addSlider(
             (slider) => {
               var _a2;
               return slider.setLimits(0, 100, 10).setValue((((_a2 = enhancements.chordVoicing) == null ? void 0 : _a2.voicingDensity) || 0.5) * 100).setDynamicTooltip().onChange(async (value) => {
@@ -19385,7 +19389,7 @@ var init_LocalSoundscapeSettings = __esm({
             }
           );
         }
-        new import_obsidian13.Setting(content).setName("Rhythmic patterns").setDesc("Organize note timing into musical patterns (arpeggio, pulse, etc.)").addToggle(
+        new import_obsidian14.Setting(content).setName("Rhythmic patterns").setDesc("Organize note timing into musical patterns (arpeggio, pulse, etc.)").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = enhancements.rhythmicPatterns) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -19398,7 +19402,7 @@ var init_LocalSoundscapeSettings = __esm({
           }
         );
         if ((_d = enhancements.rhythmicPatterns) == null ? void 0 : _d.enabled) {
-          new import_obsidian13.Setting(content).setName("Tempo (BPM)").setDesc("The tempo for rhythmic patterns in beats per minute").addSlider(
+          new import_obsidian14.Setting(content).setName("Tempo (BPM)").setDesc("The tempo for rhythmic patterns in beats per minute").addSlider(
             (slider) => {
               var _a2;
               return slider.setLimits(40, 200, 5).setValue(((_a2 = enhancements.rhythmicPatterns) == null ? void 0 : _a2.tempo) || 60).setDynamicTooltip().onChange(async (value) => {
@@ -19411,7 +19415,7 @@ var init_LocalSoundscapeSettings = __esm({
             }
           );
         }
-        new import_obsidian13.Setting(content).setName("Tension tracking").setDesc("Create melodic arcs with tension and release for emotional narrative").addToggle(
+        new import_obsidian14.Setting(content).setName("Tension tracking").setDesc("Create melodic arcs with tension and release for emotional narrative").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = enhancements.tensionTracking) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -19427,7 +19431,7 @@ var init_LocalSoundscapeSettings = __esm({
           }
         );
         if ((_e = enhancements.tensionTracking) == null ? void 0 : _e.enabled) {
-          new import_obsidian13.Setting(content).setName("Arc shape").setDesc("The emotional journey of the soundscape").addDropdown((dropdown) => {
+          new import_obsidian14.Setting(content).setName("Arc shape").setDesc("The emotional journey of the soundscape").addDropdown((dropdown) => {
             var _a2;
             const shapes = [
               { value: "rise-fall", label: "Rise-Fall (climax in middle)" },
@@ -19436,7 +19440,7 @@ var init_LocalSoundscapeSettings = __esm({
               { value: "wave", label: "Wave (multiple peaks)" },
               { value: "plateau", label: "Plateau (sustained tension)" }
             ];
-            shapes.forEach((shape) => dropdown.addOption(shape.value, shape.label));
+            shapes.forEach((shape) => void dropdown.addOption(shape.value, shape.label));
             return dropdown.setValue(((_a2 = enhancements.tensionTracking) == null ? void 0 : _a2.arcShape) || "rise-fall").onChange(async (value) => {
               if (enhancements.tensionTracking) {
                 enhancements.tensionTracking.arcShape = value;
@@ -19446,7 +19450,7 @@ var init_LocalSoundscapeSettings = __esm({
             });
           });
           if (enhancements.tensionTracking.arcShape === "rise-fall" || enhancements.tensionTracking.arcShape === "wave") {
-            new import_obsidian13.Setting(content).setName("Peak position").setDesc("Where in the sequence the tension peaks (0% = start, 100% = end)").addSlider(
+            new import_obsidian14.Setting(content).setName("Peak position").setDesc("Where in the sequence the tension peaks (0% = start, 100% = end)").addSlider(
               (slider) => {
                 var _a2;
                 return slider.setLimits(0, 100, 5).setValue((((_a2 = enhancements.tensionTracking) == null ? void 0 : _a2.peakPosition) || 0.6) * 100).setDynamicTooltip().onChange(async (value) => {
@@ -19460,7 +19464,7 @@ var init_LocalSoundscapeSettings = __esm({
             );
           }
         }
-        new import_obsidian13.Setting(content).setName("Dynamic panning").setDesc("Smooth spatial transitions for immersive stereo field").addToggle(
+        new import_obsidian14.Setting(content).setName("Dynamic panning").setDesc("Smooth spatial transitions for immersive stereo field").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = enhancements.dynamicPanning) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -19476,7 +19480,7 @@ var init_LocalSoundscapeSettings = __esm({
           }
         );
         if ((_f = enhancements.dynamicPanning) == null ? void 0 : _f.enabled) {
-          new import_obsidian13.Setting(content).setName("Smoothing factor").setDesc("How smoothly panning transitions occur (0% = instant, 100% = very gradual)").addSlider(
+          new import_obsidian14.Setting(content).setName("Smoothing factor").setDesc("How smoothly panning transitions occur (0% = instant, 100% = very gradual)").addSlider(
             (slider) => {
               var _a2;
               return slider.setLimits(0, 100, 5).setValue((((_a2 = enhancements.dynamicPanning) == null ? void 0 : _a2.smoothingFactor) || 0.3) * 100).setDynamicTooltip().onChange(async (value) => {
@@ -19488,7 +19492,7 @@ var init_LocalSoundscapeSettings = __esm({
               });
             }
           );
-          new import_obsidian13.Setting(content).setName("Animation speed").setDesc("How quickly the stereo field evolves (0.5x = slow, 5x = fast)").addSlider(
+          new import_obsidian14.Setting(content).setName("Animation speed").setDesc("How quickly the stereo field evolves (0.5x = slow, 5x = fast)").addSlider(
             (slider) => {
               var _a2;
               return slider.setLimits(0.5, 5, 0.5).setValue(((_a2 = enhancements.dynamicPanning) == null ? void 0 : _a2.animationSpeed) || 2).setDynamicTooltip().onChange(async (value) => {
@@ -19501,7 +19505,7 @@ var init_LocalSoundscapeSettings = __esm({
             }
           );
         }
-        new import_obsidian13.Setting(content).setName("Turn-taking").setDesc("Instrument dialogue patterns for textural clarity").addToggle(
+        new import_obsidian14.Setting(content).setName("Turn-taking").setDesc("Instrument dialogue patterns for textural clarity").addToggle(
           (toggle) => {
             var _a2;
             return toggle.setValue(((_a2 = enhancements.turnTaking) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -19518,7 +19522,7 @@ var init_LocalSoundscapeSettings = __esm({
           }
         );
         if ((_g = enhancements.turnTaking) == null ? void 0 : _g.enabled) {
-          new import_obsidian13.Setting(content).setName("Turn-taking pattern").setDesc("How instruments take turns").addDropdown((dropdown) => {
+          new import_obsidian14.Setting(content).setName("Turn-taking pattern").setDesc("How instruments take turns").addDropdown((dropdown) => {
             var _a2;
             const patterns = [
               { value: "none", label: "None (all together)" },
@@ -19530,7 +19534,7 @@ var init_LocalSoundscapeSettings = __esm({
               { value: "fugue", label: "Fugue (imitative entries)" },
               { value: "antiphonal", label: "Antiphonal (stereo alternation)" }
             ];
-            patterns.forEach((pattern) => dropdown.addOption(pattern.value, pattern.label));
+            patterns.forEach((pattern) => void dropdown.addOption(pattern.value, pattern.label));
             return dropdown.setValue(((_a2 = enhancements.turnTaking) == null ? void 0 : _a2.pattern) || "call-response").onChange(async (value) => {
               if (enhancements.turnTaking) {
                 enhancements.turnTaking.pattern = value;
@@ -19539,7 +19543,7 @@ var init_LocalSoundscapeSettings = __esm({
               logger23.info("musical-enhancements", `Turn-taking pattern: ${value}`);
             });
           });
-          new import_obsidian13.Setting(content).setName("Turn length").setDesc("Duration of each turn in beats (2 = short phrases, 8 = long phrases)").addSlider(
+          new import_obsidian14.Setting(content).setName("Turn length").setDesc("Duration of each turn in beats (2 = short phrases, 8 = long phrases)").addSlider(
             (slider) => {
               var _a2;
               return slider.setLimits(1, 16, 1).setValue(((_a2 = enhancements.turnTaking) == null ? void 0 : _a2.turnLength) || 4).setDynamicTooltip().onChange(async (value) => {
@@ -19551,7 +19555,7 @@ var init_LocalSoundscapeSettings = __esm({
               });
             }
           );
-          new import_obsidian13.Setting(content).setName("Accompaniment reduction").setDesc("How much to reduce non-featured instruments (0% = equal, 100% = silent)").addSlider(
+          new import_obsidian14.Setting(content).setName("Accompaniment reduction").setDesc("How much to reduce non-featured instruments (0% = equal, 100% = silent)").addSlider(
             (slider) => {
               var _a2;
               return slider.setLimits(0, 100, 5).setValue((((_a2 = enhancements.turnTaking) == null ? void 0 : _a2.accompanimentReduction) || 0.4) * 100).setDynamicTooltip().onChange(async (value) => {
@@ -19575,10 +19579,10 @@ var LocalSoundscapeLayersSettings_exports = {};
 __export(LocalSoundscapeLayersSettings_exports, {
   LocalSoundscapeLayersSettings: () => LocalSoundscapeLayersSettings
 });
-var import_obsidian14, logger24, LocalSoundscapeLayersSettings;
+var import_obsidian15, logger24, LocalSoundscapeLayersSettings;
 var init_LocalSoundscapeLayersSettings = __esm({
   "src/ui/settings/LocalSoundscapeLayersSettings.ts"() {
-    import_obsidian14 = require("obsidian");
+    import_obsidian15 = require("obsidian");
     init_material_components();
     init_logging();
     logger24 = getLogger("LocalSoundscapeLayersSettings");
@@ -19599,7 +19603,7 @@ var init_LocalSoundscapeLayersSettings = __esm({
         }
       }
       /**
-       * Section 1: Enable Continuous Layers
+       * Section 1: Enable continuous layers
        */
       renderEnableSection(container) {
         const card = new MaterialCard({
@@ -19637,8 +19641,8 @@ var init_LocalSoundscapeLayersSettings = __esm({
         noteText.createEl("strong", { text: "Important:" });
         void noteText.appendText(" Continuous layers require Freesound samples to be enabled. Go to the ");
         noteText.createEl("strong", { text: "Layers" });
-        noteText.appendText(" tab and use the Sample Browser to enable at least one sample in each category (Ambient, Harmonic, Rhythmic) you want to use.");
-        new import_obsidian14.Setting(content).setName("Enable continuous layers").setDesc("Add ambient background audio alongside note sonification").addToggle(
+        noteText.appendText(" tab and use the sample browser to enable at least one sample in each category (Ambient, Harmonic, Rhythmic) you want to use.");
+        new import_obsidian15.Setting(content).setName("Enable continuous layers").setDesc("Add ambient background audio alongside note sonification").addToggle(
           (toggle) => {
             var _a, _b;
             return toggle.setValue(((_b = (_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.enabled) || false).onChange(async (value) => {
@@ -19667,7 +19671,7 @@ var init_LocalSoundscapeLayersSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 2: Layer Controls
+       * Section 2: Layer controls
        */
       renderLayerControlsSection(container) {
         var _a;
@@ -19681,18 +19685,20 @@ var init_LocalSoundscapeLayersSettings = __esm({
         if (!((_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.continuousLayers))
           return;
         const layers = this.plugin.settings.localSoundscape.continuousLayers;
-        new import_obsidian14.Setting(content).setName("Overall intensity").setDesc("How prominent the layers are (0% = subtle, 100% = bold)").addSlider(
+        new import_obsidian15.Setting(content).setName("Overall intensity").setDesc("How prominent the layers are (0% = subtle, 100% = bold)").addSlider(
           (slider) => slider.setLimits(0, 100, 5).setValue((layers.intensity || 0.5) * 100).setDynamicTooltip().onChange(async (value) => {
             layers.intensity = value / 100;
             await this.plugin.saveSettings();
             logger24.info("layers-settings", `Layer intensity: ${value}%`);
           })
         );
-        new import_obsidian14.Setting(content).setName("Layer volume").setDesc("Overall volume of continuous layers (-24dB = quiet, 0dB = full)").addSlider(
-          (slider) => slider.setLimits(-24, 0, 1).setValue(layers.volume || -12).setDynamicTooltip().onChange(async (value) => {
-            layers.volume = value;
-            await this.plugin.saveSettings();
-            logger24.info("layers-settings", `Layer volume: ${value}dB`);
+        new import_obsidian15.Setting(content).setName("Layer volume").setDesc("Overall volume of continuous layers (-24dB = quiet, 0dB = full)").addSlider(
+          (slider) => slider.setLimits(-24, 0, 1).setValue(layers.volume || -12).setDynamicTooltip().onChange((value) => {
+            void (async () => {
+              layers.volume = value;
+              await this.plugin.saveSettings();
+              logger24.info("layers-settings", `Layer volume: ${value}dB`);
+            })();
           })
         );
         content.createEl("hr", { cls: "osp-settings-separator" });
@@ -19711,21 +19717,21 @@ var init_LocalSoundscapeLayersSettings = __esm({
           marginBottom: "var(--size-4-3)"
         });
         layerTypesDesc.textContent = "Enable individual layer types to customize your soundscape texture.";
-        new import_obsidian14.Setting(content).setName("Ambient drone").setDesc("Sustained atmospheric tones that provide harmonic foundation").addToggle(
+        new import_obsidian15.Setting(content).setName("Ambient drone").setDesc("Sustained atmospheric tones that provide harmonic foundation").addToggle(
           (toggle) => toggle.setValue(layers.ambientEnabled !== false).onChange(async (value) => {
             layers.ambientEnabled = value;
             await this.plugin.saveSettings();
             logger24.info("layers-settings", `Ambient layer: ${value}`);
           })
         );
-        new import_obsidian14.Setting(content).setName("Harmonic pads").setDesc("Slow-evolving chords that respect your selected musical key").addToggle(
+        new import_obsidian15.Setting(content).setName("Harmonic pads").setDesc("Slow-evolving chords that respect your selected musical key").addToggle(
           (toggle) => toggle.setValue(layers.harmonicEnabled !== false).onChange(async (value) => {
             layers.harmonicEnabled = value;
             await this.plugin.saveSettings();
             logger24.info("layers-settings", `Harmonic layer: ${value}`);
           })
         );
-        new import_obsidian14.Setting(content).setName("Rhythmic pulse").setDesc("Subtle beat synchronized with Rhythmic Patterns tempo").addToggle(
+        new import_obsidian15.Setting(content).setName("Rhythmic pulse").setDesc("Subtle beat synchronized with rhythmic patterns tempo").addToggle(
           (toggle) => toggle.setValue(layers.rhythmicEnabled || false).onChange(async (value) => {
             layers.rhythmicEnabled = value;
             await this.plugin.saveSettings();
@@ -19743,10 +19749,10 @@ var SonicGraphLayersSettings_exports = {};
 __export(SonicGraphLayersSettings_exports, {
   SonicGraphLayersSettings: () => SonicGraphLayersSettings
 });
-var import_obsidian15, logger25, SonicGraphLayersSettings;
+var import_obsidian16, logger25, SonicGraphLayersSettings;
 var init_SonicGraphLayersSettings = __esm({
   "src/ui/settings/SonicGraphLayersSettings.ts"() {
-    import_obsidian15 = require("obsidian");
+    import_obsidian16 = require("obsidian");
     init_material_components();
     init_logging();
     logger25 = getLogger("SonicGraphLayersSettings");
@@ -19772,7 +19778,7 @@ var init_SonicGraphLayersSettings = __esm({
         }
       }
       /**
-       * Section 1: Enable Continuous Layers
+       * Section 1: Enable continuous layers
        */
       renderEnableSection(container) {
         const card = new MaterialCard({
@@ -19791,7 +19797,7 @@ var init_SonicGraphLayersSettings = __esm({
           marginBottom: "1rem"
         });
         descP.textContent = "Continuous layers add ambient background audio that responds to vault size, activity, and animation progress. Unlike node-based audio which plays when nodes appear, continuous layers provide a persistent soundscape that evolves over time.";
-        new import_obsidian15.Setting(content).setName("Enable continuous layers").setDesc("Add ambient background audio alongside node-based synthesis").addToggle(
+        new import_obsidian16.Setting(content).setName("Enable continuous layers").setDesc("Add ambient background audio alongside node-based synthesis").addToggle(
           (toggle) => {
             var _a, _b;
             return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.enabled) || false).onChange(async (value) => {
@@ -19877,7 +19883,7 @@ var init_SonicGraphLayersSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 2: Musical Genre Selection
+       * Section 2: Musical genre selection
        * DEPRECATED: Genre-based organization removed in favor of flat sample library
        */
       /* private renderGenreSection(container: HTMLElement): void {
@@ -19895,19 +19901,19 @@ var init_SonicGraphLayersSettings = __esm({
       			.setName('Genre selection')
       			.setDesc('Each genre provides unique timbres and atmospheric qualities')
       			.addDropdown(dropdown => dropdown
-      				.addOption('ambient', 'Ambient - Gentle evolving textures')
-      				.addOption('drone', 'Drone - Sustained atmospheric tones')
-      				.addOption('orchestral', 'Orchestral - Classical instruments')
-      				.addOption('electronic', 'Electronic - Synthesized pads')
-      				.addOption('minimal', 'Minimal - Sparse, contemplative')
-      				.addOption('oceanic', 'Oceanic - Whale songs & ocean')
-      				.addOption('sci-fi', 'Sci-Fi - Futuristic atmospheres')
-      				.addOption('experimental', 'Experimental - Unconventional')
-      				.addOption('industrial', 'Industrial - Mechanical drones')
-      				.addOption('urban', 'Urban - City soundscapes')
-      				.addOption('nature', 'Nature - Forest, rain, wind')
-      				.addOption('mechanical', 'Mechanical - Machine hums')
-      				.addOption('organic', 'Organic - Acoustic processing')
+      				.addOption('ambient', 'ambient - gentle evolving textures')
+      				.addOption('drone', 'drone - sustained atmospheric tones')
+      				.addOption('orchestral', 'orchestral - classical instruments')
+      				.addOption('electronic', 'electronic - synthesized pads')
+      				.addOption('minimal', 'minimal - sparse, contemplative')
+      				.addOption('oceanic', 'oceanic - whale songs & ocean')
+      				.addOption('sci-fi', 'sci-fi - futuristic atmospheres')
+      				.addOption('experimental', 'experimental - unconventional')
+      				.addOption('industrial', 'industrial - mechanical drones')
+      				.addOption('urban', 'urban - city soundscapes')
+      				.addOption('nature', 'nature - forest, rain, wind')
+      				.addOption('mechanical', 'mechanical - machine hums')
+      				.addOption('organic', 'organic - acoustic processing')
       				.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.genre || 'ambient')
       				.onChange(async (value) => {
       					if (!this.plugin.settings.audioEnhancement?.continuousLayers) return;
@@ -19925,7 +19931,7 @@ var init_SonicGraphLayersSettings = __esm({
       		container.appendChild(card.getElement());
       	} */
       /**
-       * Section 3: Intensity Controls
+       * Section 3: Intensity controls
        */
       renderIntensitySection(container) {
         const card = new MaterialCard({
@@ -19935,7 +19941,7 @@ var init_SonicGraphLayersSettings = __esm({
           elevation: 1
         });
         const content = card.getContent();
-        new import_obsidian15.Setting(content).setName("Master intensity").setDesc("Overall volume and prominence of continuous layers (0 = silent, 1 = full)").addSlider(
+        new import_obsidian16.Setting(content).setName("Master intensity").setDesc("Overall volume and prominence of continuous layers (0 = silent, 1 = full)").addSlider(
           (slider) => {
             var _a, _b;
             return slider.setLimits(0, 1, 0.05).setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.intensity) || 0.5).setDynamicTooltip().onChange(async (value) => {
@@ -19948,7 +19954,7 @@ var init_SonicGraphLayersSettings = __esm({
             });
           }
         );
-        new import_obsidian15.Setting(content).setName("Evolution rate").setDesc("How quickly the layers evolve and change over time").addSlider(
+        new import_obsidian16.Setting(content).setName("Evolution rate").setDesc("How quickly the layers evolve and change over time").addSlider(
           (slider) => {
             var _a, _b;
             return slider.setLimits(0.1, 2, 0.1).setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.evolutionRate) || 0.5).setDynamicTooltip().onChange(async (value) => {
@@ -19964,7 +19970,7 @@ var init_SonicGraphLayersSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 4: Layer Types (Rhythmic & Harmonic)
+       * Section 4: Layer types (Rhythmic & Harmonic)
        */
       renderLayerTypesSection(container) {
         var _a, _b, _c, _d;
@@ -19984,7 +19990,7 @@ var init_SonicGraphLayersSettings = __esm({
           marginBottom: "1rem"
         });
         descP.textContent = "Beyond the ambient drone, you can enable rhythmic percussion and harmonic pad layers that respond to vault activity and cluster dynamics.";
-        new import_obsidian15.Setting(content).setName("Enable rhythmic layer").setDesc("Add activity-based percussion patterns").addToggle(
+        new import_obsidian16.Setting(content).setName("Enable rhythmic layer").setDesc("Add activity-based percussion patterns").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicEnabled) || false).onChange(async (value) => {
@@ -20011,8 +20017,8 @@ var init_SonicGraphLayersSettings = __esm({
         );
         if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.rhythmicEnabled) {
           const rhythmicDetails = content.createDiv({ cls: "osp-settings-subsection" });
-          new import_obsidian15.Setting(rhythmicDetails).setHeading().setName("Rhythmic layer settings");
-          new import_obsidian15.Setting(rhythmicDetails).setName("Base tempo").setDesc("Base BPM for rhythmic patterns (60-180)").addSlider(
+          new import_obsidian16.Setting(rhythmicDetails).setHeading().setName("Rhythmic layer settings");
+          new import_obsidian16.Setting(rhythmicDetails).setName("Base tempo").setDesc("Base BPM for rhythmic patterns (60-180)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
               return slider.setLimits(60, 180, 5).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicLayer) == null ? void 0 : _c2.baseTempo) || 120).setDynamicTooltip().onChange(async (value) => {
@@ -20024,7 +20030,7 @@ var init_SonicGraphLayersSettings = __esm({
               });
             }
           );
-          new import_obsidian15.Setting(rhythmicDetails).setName("Percussion intensity").setDesc("Volume and prominence of percussive elements (0-1)").addSlider(
+          new import_obsidian16.Setting(rhythmicDetails).setName("Percussion intensity").setDesc("Volume and prominence of percussive elements (0-1)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
               return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicLayer) == null ? void 0 : _c2.percussionIntensity) || 0.7).setDynamicTooltip().onChange(async (value) => {
@@ -20036,7 +20042,7 @@ var init_SonicGraphLayersSettings = __esm({
               });
             }
           );
-          new import_obsidian15.Setting(rhythmicDetails).setName("Pattern complexity").setDesc("Complexity of rhythmic patterns and arpeggios (0-1)").addSlider(
+          new import_obsidian16.Setting(rhythmicDetails).setName("Pattern complexity").setDesc("Complexity of rhythmic patterns and arpeggios (0-1)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
               return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicLayer) == null ? void 0 : _c2.arpeggioComplexity) || 0.5).setDynamicTooltip().onChange(async (value) => {
@@ -20048,7 +20054,7 @@ var init_SonicGraphLayersSettings = __esm({
               });
             }
           );
-          new import_obsidian15.Setting(rhythmicDetails).setName("Activity sensitivity").setDesc("How responsive tempo is to vault activity (0-1)").addSlider(
+          new import_obsidian16.Setting(rhythmicDetails).setName("Activity sensitivity").setDesc("How responsive tempo is to vault activity (0-1)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
               return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicLayer) == null ? void 0 : _c2.activitySensitivity) || 0.6).setDynamicTooltip().onChange(async (value) => {
@@ -20061,7 +20067,7 @@ var init_SonicGraphLayersSettings = __esm({
             }
           );
         }
-        new import_obsidian15.Setting(content).setName("Enable harmonic layer").setDesc("Add cluster-based harmonic pads").addToggle(
+        new import_obsidian16.Setting(content).setName("Enable harmonic layer").setDesc("Add cluster-based harmonic pads").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicEnabled) || false).onChange(async (value) => {
@@ -20088,8 +20094,8 @@ var init_SonicGraphLayersSettings = __esm({
         );
         if ((_d = (_c = this.plugin.settings.audioEnhancement) == null ? void 0 : _c.continuousLayers) == null ? void 0 : _d.harmonicEnabled) {
           const harmonicDetails = content.createDiv({ cls: "osp-settings-subsection" });
-          new import_obsidian15.Setting(harmonicDetails).setHeading().setName("Harmonic layer settings");
-          new import_obsidian15.Setting(harmonicDetails).setName("Chord complexity").setDesc("Number of voices in chords (2-6)").addSlider(
+          new import_obsidian16.Setting(harmonicDetails).setHeading().setName("Harmonic layer settings");
+          new import_obsidian16.Setting(harmonicDetails).setName("Chord complexity").setDesc("Number of voices in chords (2-6)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
               return slider.setLimits(2, 6, 1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.chordComplexity) || 3).setDynamicTooltip().onChange(async (value) => {
@@ -20101,7 +20107,7 @@ var init_SonicGraphLayersSettings = __esm({
               });
             }
           );
-          new import_obsidian15.Setting(harmonicDetails).setName("Progression speed").setDesc("How fast harmonies change (0-1)").addSlider(
+          new import_obsidian16.Setting(harmonicDetails).setName("Progression speed").setDesc("How fast harmonies change (0-1)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
               return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.progressionSpeed) || 0.5).setDynamicTooltip().onChange(async (value) => {
@@ -20113,7 +20119,7 @@ var init_SonicGraphLayersSettings = __esm({
               });
             }
           );
-          new import_obsidian15.Setting(harmonicDetails).setName("Dissonance level").setDesc("Harmonic tension and complexity (0-1)").addSlider(
+          new import_obsidian16.Setting(harmonicDetails).setName("Dissonance level").setDesc("Harmonic tension and complexity (0-1)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
               return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.dissonanceLevel) || 0.3).setDynamicTooltip().onChange(async (value) => {
@@ -20125,7 +20131,7 @@ var init_SonicGraphLayersSettings = __esm({
               });
             }
           );
-          new import_obsidian15.Setting(harmonicDetails).setName("Cluster influence").setDesc("How much clusters affect harmony (0-1)").addSlider(
+          new import_obsidian16.Setting(harmonicDetails).setName("Cluster influence").setDesc("How much clusters affect harmony (0-1)").addSlider(
             (slider) => {
               var _a2, _b2, _c2;
               return slider.setLimits(0, 1, 0.1).setValue(((_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.clusterInfluence) || 0.7).setDynamicTooltip().onChange(async (value) => {
@@ -20137,7 +20143,7 @@ var init_SonicGraphLayersSettings = __esm({
               });
             }
           );
-          new import_obsidian15.Setting(harmonicDetails).setName("Scale constraints").setDesc("Constrain harmonies to the selected musical scale").addToggle(
+          new import_obsidian16.Setting(harmonicDetails).setName("Scale constraints").setDesc("Constrain harmonies to the selected musical scale").addToggle(
             (toggle) => {
               var _a2, _b2, _c2, _d2;
               return toggle.setValue((_d2 = (_c2 = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicPad) == null ? void 0 : _c2.scaleConstraints) != null ? _d2 : true).onChange(async (value) => {
@@ -20153,7 +20159,7 @@ var init_SonicGraphLayersSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 5: Musical Settings (Scale & Key)
+       * Section 5: Musical settings (Scale & Key)
        */
       renderMusicalSettingsSection(container) {
         const card = new MaterialCard({
@@ -20163,10 +20169,10 @@ var init_SonicGraphLayersSettings = __esm({
           elevation: 1
         });
         const content = card.getContent();
-        new import_obsidian15.Setting(content).setName("Continuous layer scale").setDesc("Scale for ambient, rhythmic, and harmonic layers (independent of node sonification)").addDropdown(
+        new import_obsidian16.Setting(content).setName("Continuous layer scale").setDesc("Scale for ambient, rhythmic, and harmonic layers (independent of node sonification)").addDropdown(
           (dropdown) => {
             var _a, _b;
-            return dropdown.addOption("major", "Major - Bright, happy").addOption("minor", "Minor - Dark, melancholic").addOption("dorian", "Dorian - Modal, jazzy").addOption("phrygian", "Phrygian - Spanish, exotic").addOption("lydian", "Lydian - Dreamy, ethereal").addOption("mixolydian", "Mixolydian - Folk, bluesy").addOption("pentatonic", "Pentatonic - Asian, simple").addOption("chromatic", "Chromatic - All notes").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.scale) || "major").onChange(async (value) => {
+            return dropdown.addOption("major", "major - bright, happy").addOption("minor", "minor - dark, melancholic").addOption("dorian", "dorian - modal, jazzy").addOption("phrygian", "phrygian - spanish, exotic").addOption("lydian", "lydian - dreamy, ethereal").addOption("mixolydian", "mixolydian - folk, bluesy").addOption("pentatonic", "pentatonic - asian, simple").addOption("chromatic", "chromatic - all notes").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.scale) || "major").onChange(async (value) => {
               var _a2;
               if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers))
                 return;
@@ -20176,7 +20182,7 @@ var init_SonicGraphLayersSettings = __esm({
             });
           }
         );
-        new import_obsidian15.Setting(content).setName("Continuous layer key").setDesc("Root note for all continuous layers (ambient, rhythmic, harmonic)").addDropdown(
+        new import_obsidian16.Setting(content).setName("Continuous layer key").setDesc("Root note for all continuous layers (ambient, rhythmic, harmonic)").addDropdown(
           (dropdown) => {
             var _a, _b;
             return dropdown.addOption("C", "C").addOption("C#", "C# / Db").addOption("D", "D").addOption("D#", "D# / Eb").addOption("E", "E").addOption("F", "F").addOption("F#", "F# / Gb").addOption("G", "G").addOption("G#", "G# / Ab").addOption("A", "A").addOption("A#", "A# / Bb").addOption("B", "B").setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.key) || "C").onChange(async (value) => {
@@ -20202,7 +20208,7 @@ var init_SonicGraphLayersSettings = __esm({
         container.appendChild(card.getElement());
       }
       /**
-       * Section 6: Adaptive Behavior
+       * Section 6: Adaptive behavior
        */
       renderAdaptiveSection(container) {
         const card = new MaterialCard({
@@ -20212,7 +20218,7 @@ var init_SonicGraphLayersSettings = __esm({
           elevation: 1
         });
         const content = card.getContent();
-        new import_obsidian15.Setting(content).setName("Adaptive intensity").setDesc("Automatically adjust layer volume based on vault activity and animation state").addToggle(
+        new import_obsidian16.Setting(content).setName("Adaptive intensity").setDesc("Automatically adjust layer volume based on vault activity and animation state").addToggle(
           (toggle) => {
             var _a, _b;
             return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.adaptiveIntensity) || true).onChange(async (value) => {
@@ -20233,7 +20239,7 @@ var init_SonicGraphLayersSettings = __esm({
           lineHeight: "1.5",
           marginTop: "0.5rem"
         });
-        noteP.createEl("strong", { text: "Adaptive Behavior:" });
+        noteP.createEl("strong", { text: "Adaptive behavior:" });
         void noteP.appendText(" When enabled, layers respond to:");
         const noteUl = note.createEl("ul");
         noteUl.setCssProps({
@@ -20255,10 +20261,10 @@ var FreesoundSampleLoader_exports = {};
 __export(FreesoundSampleLoader_exports, {
   FreesoundSampleLoader: () => FreesoundSampleLoader
 });
-var import_obsidian16, logger26, FreesoundSampleLoader;
+var import_obsidian17, logger26, FreesoundSampleLoader;
 var init_FreesoundSampleLoader = __esm({
   "src/audio/layers/FreesoundSampleLoader.ts"() {
-    import_obsidian16 = require("obsidian");
+    import_obsidian17 = require("obsidian");
     init_logging();
     logger26 = getLogger("FreesoundSampleLoader");
     FreesoundSampleLoader = class {
@@ -20294,7 +20300,7 @@ var init_FreesoundSampleLoader = __esm({
       /**
        * Initialize the sample loader
        */
-      async initialize() {
+      initialize() {
         if (this.isInitialized) {
           return;
         }
@@ -20469,7 +20475,7 @@ var init_FreesoundSampleLoader = __esm({
           if (this.apiKey) {
             try {
               const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${this.apiKey}`;
-              const soundResponse = await (0, import_obsidian16.requestUrl)({ url: soundUrl, method: "GET" });
+              const soundResponse = await (0, import_obsidian17.requestUrl)({ url: soundUrl, method: "GET" });
               const soundData = JSON.parse(soundResponse.text);
               const freshPreviewUrl = ((_a = soundData.previews) == null ? void 0 : _a["preview-hq-mp3"]) || ((_b = soundData.previews) == null ? void 0 : _b["preview-lq-mp3"]);
               if (freshPreviewUrl) {
@@ -20480,7 +20486,7 @@ var init_FreesoundSampleLoader = __esm({
               logger26.warn("loading", `Failed to fetch fresh preview URL, using stored URL for ${sampleId}`, apiError);
             }
           }
-          const response = await (0, import_obsidian16.requestUrl)({
+          const response = await (0, import_obsidian17.requestUrl)({
             url: previewUrl,
             method: "GET"
           });
@@ -21064,10 +21070,10 @@ var FreesoundAuthManager_exports = {};
 __export(FreesoundAuthManager_exports, {
   FreesoundAuthManager: () => FreesoundAuthManager
 });
-var import_obsidian17, logger27, FreesoundAuthManager;
+var import_obsidian18, logger27, FreesoundAuthManager;
 var init_FreesoundAuthManager = __esm({
   "src/audio/freesound/FreesoundAuthManager.ts"() {
-    import_obsidian17 = require("obsidian");
+    import_obsidian18 = require("obsidian");
     init_logging();
     logger27 = getLogger("freesound-auth");
     FreesoundAuthManager = class {
@@ -21123,7 +21129,7 @@ var init_FreesoundAuthManager = __esm({
           logger27.debug("freesound-auth", `API key length: ${trimmedKey.length} characters`);
           logger27.debug("freesound-auth", `API key first 8 chars: ${trimmedKey.substring(0, 8)}...`);
           logger27.debug("freesound-auth", `API key last 4 chars: ...${trimmedKey.substring(trimmedKey.length - 4)}`);
-          const response = await (0, import_obsidian17.requestUrl)({
+          const response = await (0, import_obsidian18.requestUrl)({
             url,
             method: "GET",
             headers: this.getAuthHeaders()
@@ -21212,10 +21218,10 @@ function setInstrumentSetting(plugin, instrumentKey, settingKey, value) {
   }
   return false;
 }
-var import_obsidian18, logger28, MaterialControlPanelModal;
+var import_obsidian19, logger28, MaterialControlPanelModal;
 var init_control_panel = __esm({
   "src/ui/control-panel.ts"() {
-    import_obsidian18 = require("obsidian");
+    import_obsidian19 = require("obsidian");
     init_logging();
     init_components();
     init_constants();
@@ -21232,7 +21238,7 @@ var init_control_panel = __esm({
     init_FreesoundSearchModal();
     init_SampleTableBrowser();
     logger28 = getLogger("control-panel");
-    MaterialControlPanelModal = class extends import_obsidian18.Modal {
+    MaterialControlPanelModal = class extends import_obsidian19.Modal {
       constructor(app, plugin) {
         super(app);
         this.statusInterval = null;
@@ -21334,7 +21340,9 @@ var init_control_panel = __esm({
           logger28.debug("ui", `Play button state changed: ${state}`);
         });
         void this.setupAudioEngineEventListeners();
-        playBtn.addEventListener("click", () => this.handlePlay());
+        playBtn.addEventListener("click", () => {
+          void this.handlePlay();
+        });
         const stopBtn = container.createEl("button", { cls: "osp-header-btn osp-header-btn--secondary" });
         const stopIcon = createLucideIcon("square", 16);
         void stopBtn.appendChild(stopIcon);
@@ -21493,13 +21501,13 @@ var init_control_panel = __esm({
         const quickStartContent = quickStartCard.getContent();
         const stepsList = quickStartContent.createEl("ol", { cls: "osp-guide-steps" });
         stepsList.createEl("li", {
-          text: "Enable instruments: go to the keyboard, strings, or electronic tabs and enable 3-5 instruments you like. start with piano, strings, and lead synth for a balanced sound."
+          text: "Enable instruments: Go to the keyboard, strings, or electronic tabs and enable 3-5 instruments you like. Start with piano, strings, and lead synth for a balanced sound."
         });
         stepsList.createEl("li", {
-          text: "Configure musical settings: visit the musical tab to set your preferred scale (try c major) and tempo (60-120 BPM works well for most vaults)."
+          text: "Configure musical settings: Visit the musical tab to set your preferred scale (try C major) and tempo (60-120 BPM works well for most vaults)."
         });
         stepsList.createEl("li", {
-          text: 'Try local soundscape: right-click any note in your vault and select"open in Local Soundscape" to hear how it connects to other notes.'
+          text: 'Try Local Soundscape: Right-click any note in your vault and select "open in Local Soundscape" to hear how it connects to other notes.'
         });
         this.contentContainer.appendChild(quickStartCard.getElement());
         const featuresCard = new MaterialCard({
@@ -21511,24 +21519,24 @@ var init_control_panel = __esm({
         const featuresContent = featuresCard.getContent();
         const featuresList = featuresContent.createEl("div", { cls: "osp-guide-features" });
         const lsFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
-        lsFeature.createEl("strong", { text: "Local soundscape" });
+        lsFeature.createEl("strong", { text: "Local Soundscape" });
         lsFeature.createEl("p", {
-          text: "Visualize and sonify a single note and its connections. notes at different depths play different instrument families, creating layers of harmony. enable musical enhancements in the local soundscape tab for richer, more musical results."
+          text: "Visualize and sonify a single note and its connections. Notes at different depths play different instrument families, creating layers of harmony. Enable musical enhancements in the Local Soundscape tab for richer, more musical results."
         });
         const sgFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
         sgFeature.createEl("strong", { text: "Sonic Graph" });
         sgFeature.createEl("p", {
-          text: "See and hear your entire vault as an animated graph. watch temporal patterns unfold as your knowledge base comes alive with sound and motion."
+          text: "See and hear your entire vault as an animated graph. Watch temporal patterns unfold as your knowledge base comes alive with sound and motion."
         });
         const meFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
         meFeature.createEl("strong", { text: "Musical enhancements" });
         meFeature.createEl("p", {
-          text: "Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. configure these in the local soundscape tab."
+          text: "Transform basic sonification into rich musical experiences with scale quantization, chord voicing, rhythmic patterns, tension tracking, turn-taking, and dynamic panning. Configure these in the Local Soundscape tab."
         });
         const clFeature = featuresList.createDiv({ cls: "osp-guide-feature" });
         clFeature.createEl("strong", { text: "Continuous layers" });
         clFeature.createEl("p", {
-          text: "Add ambient background soundscapes from curated audio libraries. browse and preview samples from Freesound.org to create the perfect atmosphere for focused work."
+          text: "Add ambient background soundscapes from curated audio libraries. Browse and preview samples from Freesound.org to create the perfect atmosphere for focused work."
         });
         this.contentContainer.appendChild(featuresCard.getElement());
         const meGuideCard = new MaterialCard({
@@ -21539,13 +21547,13 @@ var init_control_panel = __esm({
         });
         const meGuideContent = meGuideCard.getContent();
         meGuideContent.createEl("p", {
-          text: "Musical enhancements transform raw sonification into expressive, harmonic compositions. here are recommended settings for different goals:",
+          text: "Musical enhancements transform raw sonification into expressive, harmonic compositions. Here are recommended settings for different goals:",
           cls: "osp-guide-text"
         });
         const preset1 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
         preset1.createEl("strong", { text: "For harmonic beauty:" });
         const preset1List = preset1.createEl("ul");
-        preset1List.createEl("li", { text: "Enable scale quantization (c major, 80% strength)" });
+        preset1List.createEl("li", { text: "Enable scale quantization (C major, 80% strength)" });
         preset1List.createEl("li", { text: "Enable adaptive pitch ranges" });
         preset1List.createEl("li", { text: "Enable chord voicing (50% density)" });
         const preset2 = meGuideContent.createDiv({ cls: "osp-guide-preset" });
@@ -21571,22 +21579,22 @@ var init_control_panel = __esm({
         const tipsContent = tipsCard.getContent();
         const tipsList = tipsContent.createEl("ul", { cls: "osp-guide-tips" });
         tipsList.createEl("li", {
-          text: "Start simple: enable 3-5 instruments initially. too many instruments can create sonic clutter."
+          text: "Start simple: Enable 3-5 instruments initially. Too many instruments can create sonic clutter."
         });
         tipsList.createEl("li", {
-          text: "Mix instrument types: combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound."
+          text: "Mix instrument types: Combine lead (piano, lead synth), harmony (strings, pad), and bass (bass synth, cello) for balanced sound."
         });
         tipsList.createEl("li", {
-          text: "Use scale quantization: this is the single most impactful musical enhancement for making soundscapes harmonious."
+          text: "Use scale quantization: This is the single most impactful musical enhancement for making soundscapes harmonious."
         });
         tipsList.createEl("li", {
-          text: "Adjust depth in local soundscape: depth 2 is ideal for most notes. higher depths show more context but may become overwhelming."
+          text: "Adjust depth in Local Soundscape: Depth 2 is ideal for most notes. Higher depths show more context but may become overwhelming."
         });
         tipsList.createEl("li", {
-          text: "Monitor performance: check the status tab to see active voices and ensure your system isn't overloaded."
+          text: "Monitor performance: Check the status tab to see active voices and ensure your system isn't overloaded."
         });
         tipsList.createEl("li", {
-          text: "Experiment with turn-taking: call-response and solos patterns dramatically reduce sonic congestion while adding musical dialogue."
+          text: "Experiment with turn-taking: Call-response and solos patterns dramatically reduce sonic congestion while adding musical dialogue."
         });
         this.contentContainer.appendChild(tipsCard.getElement());
         const helpCard = new MaterialCard({
@@ -21604,13 +21612,13 @@ var init_control_panel = __esm({
           text: "GitHub repository",
           attr: { href: "https://github.com/banisterious/obsidian-sonigraph/tree/main/docs/user-guides" }
         });
-        void docLi.appendText(" for detailed guides on Local Soundscape, Sonic Graph, and Musical Enhancements.");
+        void docLi.appendText(" for detailed guides on Local Soundscape, Sonic Graph, and musical enhancements.");
         const settingsLi = helpList.createEl("li");
         settingsLi.createEl("strong", { text: "Settings:" });
         void settingsLi.appendText(" Each Control Center tab has configuration options. Hover over controls for tooltips.");
         const commandsLi = helpList.createEl("li");
         commandsLi.createEl("strong", { text: "Commands:" });
-        commandsLi.appendText(` Search "Sonigraph" in Obsidian's command palette (Ctrl/Cmd + P) to see all available commands.`);
+        commandsLi.appendText(` Search "Sonigraph" in Obsidian's command palette (Ctrl/Cmd+P) to see all available commands.`);
         const feedbackLi = helpList.createEl("li");
         feedbackLi.createEl("strong", { text: "Issues & feedback:" });
         void feedbackLi.appendText(" Report bugs or request features on ");
@@ -21764,7 +21772,7 @@ var init_control_panel = __esm({
         });
         const content = card.getContent();
         const settingsSection = content.createDiv({ cls: "osp-settings-section" });
-        new import_obsidian18.Setting(settingsSection).setName("Enable Freesound integration").setDesc("Use Freesound.org API to download real audio samples for continuous layers").addToggle(
+        new import_obsidian19.Setting(settingsSection).setName("Enable Freesound integration").setDesc("Use Freesound.org API to download real audio samples for continuous layers").addToggle(
           (toggle) => toggle.setValue(this.plugin.settings.enableFreesoundSamples || false).onChange(async (value) => {
             this.plugin.settings.enableFreesoundSamples = value;
             await this.plugin.saveSettings();
@@ -21779,13 +21787,13 @@ var init_control_panel = __esm({
             cls: "osp-settings-description"
           });
           const apiKeyContainer = settingsSection.createDiv({ cls: "osp-settings-item osp-settings-description--wide-input" });
-          new import_obsidian18.Setting(apiKeyContainer).setName("API key").addText((text) => {
+          new import_obsidian19.Setting(apiKeyContainer).setName("API key").addText((text) => {
             text.setPlaceholder("Enter your Freesound API key (32 characters)").setValue(this.plugin.settings.freesoundApiKey || "").onChange(async (value) => {
               this.plugin.settings.freesoundApiKey = value;
               await this.plugin.saveSettings();
               void logger28.info("freesound", "Freesound API key updated");
             });
-            text.inputEl.style.fontSize = "13px";
+            text.inputEl.setCssProps({ fontSize: "13px" });
           }).addButton((button) => {
             button.setButtonText("Test connection").setTooltip("Test API key and connection to Freesound").onClick(async () => {
               await this.testFreesoundConnection(button.buttonEl);
@@ -21795,36 +21803,36 @@ var init_control_panel = __esm({
             text: `Note: This key will be stored in plain text in ${this.app.vault.configDir}/plugins/sonigraph/data.json. Only share your vault if you trust recipients with API access.`,
             cls: "osp-security-note"
           });
-          new import_obsidian18.Setting(settingsSection).setHeading().setName("Preloading and caching");
-          new import_obsidian18.Setting(settingsSection).setName("Predictive preloading").setDesc("Automatically preload samples for genres you use frequently").addToggle(
+          new import_obsidian19.Setting(settingsSection).setHeading().setName("Preloading and caching");
+          new import_obsidian19.Setting(settingsSection).setName("Predictive preloading").setDesc("Automatically preload samples for genres you use frequently").addToggle(
             (toggle) => toggle.setValue(this.plugin.settings.freesoundPredictivePreload !== false).onChange(async (value) => {
               this.plugin.settings.freesoundPredictivePreload = value;
               await this.plugin.saveSettings();
               logger28.info("freesound", `Predictive preloading ${value ? "enabled" : "disabled"}`);
             })
           );
-          new import_obsidian18.Setting(settingsSection).setName("Preload on startup").setDesc("Automatically preload frequently used samples when Obsidian starts").addToggle(
+          new import_obsidian19.Setting(settingsSection).setName("Preload on startup").setDesc("Automatically preload frequently used samples when Obsidian starts").addToggle(
             (toggle) => toggle.setValue(this.plugin.settings.freesoundPreloadOnStartup || false).onChange(async (value) => {
               this.plugin.settings.freesoundPreloadOnStartup = value;
               await this.plugin.saveSettings();
               logger28.info("freesound", `Preload on startup ${value ? "enabled" : "disabled"}`);
             })
           );
-          new import_obsidian18.Setting(settingsSection).setName("Background loading").setDesc("Download samples in the background during idle time").addToggle(
+          new import_obsidian19.Setting(settingsSection).setName("Background loading").setDesc("Download samples in the background during idle time").addToggle(
             (toggle) => toggle.setValue(this.plugin.settings.freesoundBackgroundLoading !== false).onChange(async (value) => {
               this.plugin.settings.freesoundBackgroundLoading = value;
               await this.plugin.saveSettings();
               logger28.info("freesound", `Background loading ${value ? "enabled" : "disabled"}`);
             })
           );
-          new import_obsidian18.Setting(settingsSection).setName("Cache strategy").setDesc("Algorithm for managing cached samples when storage is full").addDropdown(
-            (dropdown) => dropdown.addOption("adaptive", "Adaptive (Recommended)").addOption("lru", "Least Recently Used").addOption("lfu", "Least Frequently Used").addOption("predictive", "Predictive").setValue(this.plugin.settings.freesoundCacheStrategy || "adaptive").onChange(async (value) => {
+          new import_obsidian19.Setting(settingsSection).setName("Cache strategy").setDesc("Algorithm for managing cached samples when storage is full").addDropdown(
+            (dropdown) => dropdown.addOption("adaptive", "Adaptive (recommended)").addOption("lru", "Least recently used").addOption("lfu", "Least frequently used").addOption("predictive", "predictive").setValue(this.plugin.settings.freesoundCacheStrategy || "adaptive").onChange(async (value) => {
               this.plugin.settings.freesoundCacheStrategy = value;
               await this.plugin.saveSettings();
               logger28.info("freesound", `Cache strategy set to ${value}`);
             })
           );
-          new import_obsidian18.Setting(settingsSection).setName("Max storage (MB)").setDesc("Maximum disk space for cached samples (default: 100MB)").addText(
+          new import_obsidian19.Setting(settingsSection).setName("Max storage (MB)").setDesc("Maximum disk space for cached samples (default: 100MB)").addText(
             (text) => text.setPlaceholder("100").setValue(String(this.plugin.settings.freesoundMaxStorageMB || 100)).onChange(async (value) => {
               const numValue = parseInt(value) || 100;
               this.plugin.settings.freesoundMaxStorageMB = numValue;
@@ -21918,8 +21926,8 @@ var init_control_panel = __esm({
           text: "Preview",
           cls: "osp-sample-action-btn osp-preview-btn"
         });
-        previewBtn.addEventListener("click", async () => {
-          await this.previewSample(sample, previewBtn);
+        previewBtn.addEventListener("click", () => {
+          void this.previewSample(sample, previewBtn);
         });
         const infoBtn = actionsSection.createEl("button", {
           text: "Info",
@@ -21940,15 +21948,15 @@ var init_control_panel = __esm({
             text: isEnabled ? "Disable" : "Enable",
             cls: `osp-sample-action-btn ${isEnabled ? "osp-disable-btn" : "osp-enable-btn"}`
           });
-          toggleBtn.addEventListener("click", async () => {
-            await this.toggleSampleEnabled(sample.id);
+          toggleBtn.addEventListener("click", () => {
+            void this.toggleSampleEnabled(sample.id);
           });
           const removeBtn = actionsSection.createEl("button", {
             text: "Remove",
             cls: "osp-sample-action-btn osp-remove-btn"
           });
-          removeBtn.addEventListener("click", async () => {
-            await this.removeSampleFromLibrary(sample.id);
+          removeBtn.addEventListener("click", () => {
+            void this.removeSampleFromLibrary(sample.id);
           });
         }
       }
@@ -21974,7 +21982,7 @@ var init_control_panel = __esm({
           }
           logger28.debug("sample-preview", `Fetching fresh preview URL for sample ${sample.id}`);
           const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}&fields=previews`;
-          const soundResponse = await (0, import_obsidian18.requestUrl)({
+          const soundResponse = await (0, import_obsidian19.requestUrl)({
             url: soundUrl,
             method: "GET"
           });
@@ -21984,7 +21992,7 @@ var init_control_panel = __esm({
             throw new Error("No preview URL available for this sound");
           }
           logger28.debug("sample-preview", `Downloading sample ${sample.id} from ${previewUrl}`);
-          const response = await (0, import_obsidian18.requestUrl)({
+          const response = await (0, import_obsidian19.requestUrl)({
             url: previewUrl,
             method: "GET"
           });
@@ -22006,7 +22014,7 @@ var init_control_panel = __esm({
               return;
             }
             audio.addEventListener("canplay", () => resolve(), { once: true });
-            audio.addEventListener("error", (e) => reject(e), { once: true });
+            audio.addEventListener("error", (e) => reject(new Error(`Audio load error: ${e.type}`)), { once: true });
             audio.src = blobUrl;
             void audio.load();
           });
@@ -22085,13 +22093,15 @@ var init_control_panel = __esm({
       openFreesoundSearch() {
         const apiKey = this.plugin.settings.freesoundApiKey;
         if (!apiKey) {
-          new import_obsidian18.Notice("Please enter your Freesound API key in the Freesound Integration settings first.");
+          new import_obsidian19.Notice("Please enter your Freesound API key in the Freesound integration settings first.");
           return;
         }
         const modal = new FreesoundSearchModal(
           this.app,
           apiKey,
-          (sample) => this.addSampleToLibrary(sample)
+          (sample) => {
+            void this.addSampleToLibrary(sample);
+          }
         );
         void modal.open();
       }
@@ -22104,7 +22114,7 @@ var init_control_panel = __esm({
         }
         const exists = this.plugin.settings.freesoundSamples.some((s) => s.id === sample.id);
         if (exists) {
-          new import_obsidian18.Notice(`Sample "${sample.title}" is already in your library`);
+          new import_obsidian19.Notice(`Sample "${sample.title}" is already in your library`);
           return;
         }
         const sampleWithEnabled = { ...sample, enabled: true };
@@ -22122,14 +22132,14 @@ var init_control_panel = __esm({
         }
         const sample = this.plugin.settings.freesoundSamples.find((s) => s.id === sampleId);
         if (!sample) {
-          new import_obsidian18.Notice("Sample not found in library");
+          new import_obsidian19.Notice("Sample not found in library");
           return;
         }
         const wasEnabled = sample.enabled !== false;
         sample.enabled = !wasEnabled;
         await this.plugin.saveSettings();
         logger28.info("library", `${wasEnabled ? "Disabled" : "Enabled"} sample ${sampleId}`);
-        new import_obsidian18.Notice(`${wasEnabled ? "Disabled" : "Enabled"} "${sample.title}"`);
+        new import_obsidian19.Notice(`${wasEnabled ? "Disabled" : "Enabled"} "${sample.title}"`);
         void this.refreshSampleBrowser();
       }
       /**
@@ -22141,14 +22151,14 @@ var init_control_panel = __esm({
         }
         const index2 = this.plugin.settings.freesoundSamples.findIndex((s) => s.id === sampleId);
         if (index2 === -1) {
-          new import_obsidian18.Notice("Sample not found in library");
+          new import_obsidian19.Notice("Sample not found in library");
           return;
         }
         const sampleTitle = this.plugin.settings.freesoundSamples[index2].title;
         this.plugin.settings.freesoundSamples.splice(index2, 1);
         await this.plugin.saveSettings();
         logger28.info("library", `Removed sample ${sampleId} from library`);
-        new import_obsidian18.Notice(`Removed "${sampleTitle}" from library`);
+        new import_obsidian19.Notice(`Removed "${sampleTitle}" from library`);
         void this.refreshSampleBrowser();
       }
       createScaleKeyCard() {
@@ -22165,17 +22175,17 @@ var init_control_panel = __esm({
         const scaleSelect = scaleGroup.createEl("select", { cls: "osp-select" });
         const scales = [
           { value: "major", label: "Major" },
-          { value: "minor", label: "Minor (Natural)" },
+          { value: "minor", label: "Minor (natural)" },
           { value: "dorian", label: "Dorian" },
           { value: "phrygian", label: "Phrygian" },
           { value: "lydian", label: "Lydian" },
           { value: "mixolydian", label: "Mixolydian" },
           { value: "aeolian", label: "Aeolian" },
           { value: "locrian", label: "Locrian" },
-          { value: "pentatonic-major", label: "Pentatonic Major" },
-          { value: "pentatonic-minor", label: "Pentatonic Minor" },
+          { value: "pentatonic-major", label: "Pentatonic major" },
+          { value: "pentatonic-minor", label: "Pentatonic minor" },
           { value: "blues", label: "Blues" },
-          { value: "whole-tone", label: "Whole Tone" },
+          { value: "whole-tone", label: "Whole tone" },
           { value: "chromatic", label: "Chromatic" }
         ];
         scales.forEach((scale) => {
@@ -22185,15 +22195,17 @@ var init_control_panel = __esm({
             option.selected = true;
           }
         });
-        scaleSelect.addEventListener("change", async () => {
-          var _a;
-          if (!((_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory))
-            return;
-          this.plugin.settings.audioEnhancement.musicalTheory.scale = scaleSelect.value;
-          await this.plugin.saveSettings();
-          if (this.plugin.audioEngine) {
-            await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-          }
+        scaleSelect.addEventListener("change", () => {
+          void (async () => {
+            var _a;
+            if (!((_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory))
+              return;
+            this.plugin.settings.audioEnhancement.musicalTheory.scale = scaleSelect.value;
+            await this.plugin.saveSettings();
+            if (this.plugin.audioEngine) {
+              await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+            }
+          })();
         });
         const keyGroup = settingsGrid.createDiv({ cls: "osp-control-group" });
         keyGroup.createEl("label", { text: "Key signature", cls: "osp-control-label" });
@@ -22206,18 +22218,20 @@ var init_control_panel = __esm({
             option.selected = true;
           }
         });
-        keySelect.addEventListener("change", async () => {
-          var _a;
-          if (!((_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory))
-            return;
-          this.plugin.settings.audioEnhancement.musicalTheory.rootNote = keySelect.value;
-          await this.plugin.saveSettings();
-          if (this.plugin.audioEngine) {
-            await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-          }
+        keySelect.addEventListener("change", () => {
+          void (async () => {
+            var _a;
+            if (!((_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory))
+              return;
+            this.plugin.settings.audioEnhancement.musicalTheory.rootNote = keySelect.value;
+            await this.plugin.saveSettings();
+            if (this.plugin.audioEngine) {
+              await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+            }
+          })();
         });
         void content.appendChild(settingsGrid);
-        new import_obsidian18.Setting(content).setName("Enforce harmony").setDesc("Force all notes to fit within the selected scale").addToggle(
+        new import_obsidian19.Setting(content).setName("Enforce harmony").setDesc("Force all notes to fit within the selected scale").addToggle(
           (toggle) => {
             var _a, _b;
             return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.enforceHarmony) || false).onChange(async (value) => {
@@ -22232,7 +22246,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(content).setName("Quantization strength").setDesc("How strongly to snap notes to the scale (0 = free, 1 = strict)").addSlider(
+        new import_obsidian19.Setting(content).setName("Quantization strength").setDesc("How strongly to snap notes to the scale (0 = free, 1 = strict)").addSlider(
           (slider) => {
             var _a, _b;
             return slider.setLimits(0, 1, 0.05).setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.quantizationStrength) || 0.8).setDynamicTooltip().onChange(async (value) => {
@@ -22247,7 +22261,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(content).setName("Dissonance threshold").setDesc("Maximum allowed dissonance (0 = consonant, 1 = dissonant)").addSlider(
+        new import_obsidian19.Setting(content).setName("Dissonance threshold").setDesc("Maximum allowed dissonance (0 = consonant, 1 = dissonant)").addSlider(
           (slider) => {
             var _a, _b;
             return slider.setLimits(0, 1, 0.05).setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.dissonanceThreshold) || 0.5).setDynamicTooltip().onChange(async (value) => {
@@ -22262,7 +22276,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(content).setName("Chromatic passing tones").setDesc("Allow notes outside the scale as passing tones").addToggle(
+        new import_obsidian19.Setting(content).setName("Chromatic passing tones").setDesc("Allow notes outside the scale as passing tones").addToggle(
           (toggle) => {
             var _a, _b;
             return toggle.setValue(((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.musicalTheory) == null ? void 0 : _b.allowChromaticPassing) || false).onChange(async (value) => {
@@ -22288,7 +22302,7 @@ var init_control_panel = __esm({
           elevation: 1
         });
         const content = card.getContent();
-        new import_obsidian18.Setting(content).setName("Enable chord fusion").setDesc("Automatically combine notes that trigger simultaneously into chords").addToggle(
+        new import_obsidian19.Setting(content).setName("Enable chord fusion").setDesc("Automatically combine notes that trigger simultaneously into chords").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
@@ -22333,7 +22347,7 @@ var init_control_panel = __esm({
       }
       createChordFusionSettings(container) {
         var _a, _b;
-        new import_obsidian18.Setting(container).setName("Enable chord fusion").setDesc("Automatically combine notes that trigger simultaneously into chords").addToggle(
+        new import_obsidian19.Setting(container).setName("Enable chord fusion").setDesc("Automatically combine notes that trigger simultaneously into chords").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
@@ -22369,15 +22383,17 @@ var init_control_panel = __esm({
             option.selected = true;
           }
         });
-        modeSelect.addEventListener("change", async () => {
-          var _a2;
-          if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
-            return;
-          this.plugin.settings.audioEnhancement.chordFusion.mode = modeSelect.value;
-          await this.plugin.saveSettings();
-          if (this.plugin.audioEngine) {
-            await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-          }
+        modeSelect.addEventListener("change", () => {
+          void (async () => {
+            var _a2;
+            if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
+              return;
+            this.plugin.settings.audioEnhancement.chordFusion.mode = modeSelect.value;
+            await this.plugin.saveSettings();
+            if (this.plugin.audioEngine) {
+              await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+            }
+          })();
         });
         const minNotesGroup = settingsGrid.createDiv({ cls: "osp-control-group" });
         minNotesGroup.createEl("label", { text: "Minimum notes", cls: "osp-control-label" });
@@ -22389,17 +22405,19 @@ var init_control_panel = __esm({
             option.selected = true;
           }
         });
-        minNotesSelect.addEventListener("change", async () => {
-          var _a2;
-          if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
-            return;
-          this.plugin.settings.audioEnhancement.chordFusion.minimumNotes = parseInt(minNotesSelect.value);
-          await this.plugin.saveSettings();
-          if (this.plugin.audioEngine) {
-            await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-          }
+        minNotesSelect.addEventListener("change", () => {
+          void (async () => {
+            var _a2;
+            if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
+              return;
+            this.plugin.settings.audioEnhancement.chordFusion.minimumNotes = parseInt(minNotesSelect.value);
+            await this.plugin.saveSettings();
+            if (this.plugin.audioEngine) {
+              await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+            }
+          })();
         });
-        new import_obsidian18.Setting(container).setName("Timing window").setDesc("Notes arriving within this window are grouped into chords. start with 50-100ms for simultaneous notes. warning: values over 200ms will group sequential notes into large chords.").addSlider(
+        new import_obsidian19.Setting(container).setName("Timing window").setDesc("Notes arriving within this window are grouped into chords. Start with 50-100ms for simultaneous notes. Warning: Values over 200ms will group sequential notes into large chords.").addSlider(
           (slider) => {
             var _a2, _b2;
             return slider.setLimits(20, 500, 10).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.timingWindow) || 50).setDynamicTooltip().onChange(async (value) => {
@@ -22415,7 +22433,7 @@ var init_control_panel = __esm({
           }
         );
         container.createEl("h4", { text: "Temporal grouping", cls: "osp-section-heading" });
-        new import_obsidian18.Setting(container).setName("Group notes by").setDesc('Group notes from the same time period into chords. "Real-time" uses millisecond timing, while day/week/month groups notes by their temporal date.').addDropdown(
+        new import_obsidian19.Setting(container).setName("Group notes by").setDesc("Group notes from the same time period into chords. Real-time uses millisecond timing, while day/week/month groups notes by their temporal date.").addDropdown(
           (dropdown) => {
             var _a2, _b2;
             return dropdown.addOption("realtime", "Real-time (milliseconds)").addOption("day", "Same day").addOption("week", "Same week").addOption("month", "Same month").addOption("year", "Same year").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.temporalGrouping) || "realtime").onChange(async (value) => {
@@ -22430,7 +22448,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(container).setName("Maximum chord notes").setDesc("Maximum number of notes to include in a temporal chord (prevents overly dense chords)").addSlider(
+        new import_obsidian19.Setting(container).setName("Maximum chord notes").setDesc("Maximum number of notes to include in a temporal chord (prevents overly dense chords)").addSlider(
           (slider) => {
             var _a2, _b2;
             return slider.setLimits(2, 12, 1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.maxChordNotes) || 6).setDynamicTooltip().onChange(async (value) => {
@@ -22446,7 +22464,7 @@ var init_control_panel = __esm({
           }
         );
         container.createEl("h4", { text: "Layer-specific chord fusion", cls: "osp-section-heading" });
-        new import_obsidian18.Setting(container).setName("Melodic layer").setDesc("Enable chord fusion for melodic notes").addToggle(
+        new import_obsidian19.Setting(container).setName("Melodic layer").setDesc("Enable chord fusion for melodic notes").addToggle(
           (toggle) => {
             var _a2, _b2, _c;
             return toggle.setValue(((_c = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.layerSettings) == null ? void 0 : _c.melodic) || false).onChange(async (value) => {
@@ -22461,7 +22479,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(container).setName("Harmonic layer").setDesc("Enable chord fusion for harmonic notes").addToggle(
+        new import_obsidian19.Setting(container).setName("Harmonic layer").setDesc("Enable chord fusion for harmonic notes").addToggle(
           (toggle) => {
             var _a2, _b2, _c;
             return toggle.setValue(((_c = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.layerSettings) == null ? void 0 : _c.harmonic) || false).onChange(async (value) => {
@@ -22476,7 +22494,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(container).setName("Rhythmic layer").setDesc("Enable chord fusion for rhythmic notes").addToggle(
+        new import_obsidian19.Setting(container).setName("Rhythmic layer").setDesc("Enable chord fusion for rhythmic notes").addToggle(
           (toggle) => {
             var _a2, _b2, _c;
             return toggle.setValue(((_c = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.layerSettings) == null ? void 0 : _c.rhythmic) || false).onChange(async (value) => {
@@ -22491,7 +22509,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(container).setName("Ambient layer").setDesc("Enable chord fusion for ambient notes").addToggle(
+        new import_obsidian19.Setting(container).setName("Ambient layer").setDesc("Enable chord fusion for ambient notes").addToggle(
           (toggle) => {
             var _a2, _b2, _c;
             return toggle.setValue(((_c = (_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.layerSettings) == null ? void 0 : _c.ambient) || false).onChange(async (value) => {
@@ -22507,7 +22525,7 @@ var init_control_panel = __esm({
           }
         );
         container.createEl("h4", { text: "Advanced chord settings", cls: "osp-section-heading" });
-        new import_obsidian18.Setting(container).setName("Chord complexity").setDesc("Maximum number of voices per chord (2-6)").addSlider(
+        new import_obsidian19.Setting(container).setName("Chord complexity").setDesc("Maximum number of voices per chord (2-6)").addSlider(
           (slider) => {
             var _a2, _b2;
             return slider.setLimits(2, 6, 1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.chordComplexity) || 3).setDynamicTooltip().onChange(async (value) => {
@@ -22540,17 +22558,19 @@ var init_control_panel = __esm({
             option.selected = true;
           }
         });
-        voicingSelect.addEventListener("change", async () => {
-          var _a2;
-          if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
-            return;
-          this.plugin.settings.audioEnhancement.chordFusion.voicingStrategy = voicingSelect.value;
-          await this.plugin.saveSettings();
-          if (this.plugin.audioEngine) {
-            await this.plugin.audioEngine.updateSettings(this.plugin.settings);
-          }
+        voicingSelect.addEventListener("change", () => {
+          void (async () => {
+            var _a2;
+            if (!((_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion))
+              return;
+            this.plugin.settings.audioEnhancement.chordFusion.voicingStrategy = voicingSelect.value;
+            await this.plugin.saveSettings();
+            if (this.plugin.audioEngine) {
+              await this.plugin.audioEngine.updateSettings(this.plugin.settings);
+            }
+          })();
         });
-        new import_obsidian18.Setting(container).setName("Connection chords").setDesc("Enable chord progressions for connection events").addToggle(
+        new import_obsidian19.Setting(container).setName("Connection chords").setDesc("Enable chord progressions for connection events").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.connectionChords) || false).onChange(async (value) => {
@@ -22565,7 +22585,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(container).setName("Contextual harmony").setDesc("Harmonize based on connected note content").addToggle(
+        new import_obsidian19.Setting(container).setName("Contextual harmony").setDesc("Harmonize based on connected note content").addToggle(
           (toggle) => {
             var _a2, _b2;
             return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.chordFusion) == null ? void 0 : _b2.contextualHarmony) || false).onChange(async (value) => {
@@ -22744,14 +22764,16 @@ var init_control_panel = __esm({
           if (option.value === LoggerFactory.getLogLevel())
             optionEl.selected = true;
         });
-        logLevelSelect.addEventListener("change", async () => {
-          const newLevel = logLevelSelect.value;
-          void LoggerFactory.setLogLevel(newLevel);
-          await this.plugin.updateSettings({ logLevel: newLevel });
-          logger28.info("settings-change", "Log level changed from Control Center", {
-            level: newLevel,
-            persisted: true
-          });
+        logLevelSelect.addEventListener("change", () => {
+          void (async () => {
+            const newLevel = logLevelSelect.value;
+            void LoggerFactory.setLogLevel(newLevel);
+            await this.plugin.updateSettings({ logLevel: newLevel });
+            logger28.info("settings-change", "Log level changed from Control Center", {
+              level: newLevel,
+              persisted: true
+            });
+          })();
         });
         const logChipSet = loggingContent.createDiv({ cls: "ospcc-chip-set osp-logging-chip-set" });
         const exportLogsChip = new ActionChip({
@@ -22821,7 +22843,7 @@ var init_control_panel = __esm({
         voicesStat.createSpan({ cls: "osp-stat-label", text: "Voices" });
         const qualityStat = perfStatsRow.createDiv({ cls: "osp-stat-compact" });
         const qualityValueSpan = qualityStat.createSpan({ cls: "osp-stat-value", text: "High" });
-        qualityValueSpan.style.color = "var(--color-green)";
+        qualityValueSpan.setCssProps({ color: "var(--color-green)" });
         qualityStat.createSpan({ cls: "osp-stat-label", text: "Audio quality" });
         this.contentContainer.appendChild(masterEffectsCard.getElement());
         this.contentContainer.appendChild(performanceCard.getElement());
@@ -22908,7 +22930,7 @@ var init_control_panel = __esm({
         });
         const content = card.getContent();
         const description = content.createDiv({ cls: "osp-control-description" });
-        description.createEl("p", { text: "Transform your knowledge graph into a temporal audio-visual experience. notes appear chronologically with musical accompaniment based on content and connections." });
+        description.createEl("p", { text: "Transform your knowledge graph into a temporal audio-visual experience. Notes appear chronologically with musical accompaniment based on content and connections." });
         const settingsSection = content.createDiv({ cls: "osp-settings-section osp-settings-section--spaced" });
         logger28.debug("ui", `Creating show file names toggle with initial state: ${this.showFileNames}`);
         createObsidianToggle(
@@ -22950,7 +22972,7 @@ var init_control_panel = __esm({
           text: "Reset to defaults",
           icon: "rotate-ccw",
           variant: "outlined",
-          onClick: () => this.resetSonicGraphSettings()
+          onClick: () => void this.resetSonicGraphSettings()
         });
         resetButtonContainer.appendChild(resetButton.getElement());
         const tabsContainer = content.createDiv({ cls: "osp-sonic-graph-settings-tabs" });
@@ -22974,11 +22996,11 @@ var init_control_panel = __esm({
           if (this.sonicGraphSettingsTabs) {
             this.sonicGraphSettingsTabs.refresh();
           }
-          new import_obsidian18.Notice("Sonic Graph settings reset to defaults");
+          new import_obsidian19.Notice("Sonic Graph settings reset to defaults");
           void logger28.info("ui", "Sonic Graph settings reset to defaults");
         } catch (error) {
           void logger28.error("ui", "Failed to reset Sonic Graph settings:", error);
-          new import_obsidian18.Notice("Failed to reset settings");
+          new import_obsidian19.Notice("Failed to reset settings");
         }
       }
       /**
@@ -23048,7 +23070,7 @@ var init_control_panel = __esm({
         } catch (error) {
           logger28.error("ui", "Failed to launch Sonic Graph view:", error.message);
           logger28.error("ui", "Error stack:", error.stack);
-          new import_obsidian18.Notice("Failed to launch Sonic Graph: " + error.message);
+          new import_obsidian19.Notice("Failed to launch Sonic Graph: " + error.message);
         }
       }
       /**
@@ -23057,7 +23079,7 @@ var init_control_panel = __esm({
       handleShowFileNamesToggle(enabled) {
         this.showFileNames = enabled;
         logger28.debug("ui", `Show file names toggled: ${enabled}, renderer exists: ${!!this.graphRenderer}`);
-        new import_obsidian18.Notice(`File names ${enabled ? "shown" : "hidden"}`);
+        new import_obsidian19.Notice(`File names ${enabled ? "shown" : "hidden"}`);
         if (this.graphRenderer) {
           this.graphRenderer.updateConfig({ showLabels: enabled });
           logger28.debug("ui", `Graph file names visibility updated: ${enabled}`);
@@ -23145,7 +23167,7 @@ var init_control_panel = __esm({
         const currentList = this.plugin.settings[settingKey] || [];
         logger28.debug("ui", `Adding ${type2} exclusion: ${path}`, { currentList, settingKey });
         if (currentList.includes(path)) {
-          new import_obsidian18.Notice(`${type2 === "folders" ? "Folder" : "File"} already excluded`);
+          new import_obsidian19.Notice(`${type2 === "folders" ? "Folder" : "File"} already excluded`);
           return;
         }
         void currentList.push(path);
@@ -23158,7 +23180,7 @@ var init_control_panel = __esm({
           void logger28.error("ui", "Failed to save settings", error);
         });
         logger28.debug("ui", `Added ${type2 === "folders" ? "folder" : "file"} exclusion: ${path}`);
-        new import_obsidian18.Notice(`${type2 === "folders" ? "Folder" : "File"} excluded: ${path}`);
+        new import_obsidian19.Notice(`${type2 === "folders" ? "Folder" : "File"} excluded: ${path}`);
       }
       /**
        * Remove exclusion item
@@ -23172,7 +23194,7 @@ var init_control_panel = __esm({
           void this.plugin.saveSettings();
           void this.refreshExclusionLists();
           logger28.debug("ui", `Removed ${type2 === "folders" ? "folder" : "file"} exclusion: ${removedItem}`);
-          new import_obsidian18.Notice(`${type2 === "folders" ? "Folder" : "File"} exclusion removed: ${removedItem}`);
+          new import_obsidian19.Notice(`${type2 === "folders" ? "Folder" : "File"} exclusion removed: ${removedItem}`);
         }
       }
       /**
@@ -23316,7 +23338,7 @@ var init_control_panel = __esm({
           elevation: 1
         });
         const content = card.getContent();
-        new import_obsidian18.Setting(content).setName("Enable drum accents").setDesc("Trigger percussion sounds alongside regular notes").addToggle(
+        new import_obsidian19.Setting(content).setName("Enable drum accents").setDesc("Trigger percussion sounds alongside regular notes").addToggle(
           (toggle) => {
             var _a;
             return toggle.setValue(((_a = this.plugin.settings.percussionAccents) == null ? void 0 : _a.enabled) || false).onChange(async (value) => {
@@ -23338,7 +23360,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(content).setName("Density").setDesc("Probability of percussion triggering (0-100%)").addSlider(
+        new import_obsidian19.Setting(content).setName("Density").setDesc("Probability of percussion triggering (0-100%)").addSlider(
           (slider) => {
             var _a;
             return slider.setLimits(0, 100, 5).setValue((((_a = this.plugin.settings.percussionAccents) == null ? void 0 : _a.density) || 0.6) * 100).setDynamicTooltip().onChange(async (value) => {
@@ -23353,16 +23375,16 @@ var init_control_panel = __esm({
           }
         );
         const drumsContainer = content.createDiv({ cls: "osp-percussion-drums-container" });
-        new import_obsidian18.Setting(drumsContainer).setHeading().setName("Active drums");
+        new import_obsidian19.Setting(drumsContainer).setHeading().setName("Active drums");
         const drumsGrid = drumsContainer.createDiv({ cls: "osp-drums-grid" });
         const drums = [
-          { key: "kick", label: "Kick Drum" },
-          { key: "snare", label: "Snare Drum" },
-          { key: "hihat", label: "Hi-Hat" },
+          { key: "kick", label: "Kick drum" },
+          { key: "snare", label: "Snare drum" },
+          { key: "hihat", label: "Hi-hat" },
           { key: "tom", label: "Tom" }
         ];
         drums.forEach((drum) => {
-          new import_obsidian18.Setting(drumsGrid).setName(drum.label).addToggle(
+          new import_obsidian19.Setting(drumsGrid).setName(drum.label).addToggle(
             (toggle) => {
               var _a;
               return toggle.setValue(((_a = this.plugin.settings.percussionAccents) == null ? void 0 : _a.activeDrums[drum.key]) || false).onChange(async (value) => {
@@ -23377,7 +23399,7 @@ var init_control_panel = __esm({
             }
           );
         });
-        new import_obsidian18.Setting(content).setName("Accent mode").setDesc("How drums are selected based on note properties").addDropdown(
+        new import_obsidian19.Setting(content).setName("Accent mode").setDesc("How drums are selected based on note properties").addDropdown(
           (dropdown) => {
             var _a;
             return dropdown.addOption("velocity", "Velocity-based (soft=hi-hat, loud=kick)").addOption("pitch", "Pitch-based (low=kick, high=hi-hat)").addOption("random", "Random selection").setValue(((_a = this.plugin.settings.percussionAccents) == null ? void 0 : _a.accentMode) || "velocity").onChange(async (value) => {
@@ -23391,7 +23413,7 @@ var init_control_panel = __esm({
             });
           }
         );
-        new import_obsidian18.Setting(content).setName("Volume").setDesc("Percussion volume in dB (-12 to 0)").addSlider(
+        new import_obsidian19.Setting(content).setName("Volume").setDesc("Percussion volume in dB (-12 to 0)").addSlider(
           (slider) => {
             var _a;
             return slider.setLimits(-12, 0, 1).setValue(((_a = this.plugin.settings.percussionAccents) == null ? void 0 : _a.volume) || -6).setDynamicTooltip().onChange(async (value) => {
@@ -23422,7 +23444,9 @@ var init_control_panel = __esm({
         createObsidianToggle(
           content,
           whaleIntegration2.enabled,
-          (enabled) => this.handleWhaleIntegrationToggle(enabled),
+          (enabled) => {
+            void this.handleWhaleIntegrationToggle(enabled);
+          },
           {
             name: "Use external whale samples",
             description: "Replace synthesis with authentic whale recordings from NOAA, MBARI, and marine research institutions"
@@ -23452,12 +23476,16 @@ var init_control_panel = __esm({
           cls: "osp-action-btn osp-action-btn--primary",
           text: "Download samples"
         });
-        downloadBtn.addEventListener("click", () => this.handleWhaleDownload());
+        downloadBtn.addEventListener("click", () => {
+          void this.handleWhaleDownload();
+        });
         const previewBtn = actionsRow.createEl("button", {
           cls: "osp-action-btn osp-action-btn--secondary",
           text: "Preview sample"
         });
-        previewBtn.addEventListener("click", () => this.handleWhalePreview());
+        previewBtn.addEventListener("click", () => {
+          void this.handleWhalePreview();
+        });
         const attributionBtn = actionsRow.createEl("button", {
           cls: "osp-action-btn osp-action-btn--secondary",
           text: "Attribution info"
@@ -23489,7 +23517,7 @@ var init_control_panel = __esm({
           enabled: this.getFamilyEffectState(familyId, "reverb"),
           parameters: [
             {
-              name: "Decay Time",
+              name: "Decay time",
               value: 2.5,
               min: 0.1,
               max: 10,
@@ -23498,7 +23526,7 @@ var init_control_panel = __esm({
               onChange: (value) => this.handleEffectParameterChange(familyId, "reverb", "decay", value)
             },
             {
-              name: "Wet Level",
+              name: "Wet level",
               value: 0.3,
               min: 0,
               max: 1,
@@ -24111,7 +24139,7 @@ var init_control_panel = __esm({
         if (!canToggle) {
           toggleInput.disabled = true;
           toggleContainer.classList.add("ospcc-switch--unavailable");
-          toggleContainer.style.cursor = "not-allowed";
+          toggleContainer.setCssProps({ cursor: "not-allowed" });
           toggleContainer.setAttribute("data-tooltip", `${instrumentInfo.name} samples not yet downloaded`);
           toggleContainer.setAttribute("title", `${instrumentInfo.name} samples not yet downloaded`);
         }
@@ -24184,12 +24212,12 @@ var init_control_panel = __esm({
           const currentSettings = getInstrumentSettings(this.plugin, instrumentName);
           const usesHighQuality = (_g = currentSettings == null ? void 0 : currentSettings.useHighQuality) != null ? _g : false;
           qualitySelect.value = usesHighQuality ? "recording" : "synthesis";
-          qualitySelect.addEventListener("change", async () => {
+          qualitySelect.addEventListener("change", () => void (async () => {
             const useRecording = qualitySelect.value === "recording";
             if (useRecording && this.instrumentRequiresHighQuality(instrumentName)) {
               const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
               if (!isDownloaded) {
-                new import_obsidian18.Notice(`${instrumentInfo.name} recording not yet downloaded. Please wait for download to complete.`);
+                new import_obsidian19.Notice(`${instrumentInfo.name} recording not yet downloaded. Please wait for download to complete.`);
                 qualitySelect.value = "synthesis";
                 return;
               }
@@ -24197,8 +24225,8 @@ var init_control_panel = __esm({
             setInstrumentSetting(this.plugin, instrumentName, "useHighQuality", useRecording);
             await this.plugin.saveSettings();
             const modeText = useRecording ? "recording" : "synthesis";
-            new import_obsidian18.Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
-          });
+            new import_obsidian19.Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
+          })());
           if (this.instrumentRequiresHighQuality(instrumentName)) {
             const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
             if (!isDownloaded) {
@@ -24446,21 +24474,21 @@ var init_control_panel = __esm({
       async handleWhalePreview() {
         var _a, _b;
         if (!this.plugin.audioEngine) {
-          new import_obsidian18.Notice("\u26A0\uFE0F Audio engine not available");
+          new import_obsidian19.Notice("\u26A0\uFE0F Audio engine not available");
           void logger28.warn("whale-ui", "Cannot preview whale sample: audio engine not available");
           return;
         }
         try {
           const whaleEnabled = (_a = this.plugin.settings.instruments.whaleHumpback) == null ? void 0 : _a.enabled;
           if (!whaleEnabled) {
-            new import_obsidian18.Notice("\u26A0\uFE0F Please enable whale sounds first");
+            new import_obsidian19.Notice("\u26A0\uFE0F Please enable whale sounds first");
             void logger28.warn("whale-ui", "Cannot preview whale: instrument not enabled");
             return;
           }
           const whaleIntegration2 = getWhaleIntegration();
           const hasSamples = ((_b = whaleIntegration2 == null ? void 0 : whaleIntegration2.getWhaleManager()) == null ? void 0 : _b.hasSamples()) || false;
           if (!hasSamples) {
-            new import_obsidian18.Notice('\u2139\uFE0F No whale samples downloaded yet. Click "Download samples" first to hear authentic whale recordings. Playing synthesized preview...');
+            new import_obsidian19.Notice('\u2139\uFE0F No whale samples downloaded yet. Click "Download samples" first to hear authentic whale recordings. Playing synthesized preview...');
             void logger28.info("whale-ui", "No cached whale samples available, playing synthesis");
           }
           await this.plugin.audioEngine.playNoteImmediate({
@@ -24473,7 +24501,7 @@ var init_control_panel = __esm({
             instrument: "whaleHumpback"
           });
           if (hasSamples) {
-            new import_obsidian18.Notice("\u{1F40B} Playing whale recording...");
+            new import_obsidian19.Notice("\u{1F40B} Playing whale recording...");
           }
           logger28.info("whale-ui", "Whale sample preview triggered", {
             pitch: 50,
@@ -24481,7 +24509,7 @@ var init_control_panel = __esm({
             hasSamples
           });
         } catch (error) {
-          new import_obsidian18.Notice("\u274C Failed to preview whale sample");
+          new import_obsidian19.Notice("\u274C Failed to preview whale sample");
           logger28.error("whale-ui", "Whale preview failed", {
             error: error instanceof Error ? error.message : String(error)
           });
@@ -24521,7 +24549,7 @@ All whale samples are authentic recordings from marine research institutions and
 		`.trim();
         void logger28.debug("whale-ui", "Whale attribution info:", attributionInfo);
         void logger28.info("whale-ui", "Whale attribution info displayed");
-        new import_obsidian18.Notice("Whale sample attribution information logged to console. Check developer tools for details.");
+        new import_obsidian19.Notice("Whale sample attribution information logged to console. Check developer tools for details.");
       }
       /**
        * Handle manual whale sample download
@@ -24530,28 +24558,28 @@ All whale samples are authentic recordings from marine research institutions and
         const whaleIntegration2 = getWhaleIntegration();
         const whaleManager = whaleIntegration2 == null ? void 0 : whaleIntegration2.getWhaleManager();
         if (!whaleIntegration2 || !whaleManager) {
-          new import_obsidian18.Notice("\u26A0\uFE0F Whale integration not initialized. Please enable whale sounds first.");
+          new import_obsidian19.Notice("\u26A0\uFE0F Whale integration not initialized. Please enable whale sounds first.");
           void logger28.warn("whale-ui", "Cannot download samples - whale integration not initialized");
           return;
         }
         try {
-          new import_obsidian18.Notice("\u{1F4E5} Starting whale sample download... This may take a few minutes.");
+          new import_obsidian19.Notice("\u{1F4E5} Starting whale sample download... This may take a few minutes.");
           void logger28.info("whale-ui", "Manual whale sample download initiated by user");
           const before = whaleManager.getCachedSampleCount();
           await whaleManager.manuallyDownloadSamples();
           const after = whaleManager.getCachedSampleCount();
           if (after.totalSamples > before.totalSamples || after.totalSamples > 0) {
-            new import_obsidian18.Notice(`\u2705 Downloaded ${after.totalSamples} whale sample(s) for ${after.speciesCount} species!`);
+            new import_obsidian19.Notice(`\u2705 Downloaded ${after.totalSamples} whale sample(s) for ${after.speciesCount} species!`);
             logger28.info("whale-ui", "Whale sample download completed", {
               speciesCount: after.speciesCount,
               totalSamples: after.totalSamples
             });
           } else {
-            new import_obsidian18.Notice("\u26A0\uFE0F No whale samples could be downloaded. This may be due to network issues or CORS restrictions. Whale sounds will use synthesis as fallback.");
+            new import_obsidian19.Notice("\u26A0\uFE0F No whale samples could be downloaded. This may be due to network issues or CORS restrictions. Whale sounds will use synthesis as fallback.");
             void logger28.warn("whale-ui", "Whale sample download completed but no samples were cached");
           }
         } catch (error) {
-          new import_obsidian18.Notice("\u274C Failed to download whale samples. Check console for details.");
+          new import_obsidian19.Notice("\u274C Failed to download whale samples. Check console for details.");
           logger28.error("whale-ui", "Whale sample download failed", {
             error: error instanceof Error ? error.message : String(error)
           });
@@ -24563,7 +24591,7 @@ All whale samples are authentic recordings from marine research institutions and
       async testFreesoundConnection(buttonEl) {
         const apiKey = this.plugin.settings.freesoundApiKey;
         if (!apiKey || apiKey.trim().length === 0) {
-          new import_obsidian18.Notice("\u26A0\uFE0F Please enter a Freesound API key first");
+          new import_obsidian19.Notice("\u26A0\uFE0F Please enter a Freesound API key first");
           return;
         }
         const button = buttonEl;
@@ -24576,23 +24604,23 @@ All whale samples are authentic recordings from marine research institutions and
           void logger28.debug("freesound", "FreesoundAuthManager created, testing connection...");
           const result = await authManager.testConnection();
           logger28.debug("freesound", `Connection test result: ${JSON.stringify(result)}`);
-          button.textContent = "Test Connection";
+          button.textContent = "Test connection";
           button.disabled = false;
           if (result.success) {
-            const message = result.username ? `\u2713 Connected successfully as ${result.username}` : `\u2713 ${result.message}`;
-            new import_obsidian18.Notice(message, 5e3);
+            const message = result.username ? `\u2713 connected successfully as ${result.username}` : `\u2713 ${result.message}`;
+            new import_obsidian19.Notice(message, 5e3);
             logger28.info("freesound", `Connection test successful: ${result.message}`);
           } else {
             const detailedMessage = result.message + (result.error ? ` (${result.error})` : "");
-            new import_obsidian18.Notice(`\u2717 Connection failed: ${detailedMessage}`, 8e3);
+            new import_obsidian19.Notice(`\u2717 Connection failed: ${detailedMessage}`, 8e3);
             logger28.error("freesound", `Connection test failed: ${result.error} - ${result.message}`);
           }
         } catch (error) {
-          button.textContent = "Test Connection";
+          button.textContent = "Test connection";
           button.disabled = false;
           const errorMessage = error.message || "Unknown error";
           const stackTrace = error.stack || "";
-          new import_obsidian18.Notice(`\u2717 Connection test error: ${errorMessage}`, 8e3);
+          new import_obsidian19.Notice(`\u2717 Connection test error: ${errorMessage}`, 8e3);
           logger28.error("freesound", `Connection test exception: ${errorMessage}`);
           logger28.debug("freesound", `Stack trace: ${stackTrace}`);
         }
@@ -24612,7 +24640,7 @@ All whale samples are authentic recordings from marine research institutions and
         const instrumentNames = enabledInstruments.map((inst) => inst.name);
         const createDepthSetting = (label, description, settingKey, defaultInstruments) => {
           var _a, _b;
-          const setting = new import_obsidian18.Setting(content).setName(label).setDesc(description);
+          const setting = new import_obsidian19.Setting(content).setName(label).setDesc(description);
           const currentValue = ((_b = (_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.instrumentsByDepth) == null ? void 0 : _b[settingKey]) || defaultInstruments;
           setting.addText((text) => {
             text.setValue(currentValue.join(", ")).setPlaceholder("e.g., piano, organ, leadSynth").onChange(async (value) => {
@@ -24680,11 +24708,11 @@ All whale samples are authentic recordings from marine research institutions and
           elevation: 1
         });
         const content = card.getContent();
-        new import_obsidian18.Setting(content).setHeading().setName("Volume by depth");
+        new import_obsidian19.Setting(content).setHeading().setName("Volume by depth");
         const createVolumeSetting = (label, settingKey, defaultValue) => {
           var _a2, _b2, _c2;
           const currentValue = (_c2 = (_b2 = (_a2 = this.plugin.settings.localSoundscape) == null ? void 0 : _a2.volumeByDepth) == null ? void 0 : _b2[settingKey]) != null ? _c2 : defaultValue;
-          new import_obsidian18.Setting(content).setName(label).setDesc(`${(currentValue * 100).toFixed(0)}%`).addSlider((slider) => {
+          new import_obsidian19.Setting(content).setName(label).setDesc(`${(currentValue * 100).toFixed(0)}%`).addSlider((slider) => {
             slider.setLimits(0, 1, 0.1).setValue(currentValue).onChange(async (value) => {
               var _a3, _b3;
               if (!this.plugin.settings.localSoundscape) {
@@ -24704,9 +24732,9 @@ All whale samples are authentic recordings from marine research institutions and
         createVolumeSetting("Depth 1", "depth1", 0.8);
         createVolumeSetting("Depth 2", "depth2", 0.6);
         createVolumeSetting("Depth 3+", "depth3Plus", 0.4);
-        new import_obsidian18.Setting(content).setHeading().setName("Directional panning");
+        new import_obsidian19.Setting(content).setHeading().setName("Directional panning");
         const panningEnabled = (_c = (_b = (_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.directionalPanning) == null ? void 0 : _b.enabled) != null ? _c : true;
-        new import_obsidian18.Setting(content).setName("Enable directional panning").setDesc("Pan incoming links left, outgoing links right").addToggle((toggle) => {
+        new import_obsidian19.Setting(content).setName("Enable directional panning").setDesc("Pan incoming links left, outgoing links right").addToggle((toggle) => {
           toggle.setValue(panningEnabled).onChange(async (value) => {
             if (!this.plugin.settings.localSoundscape) {
               this.plugin.settings.localSoundscape = { directionalPanning: {} };
@@ -24724,7 +24752,7 @@ All whale samples are authentic recordings from marine research institutions and
           const createPanningSetting = (label, settingKey, defaultValue) => {
             var _a2, _b2, _c2;
             const currentValue = (_c2 = (_b2 = (_a2 = this.plugin.settings.localSoundscape) == null ? void 0 : _a2.directionalPanning) == null ? void 0 : _b2[settingKey]) != null ? _c2 : defaultValue;
-            new import_obsidian18.Setting(content).setName(label).setDesc(`${currentValue > 0 ? "R" : currentValue < 0 ? "L" : "C"}${Math.abs(currentValue * 100).toFixed(0)}`).addSlider((slider) => {
+            new import_obsidian19.Setting(content).setName(label).setDesc(`${currentValue > 0 ? "R" : currentValue < 0 ? "L" : "C"}${Math.abs(currentValue * 100).toFixed(0)}`).addSlider((slider) => {
               slider.setLimits(-1, 1, 0.1).setValue(currentValue).onChange(async (value) => {
                 var _a3, _b3, _c3;
                 if (!((_a3 = this.plugin.settings.localSoundscape) == null ? void 0 : _a3.directionalPanning)) {
@@ -24762,10 +24790,10 @@ All whale samples are authentic recordings from marine research institutions and
         const isUnlimited = currentValue === "all";
         const numericValue = isUnlimited ? 100 : typeof currentValue === "number" ? currentValue : 100;
         content.createEl("p", {
-          text: "Limit the number of notes per depth level. higher values create longer, more detailed soundscapes but may impact performance.",
+          text: "Limit the number of notes per depth level. Higher values create longer, more detailed soundscapes but may impact performance.",
           cls: "setting-item-description"
         });
-        new import_obsidian18.Setting(content).setName("Max nodes per depth").setDesc(isUnlimited ? "Unlimited (all nodes)" : `${numericValue} nodes`).addSlider((slider) => {
+        new import_obsidian19.Setting(content).setName("Max nodes per depth").setDesc(isUnlimited ? "Unlimited (all nodes)" : `${numericValue} nodes`).addSlider((slider) => {
           slider.setLimits(10, 200, 10).setValue(numericValue).setDisabled(isUnlimited).onChange(async (value) => {
             var _a2, _b2;
             if (!this.plugin.settings.localSoundscape) {
@@ -24777,7 +24805,7 @@ All whale samples are authentic recordings from marine research institutions and
             logger28.info("local-soundscape", "Updated maxNodesPerDepth", { value });
           });
         });
-        new import_obsidian18.Setting(content).setName("Include all nodes").setDesc("Include every node in the soundscape (no limit)").addToggle((toggle) => {
+        new import_obsidian19.Setting(content).setName("Include all nodes").setDesc("Include every node in the soundscape (no limit)").addToggle((toggle) => {
           toggle.setValue(isUnlimited).onChange(async (value) => {
             if (!this.plugin.settings.localSoundscape) {
               this.plugin.settings.localSoundscape = {};
@@ -24815,8 +24843,8 @@ All whale samples are authentic recordings from marine research institutions and
         const audioEnhancement = this.plugin.settings.audioEnhancement;
         const musicality = (audioEnhancement == null ? void 0 : audioEnhancement.noteCentricMusicality) || {};
         const currentPreset = musicality.preset || "balanced";
-        new import_obsidian18.Setting(content).setName("Musicality preset").setDesc("Choose a pre-configured style, or select custom to fine-tune individual parameters").addDropdown((dropdown) => {
-          dropdown.addOption("conservative", "Conservative - Subtle, restrained expression").addOption("balanced", "Balanced - Current default sound (recommended)").addOption("adventurous", "Adventurous - Bold, experimental character").addOption("custom", "Custom - Manual control").setValue(currentPreset).onChange(async (value) => {
+        new import_obsidian19.Setting(content).setName("Musicality preset").setDesc("Choose a pre-configured style, or select custom to fine-tune individual parameters").addDropdown((dropdown) => {
+          dropdown.addOption("conservative", "conservative - subtle, restrained expression").addOption("balanced", "balanced - current default sound (recommended)").addOption("adventurous", "adventurous - bold, experimental character").addOption("custom", "custom - manual control").setValue(currentPreset).onChange(async (value) => {
             if (!this.plugin.settings.audioEnhancement) {
               this.plugin.settings.audioEnhancement = {};
             }
@@ -24853,7 +24881,7 @@ All whale samples are authentic recordings from marine research institutions and
         });
         if (currentPreset === "custom") {
           const customControls = content.createDiv({ cls: "osp-musicality-custom-controls" });
-          new import_obsidian18.Setting(customControls).setName("Timing humanization").setDesc("Micro-timing variation in milliseconds (50-250ms). higher values create looser, more organic groove.").addSlider((slider) => {
+          new import_obsidian19.Setting(customControls).setName("Timing humanization").setDesc("Micro-timing variation in milliseconds (50-250ms). higher values create looser, more organic groove.").addSlider((slider) => {
             slider.setLimits(50, 250, 25).setValue(musicality.timingHumanization || 125).setDynamicTooltip().onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24875,7 +24903,7 @@ All whale samples are authentic recordings from marine research institutions and
               void this.createLocalSoundscapeTab();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Harmonic adventurousness").setDesc("Frequency of exotic chords and voice leading (0-100%). higher values add more chromatic color and jazz harmonies.").addSlider((slider) => {
+          new import_obsidian19.Setting(customControls).setName("Harmonic adventurousness").setDesc("Frequency of exotic chords and voice leading (0-100%). higher values add more chromatic color and jazz harmonies.").addSlider((slider) => {
             slider.setLimits(0, 100, 5).setValue(musicality.harmonicAdventurousness || 75).setDynamicTooltip().onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24897,8 +24925,8 @@ All whale samples are authentic recordings from marine research institutions and
               void this.createLocalSoundscapeTab();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Dynamic range").setDesc("Velocity variation between notes. extreme creates dramatic contrasts from whisper-quiet to forte.").addDropdown((dropdown) => {
-            dropdown.addOption("subtle", "Subtle - Even, balanced dynamics").addOption("moderate", "Moderate - Noticeable variation").addOption("extreme", "Extreme - Dramatic contrasts").setValue(musicality.dynamicRange || "extreme").onChange(async (value) => {
+          new import_obsidian19.Setting(customControls).setName("Dynamic range").setDesc("Velocity variation between notes. extreme creates dramatic contrasts from whisper-quiet to forte.").addDropdown((dropdown) => {
+            dropdown.addOption("subtle", "subtle - even, balanced dynamics").addOption("moderate", "moderate - noticeable variation").addOption("extreme", "extreme - dramatic contrasts").setValue(musicality.dynamicRange || "extreme").onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
               }
@@ -24909,8 +24937,8 @@ All whale samples are authentic recordings from marine research institutions and
               await this.plugin.saveSettings();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Polyphonic density").setDesc("How much embellishments overlap with the center phrase. maximum creates rich, layered textures.").addDropdown((dropdown) => {
-            dropdown.addOption("sparse", "Sparse - Minimal overlap, clear separation").addOption("moderate", "Moderate - Some overlap, balanced texture").addOption("maximum", "Maximum - Dense overlap, rich polyphony").setValue(musicality.polyphonicDensity || "maximum").onChange(async (value) => {
+          new import_obsidian19.Setting(customControls).setName("Polyphonic density").setDesc("How much embellishments overlap with the center phrase. maximum creates rich, layered textures.").addDropdown((dropdown) => {
+            dropdown.addOption("sparse", "sparse - minimal overlap, clear separation").addOption("moderate", "moderate - some overlap, balanced texture").addOption("maximum", "maximum - dense overlap, rich polyphony").setValue(musicality.polyphonicDensity || "maximum").onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
               }
@@ -24921,7 +24949,7 @@ All whale samples are authentic recordings from marine research institutions and
               await this.plugin.saveSettings();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Melodic independence").setDesc("How freely embellishments deviate from center melody (0-100%). higher values create more independent counterpoint.").addSlider((slider) => {
+          new import_obsidian19.Setting(customControls).setName("Melodic independence").setDesc("How freely embellishments deviate from center melody (0-100%). Higher values create more independent counterpoint.").addSlider((slider) => {
             slider.setLimits(0, 100, 5).setValue(musicality.melodicIndependence || 80).setDynamicTooltip().onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
@@ -24943,8 +24971,8 @@ All whale samples are authentic recordings from marine research institutions and
               void this.createLocalSoundscapeTab();
             });
           });
-          new import_obsidian18.Setting(customControls).setName("Voice leading style").setDesc("Approach to harmonic movement between chords. chromatic creates jazzy, sophisticated progressions.").addDropdown((dropdown) => {
-            dropdown.addOption("smooth", "Smooth - Minimal voice movement, consonant").addOption("balanced", "Balanced - Mix of smooth and chromatic").addOption("chromatic", "Chromatic - Adventurous, jazzy movement").setValue(musicality.voiceLeadingStyle || "chromatic").onChange(async (value) => {
+          new import_obsidian19.Setting(customControls).setName("Voice leading style").setDesc("Approach to harmonic movement between chords. chromatic creates jazzy, sophisticated progressions.").addDropdown((dropdown) => {
+            dropdown.addOption("smooth", "smooth - minimal voice movement, consonant").addOption("balanced", "balanced - mix of smooth and chromatic").addOption("chromatic", "chromatic - adventurous, jazzy movement").setValue(musicality.voiceLeadingStyle || "chromatic").onChange(async (value) => {
               if (!this.plugin.settings.audioEnhancement) {
                 this.plugin.settings.audioEnhancement = {};
               }
@@ -24975,16 +25003,16 @@ All whale samples are authentic recordings from marine research institutions and
         const tipsList = content.createEl("ul", { cls: "osp-guide-tips" });
         const tip1 = tipsList.createEl("li");
         tip1.createEl("strong", { text: "Start with depth 2:" });
-        void tip1.appendText(" This is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.");
+        void tip1.appendText(" this is the sweet spot for most notes. Depth 1 shows only immediate connections, while depth 3+ can become overwhelming for highly-connected notes.");
         const tip2 = tipsList.createEl("li");
         tip2.createEl("strong", { text: "Enable scale quantization:" });
-        tip2.appendText(" This is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.");
+        tip2.appendText(" this is the single most impactful Musical Enhancement. Try C Major (80% strength) for bright, harmonious soundscapes or D Minor for melancholic tones.");
         const tip3 = tipsList.createEl("li");
         tip3.createEl("strong", { text: "Use clustering to discover patterns:" });
-        void tip3.appendText(" Switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.");
+        void tip3.appendText(" switch between Folder, Tag, and Community clustering to reveal different organizational structures in your vault.");
         const tip4 = tipsList.createEl("li");
-        tip4.createEl("strong", { text: "Reduce Sonic congestion:" });
-        tip4.appendText(" Enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.");
+        tip4.createEl("strong", { text: "Reduce sonic congestion:" });
+        tip4.appendText(" enable Turn-Taking with Call-Response pattern (4 beats) to create musical dialogue instead of all instruments playing simultaneously.");
         const tip5 = tipsList.createEl("li");
         tip5.createEl("strong", { text: "Filter by tags/folders:" });
         void tip5.appendText(" Use the filter modal to focus on specific topics or projects. This creates more coherent, thematic soundscapes.");
@@ -25009,151 +25037,151 @@ All whale samples are authentic recordings from marine research institutions and
         const content = card.getContent();
         const faq1 = content.createEl("div", { cls: "osp-faq-item" });
         const q1 = faq1.createEl("h4", { cls: "osp-faq-question" });
-        q1.createEl("strong", { text: "Q: why does the music sound simplistic or repetitive?" });
+        q1.createEl("strong", { text: "Q: Why does the music sound simplistic or repetitive?" });
         void q1.appendText(" ");
         q1.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
         const a1 = faq1.createEl("div", { cls: "osp-faq-answer" });
         const a1p1 = a1.createEl("p");
         a1p1.createEl("strong", { text: "A:" });
-        void a1p1.appendText(" By default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:");
+        void a1p1.appendText(" by default, Local Soundscape uses fast file-size approximation for word counts to maintain performance with large graphs. This means:");
         const a1ul1 = a1.createEl("ul");
         const a1li1 = a1ul1.createEl("li");
         a1li1.createEl("strong", { text: "All markdown syntax counts:" });
-        void a1li1.appendText(" Links, headings, callouts, and formatting inflate word counts");
+        void a1li1.appendText(" links, headings, callouts, and formatting inflate word counts");
         const a1li2 = a1ul1.createEl("li");
         a1li2.createEl("strong", { text: "Notes sound similar:" });
-        void a1li2.appendText(" Similar file sizes produce similar durations and pitches");
+        void a1li2.appendText(" similar file sizes produce similar durations and pitches");
         const a1li3 = a1ul1.createEl("li");
         a1li3.createEl("strong", { text: "No content differentiation:" });
-        void a1li3.appendText(" Callouts, code blocks, and lists are treated the same as regular text");
+        void a1li3.appendText(" callouts, code blocks, and lists are treated the same as regular text");
         const a1p2 = a1.createEl("p");
         a1p2.createEl("strong", { text: "To get richer, more varied soundscapes:" });
         const a1ol = a1.createEl("ol");
         const a1oli1 = a1ol.createEl("li");
         a1oli1.createEl("strong", { text: "Enable musical enhancements" });
-        a1oli1.appendText(" (above) - This is the most impactful change:");
+        a1oli1.appendText(" (above) - this is the most impactful change:");
         const a1oli1ul = a1oli1.createEl("ul");
-        a1oli1ul.createEl("li", { text: "Scale quantization creates harmonic consonance" });
-        a1oli1ul.createEl("li", { text: "Chord voicing adds polyphonic richness" });
-        a1oli1ul.createEl("li", { text: "Rhythmic patterns organize timing musically" });
-        a1oli1ul.createEl("li", { text: "Tension tracking creates emotional arcs" });
-        a1oli1ul.createEl("li", { text: "Turn-Taking reduces congestion through dialogue" });
+        a1oli1ul.createEl("li", { text: "scale quantization creates harmonic consonance" });
+        a1oli1ul.createEl("li", { text: "chord voicing adds polyphonic richness" });
+        a1oli1ul.createEl("li", { text: "rhythmic patterns organize timing musically" });
+        a1oli1ul.createEl("li", { text: "tension tracking creates emotional arcs" });
+        a1oli1ul.createEl("li", { text: "turn-Taking reduces congestion through dialogue" });
         const a1oli2 = a1ol.createEl("li");
         a1oli2.createEl("strong", { text: "Use diverse instruments" });
-        a1oli2.appendText(" - Enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type");
+        a1oli2.appendText(" - enable 3-4 instruments from different families (Keyboard, Strings, Electronic, Brass) instead of just one type");
         const a1oli3 = a1ol.createEl("li");
         a1oli3.createEl("strong", { text: "Apply filters" });
-        void a1oli3.appendText(" - Focus on specific tags or folders to create more thematically coherent soundscapes");
+        void a1oli3.appendText(" - focus on specific tags or folders to create more thematically coherent soundscapes");
         const a1oli4 = a1ol.createEl("li");
         a1oli4.createEl("strong", { text: "Experiment with clustering" });
-        void a1oli4.appendText(" - Different clustering methods reveal different organizational patterns in your vault");
+        void a1oli4.appendText(" - different clustering methods reveal different organizational patterns in your vault");
         const a1p3 = a1.createEl("p");
-        a1p3.createEl("em", { text: "Note: the plugin reads content inside callouts and includes it in word counts when using accurate parsing (sonic Graph mode). callout markers are stripped but the text content is counted." });
+        a1p3.createEl("em", { text: "Note: The plugin reads content inside callouts and includes it in word counts when using accurate parsing (Sonic Graph mode). Callout markers are stripped but the text content is counted." });
         const faq2 = content.createEl("div", { cls: "osp-faq-item" });
         const q2 = faq2.createEl("h4", { cls: "osp-faq-question" });
-        q2.createEl("strong", { text: "Q: I only see one node, or my soundscapes are simple even with musical enhancements enabled. why?" });
+        q2.createEl("strong", { text: "Q: I only see one node, or my soundscapes are simple even with musical enhancements enabled. Why?" });
         void q2.appendText(" ");
         q2.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
         const a2 = faq2.createEl("div", { cls: "osp-faq-answer" });
         const a2p1 = a2.createEl("p");
         a2p1.createEl("strong", { text: "A:" });
-        a2p1.appendText(" Musical Enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.");
+        a2p1.appendText(" musical enhancements require multiple notes at different depths to function effectively. If you only see the center node (or very few nodes), the enhancements have insufficient material to work with.");
         const a2p2 = a2.createEl("p");
         a2p2.createEl("strong", { text: "Why this happens:" });
         const a2ul1 = a2.createEl("ul");
         const a2li1 = a2ul1.createEl("li");
         a2li1.createEl("strong", { text: "Sparse connections:" });
-        a2li1.appendText(" Your note has few or no links to other notes at shallow depths (1-2)");
+        a2li1.appendText(" your note has few or no links to other notes at shallow depths (1-2)");
         const a2li2 = a2ul1.createEl("li");
         a2li2.createEl("strong", { text: "Low depth setting:" });
-        void a2li2.appendText(" The depth slider is set to 1, limiting the graph to immediate connections only");
+        void a2li2.appendText(" the depth slider is set to 1, limiting the graph to immediate connections only");
         const a2li3 = a2ul1.createEl("li");
         a2li3.createEl("strong", { text: "Filters too restrictive:" });
-        void a2li3.appendText(" Tag/folder filters are excluding connected notes");
+        void a2li3.appendText(" tag/folder filters are excluding connected notes");
         const a2p3 = a2.createEl("p");
         a2p3.createEl("strong", { text: "What musical enhancements need to work:" });
         const a2ul2 = a2.createEl("ul");
         const a2li4 = a2ul2.createEl("li");
         a2li4.createEl("strong", { text: "Turn-Taking:" });
-        void a2li4.appendText(" Needs 3+ notes at different depths to create call-response dialogue");
+        void a2li4.appendText(" needs 3+ notes at different depths to create call-response dialogue");
         const a2li5 = a2ul2.createEl("li");
         a2li5.createEl("strong", { text: "Chord voicing:" });
-        void a2li5.appendText(" Needs 2+ notes at same depth to build harmonies");
+        void a2li5.appendText(" needs 2+ notes at same depth to build harmonies");
         const a2li6 = a2ul2.createEl("li");
         a2li6.createEl("strong", { text: "Rhythmic patterns:" });
-        void a2li6.appendText(" Needs 4+ notes to organize into musical patterns");
+        void a2li6.appendText(" needs 4+ notes to organize into musical patterns");
         const a2li7 = a2ul2.createEl("li");
         a2li7.createEl("strong", { text: "Tension tracking:" });
-        void a2li7.appendText(" Needs 5+ notes to create narrative arcs");
+        void a2li7.appendText(" needs 5+ notes to create narrative arcs");
         const a2li8 = a2ul2.createEl("li");
         a2li8.createEl("strong", { text: "Scale quantization:" });
-        void a2li8.appendText(" Works with any number of notes, but more varied with higher counts");
+        void a2li8.appendText(" works with any number of notes, but more varied with higher counts");
         const a2p4 = a2.createEl("p");
         a2p4.createEl("strong", { text: "How to fix:" });
         const a2ol = a2.createEl("ol");
         const a2oli1 = a2ol.createEl("li");
         a2oli1.createEl("strong", { text: "Enable continuous layers:" });
-        void a2oli1.appendText(' Scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
+        void a2oli1.appendText(' scroll down to "Continuous audio layers" and toggle it on. Layers provide ambient, harmonic, and rhythmic background that fills out sparse soundscapes - perfect for notes with few connections. ');
         a2oli1.createEl("strong", { text: "Important:" });
-        void a2oli1.appendText(" You must enable at least one Freesound sample in the Layers tab's Sample Browser for continuous layers to produce audio.");
+        void a2oli1.appendText(" you must enable at least one Freesound sample in the Layers tab's Sample Browser for continuous layers to produce audio.");
         const a2oli2 = a2ol.createEl("li");
         a2oli2.createEl("strong", { text: "Increase depth:" });
-        void a2oli2.appendText(" Slide the depth control to 3-5 to explore more connection levels");
+        void a2oli2.appendText(" slide the depth control to 3-5 to explore more connection levels");
         const a2oli3 = a2ol.createEl("li");
         a2oli3.createEl("strong", { text: "Choose more connected notes:" });
-        a2oli3.appendText(' Right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"');
+        a2oli3.appendText(' right-click highly-linked notes (MOCs, index notes, hub notes) and "Open in Local Soundscape"');
         const a2oli4 = a2ol.createEl("li");
         a2oli4.createEl("strong", { text: "Build more connections:" });
-        void a2oli4.appendText(" Add links between related notes in your vault to create richer graph structure");
+        void a2oli4.appendText(" add links between related notes in your vault to create richer graph structure");
         const a2oli5 = a2ol.createEl("li");
         a2oli5.createEl("strong", { text: "Check filters:" });
-        void a2oli5.appendText(" Ensure Include/Exclude filters aren't hiding connected notes");
+        void a2oli5.appendText(" ensure Include/Exclude filters aren't hiding connected notes");
         const a2oli6 = a2ol.createEl("li");
         a2oli6.createEl("strong", { text: "Try bidirectional links:" });
-        void a2oli6.appendText(" Notes with two-way connections create denser graphs than one-way links");
+        void a2oli6.appendText(" notes with two-way connections create denser graphs than one-way links");
         const a2p5 = a2.createEl("p");
         a2p5.createEl("strong", { text: "For sparse vaults:" });
-        void a2p5.appendText(" If your vault generally has limited connections, ");
+        void a2p5.appendText(" if your vault generally has limited connections, ");
         a2p5.createEl("strong", { text: "Continuous layers" });
         a2p5.appendText(" are your best solution. They provide rich ambient background regardless of node count (but require Freesound samples to be enabled first). Also focus on Scale Quantization and diverse instruments rather than features requiring many nodes.");
         const faq3 = content.createEl("div", { cls: "osp-faq-item" });
         const q3 = faq3.createEl("h4", { cls: "osp-faq-question" });
-        q3.createEl("strong", { text: "Q: how do I create musically rich notes for playback?" });
+        q3.createEl("strong", { text: "Q: How do I create musically rich notes for playback?" });
         void q3.appendText(" ");
         q3.createEl("span", { text: "[Local Soundscape]", cls: "osp-faq-view-label" });
         const a3 = faq3.createEl("div", { cls: "osp-faq-answer" });
         const a3p1 = a3.createEl("p");
         a3p1.createEl("strong", { text: "A:" });
-        void a3p1.appendText(" The richness of your soundscape depends primarily on your note's link structure and network density. Here's what creates the most beautiful, harmonically rich playback:");
+        void a3p1.appendText(" the richness of your soundscape depends primarily on your note's link structure and network density. Here's what creates the most beautiful, harmonically rich playback:");
         const a3p2 = a3.createEl("p");
         a3p2.createEl("strong", { text: "The depth slider and link structure:" });
         const a3ul1 = a3.createEl("ul");
         const a3li1 = a3ul1.createEl("li");
         a3li1.createEl("strong", { text: "Depth = link-hop distance:" });
-        a3li1.appendText(' The Depth slider controls how many "hops" away from your center note the graph explores. Depth 1 = direct links only, Depth 2 = links of links, etc.');
+        a3li1.appendText(' the Depth slider controls how many "hops" away from your center note the graph explores. Depth 1 = direct links only, Depth 2 = links of links, etc.');
         const a3li2 = a3ul1.createEl("li");
         a3li2.createEl("strong", { text: "Fully-connected notes:" });
-        a3li2.appendText(" If your notes all link to each other (like test notes that each link to all others), even Depth 1 creates dense harmonic texture because all notes are immediate neighbors.");
+        a3li2.appendText(" if your notes all link to each other (like test notes that each link to all others), even Depth 1 creates dense harmonic texture because all notes are immediate neighbors.");
         const a3li3 = a3ul1.createEl("li");
         a3li3.createEl("strong", { text: "Bidirectional links:" });
-        void a3li3.appendText(" Two-way connections between notes create denser, richer graphs than one-way links.");
+        void a3li3.appendText(" two-way connections between notes create denser, richer graphs than one-way links.");
         const a3p3 = a3.createEl("p");
         a3p3.createEl("strong", { text: "Additional ways to enrich your notes:" });
         const a3ul2 = a3.createEl("ul");
         const a3li4 = a3ul2.createEl("li");
         a3li4.createEl("strong", { text: "Add meaningful tags:" });
-        void a3li4.appendText(" Tags influence clustering and can create thematic groupings");
+        void a3li4.appendText(" tags influence clustering and can create thematic groupings");
         const a3li5 = a3ul2.createEl("li");
         a3li5.createEl("strong", { text: "Vary content types:" });
-        void a3li5.appendText(" Mix images, PDFs, audio files, and regular notes - different file types add variety");
+        void a3li5.appendText(" mix images, PDFs, audio files, and regular notes - different file types add variety");
         const a3li6 = a3ul2.createEl("li");
         a3li6.createEl("strong", { text: "Build hub notes:" });
         a3li6.appendText(" MOCs (Maps of Content) and index notes with many links create rich soundscapes");
         const a3li7 = a3ul2.createEl("li");
         a3li7.createEl("strong", { text: "Use frontmatter:" });
-        a3li7.appendText(" Add custom metadata for explicit control over musical parameters (see documentation)");
+        a3li7.appendText(" add custom metadata for explicit control over musical parameters (see documentation)");
         const a3p4 = a3.createEl("p");
-        a3p4.createEl("em", { text: "Important: heading levels (# vs ## vs ###) do not currently affect musical depth or layering - only the link network structure does. the depth slider controls network exploration radius, not markdown hierarchy." });
+        a3p4.createEl("em", { text: "Important: Heading levels (# vs ## vs ###) do not currently affect musical depth or layering - only the link network structure does. The depth slider controls network exploration radius, not markdown hierarchy." });
         this.contentContainer.appendChild(card.getElement());
       }
     };
@@ -25370,7 +25398,7 @@ var init_ProseAnalyzer = __esm({
        * Helper: Strip markdown syntax for linguistic analysis
        */
       static stripMarkdown(text) {
-        return text.replace(/```[\s\S]*?```/g, "").replace(/`[^`]+`/g, "").replace(/^#+\s/gm, "").replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1").replace(/!\[([^\]]*)\]\([^\)]+\)/g, "").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/^>\s*/gm, "").replace(/^[\s]*[-*+]\s/gm, "").replace(/^[\s]*\d+\.\s/gm, "");
+        return text.replace(/```[\s\S]*?```/g, "").replace(/`[^`]+`/g, "").replace(/^#+\s/gm, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/!\[([^\]]*)\]\([^)]+\)/g, "").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/^>\s*/gm, "").replace(/^[\s]*[-*+]\s/gm, "").replace(/^[\s]*\d+\.\s/gm, "");
       }
     };
   }
@@ -57366,13 +57394,13 @@ var init_types5 = __esm({
 });
 
 // src/audio/layers/MusicalGenreEngine.ts
-var import_obsidian25, logger61, MusicalGenreEngine;
+var import_obsidian26, logger61, MusicalGenreEngine;
 var init_MusicalGenreEngine = __esm({
   "src/audio/layers/MusicalGenreEngine.ts"() {
     init_esm();
     init_types5();
     init_logging();
-    import_obsidian25 = require("obsidian");
+    import_obsidian26 = require("obsidian");
     logger61 = getLogger("MusicalGenreEngine");
     MusicalGenreEngine = class {
       constructor(genre, settings) {
@@ -57728,7 +57756,7 @@ var init_MusicalGenreEngine = __esm({
         }
         void currentNode.connect(this.synthVolume);
       }
-      async loadGenreSamples(categories) {
+      loadGenreSamples(categories) {
         if (!this.sampleLoader) {
           return;
         }
@@ -58195,7 +58223,7 @@ var init_MusicalGenreEngine = __esm({
           }
           const soundUrl = `https://freesound.org/apiv2/sounds/${sample.id}/?token=${apiKey}`;
           logger61.debug("api-fetch", "Fetching fresh preview URL from API", { soundUrl: soundUrl.replace(apiKey, "[REDACTED]") });
-          const soundResponse = await (0, import_obsidian25.requestUrl)({ url: soundUrl, method: "GET" });
+          const soundResponse = await (0, import_obsidian26.requestUrl)({ url: soundUrl, method: "GET" });
           const soundData = JSON.parse(soundResponse.text);
           const previewUrl = ((_b = soundData.previews) == null ? void 0 : _b["preview-hq-mp3"]) || ((_c = soundData.previews) == null ? void 0 : _c["preview-lq-mp3"]);
           if (!previewUrl) {
@@ -58205,7 +58233,7 @@ var init_MusicalGenreEngine = __esm({
           logger61.debug("download", "Downloading sample via requestUrl", {
             previewUrl
           });
-          const response = await (0, import_obsidian25.requestUrl)({ url: previewUrl, method: "GET" });
+          const response = await (0, import_obsidian26.requestUrl)({ url: previewUrl, method: "GET" });
           const blob = new Blob([response.arrayBuffer], { type: "audio/mpeg" });
           const blobUrl = URL.createObjectURL(blob);
           logger61.debug("download", "Sample downloaded, blob URL created", {
@@ -60212,7 +60240,7 @@ var init_NoteCentricPlayer = __esm({
       /**
        * Play a musical phrase
        */
-      async playPhrase(phrase, role, startDelay) {
+      playPhrase(phrase, role, startDelay) {
         var _a, _b;
         const instrument = this.getInstrumentForRole(role, this.phraseCounter++);
         logger72.debug("phrase-play", "Playing phrase", {
@@ -60482,10 +60510,6 @@ var init_NoteCentricPlayer = __esm({
 });
 
 // src/export/ExportNoteCreator.ts
-var ExportNoteCreator_exports = {};
-__export(ExportNoteCreator_exports, {
-  ExportNoteCreator: () => ExportNoteCreator
-});
 var logger73, ExportNoteCreator;
 var init_ExportNoteCreator = __esm({
   "src/export/ExportNoteCreator.ts"() {
@@ -60938,15 +60962,17 @@ ${audioConfig}
 });
 
 // src/export/AudioExporter.ts
-var import_obsidian26, logger74, AudioExporter;
+var import_obsidian27, logger74, AudioExporter;
 var init_AudioExporter = __esm({
   "src/export/AudioExporter.ts"() {
-    import_obsidian26 = require("obsidian");
+    import_obsidian27 = require("obsidian");
     init_WavEncoder();
     init_Mp3Encoder();
     init_OfflineRenderer();
     init_NoteCentricPlayer();
     init_logging();
+    init_esm();
+    init_ExportNoteCreator();
     logger74 = getLogger("export");
     AudioExporter = class {
       constructor(app, audioEngine, pluginSettings, pluginVersion = "0.14.2") {
@@ -61072,15 +61098,12 @@ var init_AudioExporter = __esm({
             await this.app.vault.createFolder(config.location);
           }
         } else {
-          const fs = require("fs");
-          const path = require("path");
-          const dirPath = path.isAbsolute(config.location) ? config.location : path.resolve(config.location);
-          if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
+          if (!import_obsidian27.Platform.isDesktopApp) {
+            throw new Error("System location exports are only supported on desktop");
           }
         }
         const fullPath = this.getFullPath(config);
-        const exists = this.fileExists(fullPath);
+        const exists = await this.fileExists(fullPath, config.locationType === "system");
         if (exists && config.onCollision === "cancel") {
           throw new Error(`File already exists: ${fullPath}`);
         }
@@ -61178,8 +61201,7 @@ var init_AudioExporter = __esm({
        * Record note-centric playback using MediaRecorder
        */
       async recordNoteCentricPlayback(player, mapping, duration2, targetSampleRate) {
-        const { getContext: getContext2 } = (init_esm(), __toCommonJS(esm_exports));
-        const audioContext = getContext2().rawContext;
+        const audioContext = getContext().rawContext;
         if (!audioContext) {
           throw new Error("Audio context not available");
         }
@@ -61320,7 +61342,7 @@ var init_AudioExporter = __esm({
        */
       async writeFile(data, config) {
         const fullPath = this.getFullPath(config);
-        if (this.fileExists(fullPath)) {
+        if (await this.fileExists(fullPath, config.locationType === "system")) {
           switch (config.onCollision) {
             case "cancel":
               throw new Error(`File already exists: ${fullPath}`);
@@ -61334,22 +61356,7 @@ var init_AudioExporter = __esm({
           const uint8Array = new Uint8Array(data);
           await this.app.vault.createBinary(fullPath, uint8Array);
         } else {
-          const uint8Array = new Uint8Array(data);
-          const fs = require("fs");
-          const path = require("path");
-          const dirPath = path.dirname(fullPath);
-          if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath, { recursive: true });
-          }
-          await new Promise((resolve, reject) => {
-            fs.writeFile(fullPath, uint8Array, (err) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          });
+          await this.app.vault.adapter.writeBinary(fullPath, data);
         }
         logger74.info("export", `File written: ${fullPath} (${data.byteLength} bytes)`);
         return fullPath;
@@ -61359,8 +61366,7 @@ var init_AudioExporter = __esm({
        */
       async createExportNote(config, filePath) {
         try {
-          const { ExportNoteCreator: ExportNoteCreator2 } = (init_ExportNoteCreator(), __toCommonJS(ExportNoteCreator_exports));
-          const noteCreator = new ExportNoteCreator2(this.app, this.pluginVersion);
+          const noteCreator = new ExportNoteCreator(this.app, this.pluginVersion);
           const result = {
             success: true,
             filePath,
@@ -61368,15 +61374,14 @@ var init_AudioExporter = __esm({
           };
           if (config.locationType === "system") {
             try {
-              const fs = require("fs");
-              const stats = fs.statSync(filePath);
+              const stats = await this.app.vault.adapter.stat(filePath);
               result.fileSize = stats.size;
             } catch (error) {
               void logger74.warn("export", "Could not get file size from system location", error);
             }
           } else {
             const file = this.app.vault.getAbstractFileByPath(filePath);
-            if (file instanceof import_obsidian26.TFile) {
+            if (file instanceof import_obsidian27.TFile) {
               result.fileSize = file.stat.size;
             }
           }
@@ -61396,7 +61401,7 @@ var init_AudioExporter = __esm({
           return;
         try {
           const file = this.app.vault.getAbstractFileByPath(filePath);
-          if (file instanceof import_obsidian26.TFile) {
+          if (file instanceof import_obsidian27.TFile) {
             await this.app.fileManager.trashFile(file);
             logger74.info("export", `Cleaned up partial file: ${filePath}`);
           }
@@ -61409,22 +61414,26 @@ var init_AudioExporter = __esm({
        */
       getFullPath(config) {
         const extension = config.format;
+        const filename = `${config.filename}.${extension}`;
         if (config.locationType === "system") {
-          const path = require("path");
-          return path.join(config.location, `${config.filename}.${extension}`);
+          const normalizedLocation = config.location.replace(/\\/g, "/");
+          return `${normalizedLocation}/${filename}`;
         }
-        return `${config.location}/${config.filename}.${extension}`;
+        return `${config.location}/${filename}`;
       }
       /**
        * Check if file exists (supports both vault and system paths)
        */
-      fileExists(path) {
-        const isSystemPath = require("path").isAbsolute(path);
+      async fileExists(filePath, isSystemPath) {
         if (isSystemPath) {
-          const fs = require("fs");
-          return fs.existsSync(path);
+          try {
+            await this.app.vault.adapter.stat(filePath);
+            return true;
+          } catch (e) {
+            return false;
+          }
         } else {
-          const file = this.app.vault.getAbstractFileByPath(path);
+          const file = this.app.vault.getAbstractFileByPath(filePath);
           return file !== null;
         }
       }
@@ -61483,13 +61492,13 @@ var init_AudioExporter = __esm({
 });
 
 // src/export/ExportProgressModal.ts
-var import_obsidian27, logger75, ExportProgressModal;
+var import_obsidian28, logger75, ExportProgressModal;
 var init_ExportProgressModal = __esm({
   "src/export/ExportProgressModal.ts"() {
-    import_obsidian27 = require("obsidian");
+    import_obsidian28 = require("obsidian");
     init_logging();
     logger75 = getLogger("export-progress");
-    ExportProgressModal = class extends import_obsidian27.Modal {
+    ExportProgressModal = class extends import_obsidian28.Modal {
       constructor(app, exporter, config) {
         super(app);
         this.isCancelled = false;
@@ -61533,7 +61542,7 @@ var init_ExportProgressModal = __esm({
           });
           const result = await this.exporter.export(this.config);
           if (this.isCancelled) {
-            new import_obsidian27.Notice("Export cancelled");
+            new import_obsidian28.Notice("Export cancelled");
             void logger75.info("export-progress", "Export cancelled by user");
           } else if (result.success) {
             void this.showSuccess(result);
@@ -61542,7 +61551,7 @@ var init_ExportProgressModal = __esm({
           }
         } catch (error) {
           void logger75.error("export-progress", "Export failed:", error);
-          new import_obsidian27.Notice(`Export failed: ${error.message}`);
+          new import_obsidian28.Notice(`Export failed: ${error.message}`);
         } finally {
           setTimeout(() => {
             if (!this.isCancelled) {
@@ -61594,7 +61603,7 @@ var init_ExportProgressModal = __esm({
           this.cancelButton.disabled = true;
         }
         const fileSizeMB = result.fileSize ? (result.fileSize / (1024 * 1024)).toFixed(1) : "?";
-        new import_obsidian27.Notice(`Export complete: ${result.filePath} (${fileSizeMB} MB)`);
+        new import_obsidian28.Notice(`Export complete: ${result.filePath} (${fileSizeMB} MB)`);
         logger75.info("export-progress", `Export successful: ${result.filePath}`, {
           fileSize: result.fileSize,
           duration: result.duration,
@@ -61614,7 +61623,7 @@ var init_ExportProgressModal = __esm({
           this.cancelButton.textContent = "Close";
           this.cancelButton.classList.remove("mod-warning");
         }
-        new import_obsidian27.Notice(`Export failed: ${((_b = result.error) == null ? void 0 : _b.message) || "Unknown error"}`);
+        new import_obsidian28.Notice(`Export failed: ${((_b = result.error) == null ? void 0 : _b.message) || "Unknown error"}`);
         void logger75.error("export-progress", "Export failed:", result.error);
       }
       /**
@@ -61676,23 +61685,19 @@ var init_ExportProgressModal = __esm({
 });
 
 // src/export/FileCollisionModal.ts
-var FileCollisionModal_exports = {};
-__export(FileCollisionModal_exports, {
-  FileCollisionModal: () => FileCollisionModal
-});
-var import_obsidian28, logger76, FileCollisionModal;
+var import_obsidian29, logger76, FileCollisionModal;
 var init_FileCollisionModal = __esm({
   "src/export/FileCollisionModal.ts"() {
-    import_obsidian28 = require("obsidian");
+    import_obsidian29 = require("obsidian");
     init_logging();
     logger76 = getLogger("file-collision");
-    FileCollisionModal = class extends import_obsidian28.Modal {
+    FileCollisionModal = class extends import_obsidian29.Modal {
       constructor(app, filePath, resolveCallback) {
         super(app);
         this.filePath = filePath;
         this.resolveCallback = resolveCallback;
         const file = this.app.vault.getAbstractFileByPath(filePath);
-        this.existingFile = file && file instanceof import_obsidian28.TFile ? file : null;
+        this.existingFile = file && file instanceof import_obsidian29.TFile ? file : null;
         this.suggestedName = this.generateAlternativeName(filePath);
       }
       onOpen() {
@@ -61790,19 +61795,19 @@ var init_FileCollisionModal = __esm({
         continueBtn.addEventListener("click", () => {
           const selectedRadio = radioGroup.querySelector('input[name="collision-action"]:checked');
           if (!selectedRadio) {
-            new import_obsidian28.Notice("Please select an option");
+            new import_obsidian29.Notice("Please select an option");
             return;
           }
           const action = selectedRadio.value;
           if (action === "rename") {
             const newName = renameInput.value.trim();
             if (!newName) {
-              new import_obsidian28.Notice("Please enter a filename");
+              new import_obsidian29.Notice("Please enter a filename");
               void renameInput.focus();
               return;
             }
             if (this.containsInvalidCharacters(newName)) {
-              new import_obsidian28.Notice("Filename contains invalid characters");
+              new import_obsidian29.Notice("Filename contains invalid characters");
               void renameInput.focus();
               return;
             }
@@ -61921,15 +61926,16 @@ var ExportModal_exports = {};
 __export(ExportModal_exports, {
   ExportModal: () => ExportModal
 });
-var import_obsidian29, logger77, ExportModal;
+var import_obsidian30, logger77, ExportModal;
 var init_ExportModal = __esm({
   "src/export/ExportModal.ts"() {
-    import_obsidian29 = require("obsidian");
+    import_obsidian30 = require("obsidian");
     init_AudioExporter();
     init_ExportProgressModal();
+    init_FileCollisionModal();
     init_logging();
     logger77 = getLogger("export-modal");
-    ExportModal = class extends import_obsidian29.Modal {
+    ExportModal = class extends import_obsidian30.Modal {
       constructor(app, plugin, audioEngine, animator, noteCentricMapping = null) {
         super(app);
         // Configuration state
@@ -62000,7 +62006,7 @@ var init_ExportModal = __esm({
           });
         }
         const savePresetBtn = presetButtons.createEl("button", {
-          text: "\u{1F4BE} save current as preset",
+          text: "\u{1F4BE} Save current as preset",
           cls: "sonigraph-export-preset-save"
         });
         savePresetBtn.addEventListener("click", () => void this.saveCurrentAsPreset());
@@ -62027,26 +62033,26 @@ var init_ExportModal = __esm({
         if (preset.metadata) {
           this.config.metadata = preset.metadata;
         }
-        if (this.formatDropdown) {
+        if (this.formatDropdown !== void 0) {
           this.formatDropdown.setValue(preset.format);
         }
         void this.updateQualityOptions();
         void this.updateEstimate();
         if (preset.metadata && this.metadataInputs) {
-          if (this.metadataInputs.title)
+          if (this.metadataInputs.title !== void 0)
             this.metadataInputs.title.setValue(preset.metadata.title || "");
-          if (this.metadataInputs.artist)
+          if (this.metadataInputs.artist !== void 0)
             this.metadataInputs.artist.setValue(preset.metadata.artist || "");
-          if (this.metadataInputs.album)
+          if (this.metadataInputs.album !== void 0)
             this.metadataInputs.album.setValue(preset.metadata.album || "");
-          if (this.metadataInputs.year)
+          if (this.metadataInputs.year !== void 0)
             this.metadataInputs.year.setValue(((_a = preset.metadata.year) == null ? void 0 : _a.toString()) || "");
-          if (this.metadataInputs.genre)
+          if (this.metadataInputs.genre !== void 0)
             this.metadataInputs.genre.setValue(preset.metadata.genre || "");
-          if (this.metadataInputs.comment)
+          if (this.metadataInputs.comment !== void 0)
             this.metadataInputs.comment.setValue(preset.metadata.comment || "");
         }
-        new import_obsidian29.Notice(`Loaded preset: ${preset.name}`);
+        new import_obsidian30.Notice(`Loaded preset: ${preset.name}`);
       }
       /**
        * Save current settings as a preset
@@ -62072,7 +62078,7 @@ var init_ExportModal = __esm({
         }
         this.plugin.settings.exportSettings.exportPresets.push(preset);
         await this.plugin.saveSettings();
-        new import_obsidian29.Notice(`Saved preset: ${name}`);
+        new import_obsidian30.Notice(`Saved preset: ${name}`);
         void this.close();
       }
       /**
@@ -62080,12 +62086,12 @@ var init_ExportModal = __esm({
        */
       promptForPresetName() {
         return new Promise((resolve) => {
-          const modal = new import_obsidian29.Modal(this.app);
+          const modal = new import_obsidian30.Modal(this.app);
           modal.titleEl.setText("Save preset");
           const content = modal.contentEl;
           content.createEl("p", { text: "Enter a name for this preset:" });
           let nameInput;
-          new import_obsidian29.Setting(content).setName("Preset name").addText((text) => {
+          new import_obsidian30.Setting(content).setName("Preset name").addText((text) => {
             nameInput = text;
             void text.setPlaceholder("My Preset");
           });
@@ -62100,7 +62106,7 @@ var init_ExportModal = __esm({
               void modal.close();
               resolve(name);
             } else {
-              new import_obsidian29.Notice("Please enter a preset name");
+              new import_obsidian30.Notice("Please enter a preset name");
             }
           });
           void modal.open();
@@ -62136,12 +62142,12 @@ var init_ExportModal = __esm({
       createScopeSection(container) {
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "What to export" });
-        new import_obsidian29.Setting(section).setName("Export scope").setDesc("Choose what portion of the timeline to export").addDropdown((dropdown) => {
+        new import_obsidian30.Setting(section).setName("Export scope").setDesc("Choose what portion of the timeline to export").addDropdown((dropdown) => {
           this.scopeDropdown = dropdown;
           if (this.animator) {
-            dropdown.addOption("full-timeline", `Full Timeline Animation (${this.animator.config.duration}s)`).addOption("custom-range", "Custom Time Range");
+            dropdown.addOption("full-timeline", `Full timeline animation (${this.animator.config.duration}s)`).addOption("custom-range", "Custom time range");
           }
-          void dropdown.addOption("static-graph", "Current Static Graph");
+          void dropdown.addOption("static-graph", "Current static graph");
           dropdown.setValue(this.config.scope || "static-graph").onChange((value) => {
             this.config.scope = value;
             void this.updateCustomRangeVisibility();
@@ -62149,13 +62155,13 @@ var init_ExportModal = __esm({
           });
         });
         this.customRangeContainer = section.createDiv("sonigraph-custom-range-container");
-        new import_obsidian29.Setting(this.customRangeContainer).setName("Start time").setDesc("Start time in seconds (e.g., 5 or 0:05)").addText((text) => {
+        new import_obsidian30.Setting(this.customRangeContainer).setName("Start time").setDesc("Start time in seconds (e.g., 5 or 0:05)").addText((text) => {
           this.startTimeInput = text;
           text.setPlaceholder("0").setValue("0").onChange((value) => {
             this.updateCustomRange();
           });
         });
-        new import_obsidian29.Setting(this.customRangeContainer).setName("End time").setDesc("End time in seconds (e.g., 30 or 0:30)").addText((text) => {
+        new import_obsidian30.Setting(this.customRangeContainer).setName("End time").setDesc("End time in seconds (e.g., 30 or 0:30)").addText((text) => {
           var _a;
           this.endTimeInput = text;
           const maxDuration = ((_a = this.animator) == null ? void 0 : _a.config.duration) || 60;
@@ -62170,17 +62176,17 @@ var init_ExportModal = __esm({
       createFormatSection(container) {
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "Format & quality" });
-        new import_obsidian29.Setting(section).setName("Format").setDesc("Audio file format. compressed audio uses native platform codecs (m4a/aac, webm/opus, or ogg/vorbis).").addDropdown((dropdown) => {
+        new import_obsidian30.Setting(section).setName("Format").setDesc("Audio file format. compressed audio uses native platform codecs (m4a/aac, webm/opus, or ogg/vorbis).").addDropdown((dropdown) => {
           this.formatDropdown = dropdown;
-          dropdown.addOption("wav", "WAV (Lossless Audio)").addOption("mp3", "Compressed Audio (M4A/WebM/OGG)").setValue(this.config.format || "wav").onChange((value) => {
+          dropdown.addOption("wav", "WAV (Lossless audio)").addOption("mp3", "Compressed audio (M4A/WebM/OGG)").setValue(this.config.format || "wav").onChange((value) => {
             this.config.format = value;
             void this.updateQualityOptions();
             void this.updateEstimate();
           });
         });
-        new import_obsidian29.Setting(section).setName("Quality preset").setDesc("Audio quality settings").addDropdown((dropdown) => {
+        new import_obsidian30.Setting(section).setName("Quality preset").setDesc("Audio quality settings").addDropdown((dropdown) => {
           this.qualityDropdown = dropdown;
-          dropdown.addOption("high", "High Quality (48kHz, 16-bit)").addOption("lossless", "Lossless (48kHz, 24-bit)").addOption("standard", "Standard (44.1kHz, 16-bit)").setValue("high").onChange((value) => {
+          dropdown.addOption("high", "High quality (48kHz, 16-bit)").addOption("lossless", "Lossless (48kHz, 24-bit)").addOption("standard", "Standard (44.1kHz, 16-bit)").setValue("high").onChange((value) => {
             this.config.quality = this.getQualityFromPreset(value);
             void this.updateEstimate();
           });
@@ -62192,14 +62198,14 @@ var init_ExportModal = __esm({
       createLocationSection(container) {
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "Save location" });
-        new import_obsidian29.Setting(section).setName("Location type").setDesc("Save to vault or system location").addDropdown((dropdown) => {
+        new import_obsidian30.Setting(section).setName("Location type").setDesc("Save to vault or system location").addDropdown((dropdown) => {
           this.locationTypeDropdown = dropdown;
-          dropdown.addOption("vault", "Vault Folder").addOption("system", "System Location").setValue(this.config.locationType || "vault").onChange((value) => {
+          dropdown.addOption("vault", "Vault folder").addOption("system", "System location").setValue(this.config.locationType || "vault").onChange((value) => {
             this.config.locationType = value;
             void this.updateLocationInput();
           });
         });
-        new import_obsidian29.Setting(section).setName("Location").setDesc("Folder path for exported file").addText((text) => {
+        new import_obsidian30.Setting(section).setName("Location").setDesc("Folder path for exported file").addText((text) => {
           this.locationInput = text;
           text.setPlaceholder("Sonigraph Exports").setValue(this.config.location || "Sonigraph Exports").onChange((value) => {
             this.config.location = value;
@@ -62212,24 +62218,24 @@ var init_ExportModal = __esm({
       createFilenameSection(container) {
         const section = container.createDiv("export-section");
         section.createEl("h3", { text: "Filename" });
-        new import_obsidian29.Setting(section).setName("Filename").setDesc("Name for the exported file (without extension)").addText((text) => {
+        new import_obsidian30.Setting(section).setName("Filename").setDesc("Name for the exported file (without extension)").addText((text) => {
           this.filenameInput = text;
           text.setPlaceholder("sonigraph-export").setValue(this.config.filename || this.generateFilename()).onChange((value) => {
             this.config.filename = value;
             void this.updateEstimate();
           });
         });
-        new import_obsidian29.Setting(section).setName("Create export note").setDesc("Generate a markdown note documenting this export").addToggle((toggle) => {
+        new import_obsidian30.Setting(section).setName("Create export note").setDesc("Generate a markdown note documenting this export").addToggle((toggle) => {
           toggle.setValue(this.config.createNote !== false).onChange((value) => {
             this.config.createNote = value;
           });
         });
-        new import_obsidian29.Setting(section).setName("Include full settings in note").setDesc("Add comprehensive settings documentation to the export note").addToggle((toggle) => {
+        new import_obsidian30.Setting(section).setName("Include full settings in note").setDesc("Add comprehensive settings documentation to the export note").addToggle((toggle) => {
           toggle.setValue(this.config.includeSettingsSummary !== false).onChange((value) => {
             this.config.includeSettingsSummary = value;
           });
         });
-        new import_obsidian29.Setting(section).setName("Max export duration").setDesc("Safety limit in minutes (prevents accidentally long exports)").addText((text) => {
+        new import_obsidian30.Setting(section).setName("Max export duration").setDesc("Safety limit in minutes (prevents accidentally long exports)").addText((text) => {
           var _a;
           text.setPlaceholder("10").setValue(((_a = this.config.maxDurationMinutes) == null ? void 0 : _a.toString()) || "10").onChange((value) => {
             const minutes = parseInt(value, 10);
@@ -62262,14 +62268,14 @@ var init_ExportModal = __esm({
           const isVisible = this.metadataContainer.hasClass("sonigraph-export-metadata-content--visible");
           if (isVisible) {
             this.metadataContainer.removeClass("sonigraph-export-metadata-content--visible");
-            header.textContent = "Metadata (Optional) \u25BC";
+            header.textContent = "Metadata (optional) \u25BC";
           } else {
             this.metadataContainer.addClass("sonigraph-export-metadata-content--visible");
-            header.textContent = "Metadata (Optional) \u25B2";
+            header.textContent = "Metadata (optional) \u25B2";
           }
         });
         const lastMetadata = (_a = this.plugin.settings.exportSettings) == null ? void 0 : _a.lastMetadata;
-        new import_obsidian29.Setting(this.metadataContainer).setName("Title").setDesc("Song or export title").addText((text) => {
+        new import_obsidian30.Setting(this.metadataContainer).setName("Title").setDesc("Song or export title").addText((text) => {
           this.metadataInputs.title = text;
           text.setPlaceholder("Sonic Graph Export").setValue((lastMetadata == null ? void 0 : lastMetadata.title) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -62277,7 +62283,7 @@ var init_ExportModal = __esm({
             this.config.metadata.title = value.trim() || void 0;
           });
         });
-        new import_obsidian29.Setting(this.metadataContainer).setName("Artist").setDesc("Artist or creator name").addText((text) => {
+        new import_obsidian30.Setting(this.metadataContainer).setName("Artist").setDesc("Artist or creator name").addText((text) => {
           this.metadataInputs.artist = text;
           text.setPlaceholder("Your Name").setValue((lastMetadata == null ? void 0 : lastMetadata.artist) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -62285,7 +62291,7 @@ var init_ExportModal = __esm({
             this.config.metadata.artist = value.trim() || void 0;
           });
         });
-        new import_obsidian29.Setting(this.metadataContainer).setName("Album").setDesc("Album or collection name").addText((text) => {
+        new import_obsidian30.Setting(this.metadataContainer).setName("Album").setDesc("Album or collection name").addText((text) => {
           this.metadataInputs.album = text;
           text.setPlaceholder("Vault Soundscapes").setValue((lastMetadata == null ? void 0 : lastMetadata.album) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -62293,7 +62299,7 @@ var init_ExportModal = __esm({
             this.config.metadata.album = value.trim() || void 0;
           });
         });
-        new import_obsidian29.Setting(this.metadataContainer).setName("Year").setDesc("Year of creation").addText((text) => {
+        new import_obsidian30.Setting(this.metadataContainer).setName("Year").setDesc("Year of creation").addText((text) => {
           var _a2;
           this.metadataInputs.year = text;
           const currentYear = new Date().getFullYear();
@@ -62304,7 +62310,7 @@ var init_ExportModal = __esm({
             this.config.metadata.year = isNaN(year) ? void 0 : year;
           });
         });
-        new import_obsidian29.Setting(this.metadataContainer).setName("Genre").setDesc("Musical genre or category").addText((text) => {
+        new import_obsidian30.Setting(this.metadataContainer).setName("Genre").setDesc("Musical genre or category").addText((text) => {
           this.metadataInputs.genre = text;
           text.setPlaceholder("Ambient, Generative").setValue((lastMetadata == null ? void 0 : lastMetadata.genre) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -62312,7 +62318,7 @@ var init_ExportModal = __esm({
             this.config.metadata.genre = value.trim() || void 0;
           });
         });
-        new import_obsidian29.Setting(this.metadataContainer).setName("Comment").setDesc("Additional notes or description").addTextArea((text) => {
+        new import_obsidian30.Setting(this.metadataContainer).setName("Comment").setDesc("Additional notes or description").addTextArea((text) => {
           this.metadataInputs.comment = text;
           text.setPlaceholder("Generated from Obsidian vault using Sonigraph plugin").setValue((lastMetadata == null ? void 0 : lastMetadata.comment) || "").onChange((value) => {
             if (!this.config.metadata)
@@ -62346,7 +62352,7 @@ var init_ExportModal = __esm({
       async startExport() {
         try {
           if (!this.config.filename || this.config.filename.trim() === "") {
-            new import_obsidian29.Notice("Please enter a filename");
+            new import_obsidian30.Notice("Please enter a filename");
             return;
           }
           const exportConfig = {
@@ -62396,8 +62402,7 @@ var init_ExportModal = __esm({
           const fileExists = this.app.vault.getAbstractFileByPath(fullPath);
           if (fileExists) {
             void logger77.info("export-modal", "File collision detected, showing resolution modal");
-            const { FileCollisionModal: FileCollisionModal2 } = (init_FileCollisionModal(), __toCommonJS(FileCollisionModal_exports));
-            const collisionModal = new FileCollisionModal2(
+            const collisionModal = new FileCollisionModal(
               this.app,
               fullPath,
               (resolution) => {
@@ -62425,7 +62430,7 @@ var init_ExportModal = __esm({
           void this.proceedWithExport(exportConfig);
         } catch (error) {
           void logger77.error("export-modal", "Export start failed:", error);
-          new import_obsidian29.Notice(`Export failed: ${error.message}`);
+          new import_obsidian30.Notice(`Export failed: ${error.message}`);
         }
       }
       /**
@@ -62441,15 +62446,15 @@ var init_ExportModal = __esm({
        * Update quality dropdown options based on selected format
        */
       updateQualityOptions() {
-        if (!this.qualityDropdown)
+        if (this.qualityDropdown === void 0)
           return;
         this.qualityDropdown.selectEl.empty();
         const format2 = this.config.format || "wav";
         if (format2 === "wav") {
-          this.qualityDropdown.addOption("high", "High Quality (48kHz, 16-bit)").addOption("lossless", "Lossless (48kHz, 24-bit)").addOption("standard", "Standard (44.1kHz, 16-bit)").setValue("high");
+          this.qualityDropdown.addOption("high", "High quality (48kHz, 16-bit)").addOption("lossless", "Lossless (48kHz, 24-bit)").addOption("standard", "Standard (44.1kHz, 16-bit)").setValue("high");
           this.config.quality = this.getQualityFromPreset("high");
         } else if (format2 === "mp3") {
-          this.qualityDropdown.addOption("high", "High Quality (320 kbps)").addOption("standard", "Standard (192 kbps)").addOption("small", "Small Size (128 kbps)").setValue("high");
+          this.qualityDropdown.addOption("high", "High quality (320 kbps)").addOption("standard", "Standard (192 kbps)").addOption("small", "Small size (128 kbps)").setValue("high");
           this.config.quality = this.getQualityFromPreset("high");
         }
         void this.updateEstimate();
@@ -62458,7 +62463,7 @@ var init_ExportModal = __esm({
        * Update location input based on location type
        */
       updateLocationInput() {
-        if (this.locationInput) {
+        if (this.locationInput !== void 0) {
           if (this.config.locationType === "vault") {
             this.locationInput.setValue(this.config.location || "Sonigraph Exports");
           } else {
@@ -62470,7 +62475,7 @@ var init_ExportModal = __esm({
        * Update estimate display
        */
       updateEstimate() {
-        if (!this.estimateDisplay)
+        if (this.estimateDisplay === void 0)
           return;
         const duration2 = this.estimateDuration();
         const fileSize = this.estimateFileSize(duration2);
@@ -62650,7 +62655,7 @@ var init_ExportModal = __esm({
        */
       updateCustomRange() {
         var _a;
-        if (!this.startTimeInput || !this.endTimeInput)
+        if (this.startTimeInput === void 0 || this.endTimeInput === void 0)
           return;
         const startValue = this.startTimeInput.getValue().trim();
         const endValue = this.endTimeInput.getValue().trim();
@@ -62686,2662 +62691,13 @@ var init_ExportModal = __esm({
   }
 });
 
-// curated-samples-transformed.json
-var require_curated_samples_transformed = __commonJS({
-  "curated-samples-transformed.json"(exports, module2) {
-    module2.exports = [
-      {
-        id: 437386,
-        title: "Electronic Minute No 152 - The Drone",
-        previewUrl: "https://cdn.freesound.org/previews/437/437386_preview-hq.mp3",
-        duration: 346.906,
-        license: "CC0",
-        attribution: "gis_sweden",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "electronic",
-          "atmospheric"
-        ],
-        description: "Electronic drone track, part of Electronic Minute series",
-        usageNotes: "Excellent for sustained atmospheric background, no attribution required. Long duration ideal for extended continuous layers."
-      },
-      {
-        id: 479059,
-        title: "Modulated Drone (Key of G)",
-        previewUrl: "https://cdn.freesound.org/previews/479/479059_preview-hq.mp3",
-        duration: 62,
-        license: "CC BY 3.0",
-        attribution: "subtletransmissions",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "modulated",
-          "key-g",
-          "tonal"
-        ],
-        description: "Modulated drone in the key of G",
-        usageNotes: "Tonal drone with modulation, perfect for musical key-based continuous layers. Medium duration ideal for musical looping."
-      },
-      {
-        id: 400062,
-        title: "Lost Ark Drone",
-        previewUrl: "https://cdn.freesound.org/previews/400/400062_preview-hq.mp3",
-        duration: 44.587,
-        license: "CC BY 4.0",
-        attribution: "eardeer",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "atmospheric",
-          "ambient",
-          "ark"
-        ],
-        description: "Lost Ark themed atmospheric drone",
-        usageNotes: "Atmospheric drone with thematic elements, good for immersive continuous layers. Medium duration perfect for looping."
-      },
-      {
-        id: 277372,
-        title: "Drone 08",
-        previewUrl: "https://cdn.freesound.org/previews/277/277372_preview-hq.mp3",
-        duration: 45.098,
-        license: "CC0",
-        attribution: "myluckyfeet",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "atmospheric"
-        ],
-        description: "Atmospheric drone, part of drone series",
-        usageNotes: "Excellent for sustained atmospheric background, no attribution required. Similar duration to Lost Ark Drone, good for alternating loops."
-      },
-      {
-        id: 321761,
-        title: "Atonal Drone 03",
-        previewUrl: "https://cdn.freesound.org/previews/321/321761_preview-hq.mp3",
-        duration: 340,
-        license: "CC0",
-        attribution: "Skjor1",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "atonal",
-          "atmospheric",
-          "ambient"
-        ],
-        description: "Atonal drone, part of atonal drone series",
-        usageNotes: "Excellent long-form atonal drone, no attribution required. Perfect companion to Electronic Minute No 152 for extended atmospheric layers."
-      },
-      {
-        id: 440688,
-        title: "Tinnito - Drone - Eau Tuyau Low",
-        previewUrl: "https://cdn.freesound.org/previews/440/440688_preview-hq.mp3",
-        duration: 34.304,
-        license: "CC0",
-        attribution: "rombart",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "low",
-          "water",
-          "pipe",
-          "tonal"
-        ],
-        description: "Low water pipe drone with unique tonal character",
-        usageNotes: "Unique tonal drone with water/pipe characteristics, no attribution required. Shortest drone in collection, good for rapid cycling or layering."
-      },
-      {
-        id: 496216,
-        title: "Broken Hum",
-        previewUrl: "https://cdn.freesound.org/previews/496/496216_preview-hq.mp3",
-        duration: 176,
-        license: "CC BY 3.0",
-        attribution: "subtletransmissions",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "hum",
-          "broken",
-          "atmospheric"
-        ],
-        description: "Broken hum with atmospheric qualities",
-        usageNotes: 'Medium-length atmospheric drone with "broken" character, perfect for adding texture variation to continuous layers.'
-      },
-      {
-        id: 441987,
-        title: "Tascam 246 (Buzz) 1",
-        previewUrl: "https://cdn.freesound.org/previews/441/441987_preview-hq.mp3",
-        duration: 93.542,
-        license: "CC BY 3.0",
-        attribution: "subtletransmissions",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "buzz",
-          "tascam",
-          "equipment",
-          "lo-fi"
-        ],
-        description: "Atmospheric buzz from Tascam 246 equipment",
-        usageNotes: "Equipment-generated atmospheric buzz with vintage character. Perfect for adding analog texture to continuous layers."
-      },
-      {
-        id: 431903,
-        title: "Anglepoise Lamp",
-        previewUrl: "https://cdn.freesound.org/previews/431/431903_preview-hq.mp3",
-        duration: 98.353,
-        license: "CC BY 3.0",
-        attribution: "subtletransmissions",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "lamp",
-          "electrical",
-          "hum",
-          "ambient"
-        ],
-        description: "Atmospheric drone from anglepoise lamp electrical hum",
-        usageNotes: "Electrical lamp hum with ambient character. Unique everyday object drone perfect for organic/domestic atmospheric layers."
-      },
-      {
-        id: 371518,
-        title: "Drone at the 21th",
-        previewUrl: "https://cdn.freesound.org/previews/371/371518_preview-hq.mp3",
-        duration: 11.888,
-        license: "CC0",
-        attribution: "gis_sweden",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "atmospheric",
-          "electronic",
-          "short"
-        ],
-        description: "Short atmospheric drone, part of Electronic Minute series",
-        usageNotes: "Very short atmospheric drone, no attribution required. Perfect for rapid cycling, transitions, or layering with longer drones."
-      },
-      {
-        id: 360425,
-        title: "Evolving Drone Pad",
-        previewUrl: "https://cdn.freesound.org/previews/360/360425_preview-hq.mp3",
-        duration: 125.522,
-        license: "CC0",
-        attribution: "brogenhogan",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "pad",
-          "evolving",
-          "atmospheric",
-          "dynamic"
-        ],
-        description: "Evolving drone pad with dynamic character",
-        usageNotes: "Evolving atmospheric pad with natural progression, no attribution required. Perfect for continuous layers that need internal development and variation."
-      },
-      {
-        id: 346427,
-        title: "Friday Lunch Drone",
-        previewUrl: "https://cdn.freesound.org/previews/346/346427_preview-hq.mp3",
-        duration: 86.936,
-        license: "CC0",
-        attribution: "gis_sweden",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "atmospheric",
-          "casual",
-          "ambient"
-        ],
-        description: "Atmospheric drone with casual, everyday character",
-        usageNotes: "Casual atmospheric drone with relaxed character, no attribution required. Perfect for comfortable, non-intensive vault exploration sessions."
-      },
-      {
-        id: 345779,
-        title: "Drone, Rain, Fade Out",
-        previewUrl: "https://cdn.freesound.org/previews/345/345779_preview-hq.mp3",
-        duration: 27.695,
-        license: "CC0",
-        attribution: "gerainsan",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "rain",
-          "fade",
-          "atmospheric",
-          "natural"
-        ],
-        description: "Atmospheric drone with rain elements and natural fade out",
-        usageNotes: "Natural atmospheric drone with rain texture and fade-out ending, no attribution required. Perfect for transitions, nature-themed sessions, or gentle layer endings."
-      },
-      {
-        id: 349030,
-        title: "Derived Low Drone",
-        previewUrl: "https://cdn.freesound.org/previews/349/349030_preview-hq.mp3",
-        duration: 139.319,
-        license: "CC0",
-        attribution: "gis_sweden",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "low",
-          "derived",
-          "atmospheric",
-          "bass"
-        ],
-        description: "Low-frequency derived atmospheric drone",
-        usageNotes: "Deep low-frequency atmospheric drone, no attribution required. Perfect for adding bass foundation to continuous layers or creating deep, contemplative atmospheres."
-      },
-      {
-        id: 379515,
-        title: "Drone Loop",
-        previewUrl: "https://cdn.freesound.org/previews/379/379515_preview-hq.mp3",
-        duration: 38.399,
-        license: "CC0",
-        attribution: "stixthule",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "loop",
-          "atmospheric",
-          "seamless"
-        ],
-        description: "Atmospheric drone specifically designed for looping",
-        usageNotes: "Purpose-built loop drone, no attribution required. Designed for seamless continuous playback, perfect for sustained atmospheric layers."
-      },
-      {
-        id: 239039,
-        title: "Synth Drone 3",
-        previewUrl: "https://cdn.freesound.org/previews/239/239039_preview-hq.mp3",
-        duration: 614,
-        license: "CC BY 4.0",
-        attribution: "apotter1992",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "synth",
-          "synthesized",
-          "atmospheric",
-          "electronic"
-        ],
-        description: "Synthesized atmospheric drone, part of synth drone series",
-        usageNotes: "Clean synthesized drone with electronic character, attribution required. Extended duration perfect for very long vault exploration sessions or as primary background layer."
-      },
-      {
-        id: 457598,
-        title: "Electronic Minute No 226 - Minimal Drone 2 VCO",
-        previewUrl: "https://cdn.freesound.org/previews/457/457598_preview-hq.mp3",
-        duration: 209.389,
-        license: "CC0",
-        attribution: "gis_sweden",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "minimal",
-          "electronic",
-          "modular",
-          "vcv-rack",
-          "vco"
-        ],
-        description: "Minimal drone using 2 VCO (Voltage Controlled Oscillators) in VCV-Rack modular synth",
-        usageNotes: "Minimal modular synth drone with 2 oscillators, no attribution required. Perfect for clean, minimal electronic atmospheres with precise oscillator control."
-      },
-      {
-        id: 457453,
-        title: "Electronic Minute No 224 - 3rd After 13 Drone",
-        previewUrl: "https://cdn.freesound.org/previews/457/457453_preview-hq.mp3",
-        duration: 655.083,
-        license: "CC0",
-        attribution: "gis_sweden",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "chaos",
-          "ring-modulator",
-          "electronic",
-          "complex",
-          "experimental"
-        ],
-        description: '"A drone resting in chaos and ring modulator circuits" - complex electronic drone with ring modulation',
-        usageNotes: "Complex experimental drone with chaos and ring modulation, no attribution required. Perfect for deep, immersive vault exploration with evolving electronic textures. Longest drone in collection."
-      },
-      {
-        id: 456758,
-        title: "Electronic Minute No 218 - Algorithmic Drone Music Program",
-        previewUrl: "https://cdn.freesound.org/previews/456/456758_preview-hq.mp3",
-        duration: 627.594,
-        license: "CC0",
-        attribution: "gis_sweden",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "algorithmic",
-          "generative",
-          "electronic",
-          "computational",
-          "modular"
-        ],
-        description: '"Algorithmic drone music program. The computer is my analog modular synth." - AI/algorithmic generated drone',
-        usageNotes: "Algorithmically generated drone using computer as modular synth, no attribution required. Perfect for AI-themed vaults or computational music exploration. Second longest drone in collection."
-      },
-      {
-        id: 456036,
-        title: "60bpm - Air Drone",
-        previewUrl: "https://cdn.freesound.org/previews/456/456036_preview-hq.mp3",
-        duration: 112,
-        license: "CC BY-NC",
-        attribution: "Wilii89",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "air",
-          "atmospheric",
-          "60bpm",
-          "tempo-specific"
-        ],
-        description: "Atmospheric air drone at 60 BPM tempo",
-        usageNotes: "Tempo-specific air drone at 60 BPM, attribution required, non-commercial use only. Perfect for synchronized atmospheric layers with defined tempo."
-      },
-      {
-        id: 169013,
-        title: "Drone2.aif",
-        previewUrl: "https://cdn.freesound.org/previews/169/169013_preview-hq.mp3",
-        duration: 52,
-        license: "CC0",
-        attribution: "LogicMoon",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "atmospheric"
-        ],
-        description: "Atmospheric drone, part of drone series",
-        usageNotes: "Clean atmospheric drone with medium duration, no attribution required. Perfect for looping and layering with other atmospheric elements."
-      },
-      {
-        id: 177016,
-        title: "Artillery Drone Burnt Orange",
-        previewUrl: "https://cdn.freesound.org/previews/177/177016_preview-hq.mp3",
-        duration: 14,
-        license: "CC BY 4.0",
-        attribution: "Jovica",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "artillery",
-          "burnt-orange",
-          "short",
-          "atmospheric"
-        ],
-        description: "Short artillery-themed atmospheric drone with burnt orange character",
-        usageNotes: "Very short atmospheric drone with unique artillery character, attribution required. Perfect for rapid cycling, transitions, or as accent layer with longer drones."
-      },
-      {
-        id: 222610,
-        title: "Cinematic Drone 1",
-        previewUrl: "https://cdn.freesound.org/previews/222/222610_preview-hq.mp3",
-        duration: 63.405,
-        license: "CC0",
-        attribution: "jordivburgel",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "cinematic",
-          "atmospheric",
-          "film",
-          "media"
-        ],
-        description: "Cinematic atmospheric drone designed for film/media use",
-        usageNotes: "Medium-length cinematic drone with professional film quality, no attribution required. Perfect for dramatic atmospheric layers and cinematic vault exploration experiences."
-      },
-      {
-        id: 191167,
-        title: "Piano Drone",
-        previewUrl: "https://cdn.freesound.org/previews/191/191167_preview-hq.mp3",
-        duration: 14.86,
-        license: "CC0",
-        attribution: "laserlife",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "piano",
-          "acoustic",
-          "atmospheric",
-          "instrumental"
-        ],
-        description: "Piano-based atmospheric drone with acoustic character",
-        usageNotes: "Short piano-based drone with organic acoustic character, no attribution required. Perfect for adding warmth and acoustic texture to continuous layers, ideal for musical or creative-themed vaults."
-      },
-      {
-        id: 180495,
-        title: "MonotonousDrone5_1",
-        previewUrl: "https://cdn.freesound.org/previews/180/180495_preview-hq.mp3",
-        duration: 61.23,
-        license: "CC0",
-        attribution: "Sclolex",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "monotonous",
-          "atmospheric",
-          "sustained"
-        ],
-        description: "Monotonous atmospheric drone, part of drone series",
-        usageNotes: "Medium-length monotonous drone with consistent character, no attribution required. Perfect for sustained background atmosphere with minimal variation, ideal for focused work sessions or meditative vault exploration."
-      },
-      {
-        id: 182047,
-        title: "FX Background Drone Spaceship",
-        previewUrl: "https://cdn.freesound.org/previews/182/182047_preview-hq.mp3",
-        duration: 15.879,
-        license: "CC0",
-        attribution: "Karma-Ron",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "fx",
-          "background",
-          "spaceship",
-          "sci-fi",
-          "atmospheric"
-        ],
-        description: "FX background drone with spaceship theme, created by request",
-        usageNotes: "Short spaceship-themed FX drone, no attribution required. Perfect for sci-fi atmospheric layers and space-themed continuous backgrounds."
-      },
-      {
-        id: 207376,
-        title: "Big Space Drone 8",
-        previewUrl: "https://cdn.freesound.org/previews/207/207376_preview-hq.mp3",
-        duration: 202.292,
-        license: "CC BY-NC",
-        attribution: "Speedenza",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "space",
-          "atmospheric",
-          "big",
-          "extended",
-          "sci-fi"
-        ],
-        description: "Extended space-themed atmospheric drone, part of space drone series",
-        usageNotes: "Extended space drone with substantial duration, attribution required, non-commercial use only. Perfect for long-form sci-fi atmospheric layers and extended space-themed vault exploration sessions."
-      },
-      {
-        id: 203923,
-        title: "Airy Layered Drone",
-        previewUrl: "https://cdn.freesound.org/previews/203/203923_preview-hq.mp3",
-        duration: 208.421,
-        license: "CC BY-NC",
-        attribution: "Speedenza",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "airy",
-          "layered",
-          "atmospheric",
-          "extended"
-        ],
-        description: "Airy atmospheric drone with layered textures",
-        usageNotes: "Extended airy drone with layered composition, attribution required, non-commercial use only. Perfect for light, atmospheric continuous layers with textural complexity."
-      },
-      {
-        id: 220894,
-        title: "Ibrkr01 Drone",
-        previewUrl: "https://cdn.freesound.org/previews/220/220894_preview-hq.mp3",
-        duration: 65.976,
-        license: "CC0",
-        attribution: "Diboz",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "drone",
-          "atmospheric",
-          "ibrkr"
-        ],
-        description: "Atmospheric drone from ibrkr series",
-        usageNotes: "Medium-length atmospheric drone, no attribution required. Perfect for sustained continuous layers with good loop duration."
-      },
-      {
-        id: 197395,
-        title: "Heavy Industrial Elevator",
-        previewUrl: "https://cdn.freesound.org/previews/197/197395_preview-hq.mp3",
-        duration: 42.349,
-        license: "CC BY 3.0",
-        attribution: "peter5992",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "drone",
-          "mechanical",
-          "industrial",
-          "elevator",
-          "vintage",
-          "oakland",
-          "cotton-mill",
-          "historical",
-          "machinery"
-        ],
-        description: "Sound of the 100 year old industrial elevator in the iconic Cotton Mill Studios in Oakland, California. Heavy duty industrial type with old school call buttons and secured by two gates. Recorded with Zoom H4 at 96kHz/24bit",
-        usageNotes: "Authentic industrial mechanical drone from historic building, attribution required. Perfect for industrial atmospheres, mechanical environments, or vintage machinery soundscapes."
-      },
-      {
-        id: 413377,
-        title: "Gray Whale - MBARI Deep-Sea Observatory",
-        previewUrl: "https://cdn.freesound.org/previews/413/413377_preview-hq.mp3",
-        duration: 0,
-        license: "CC BY 4.0",
-        attribution: "MBARI_MARS",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "whale",
-          "gray",
-          "mbari",
-          "deep-sea",
-          "observatory",
-          "california",
-          "2015"
-        ],
-        description: "Gray whale (Eschrichtius robustus) vocalizations from California deep-sea cabled observatory, recorded August 18, 2015",
-        usageNotes: "Professional research institution recording from deep-sea observatory, attribution required. Perfect for California coastal oceanic themes with migration context."
-      },
-      {
-        id: 479068,
-        title: "Dark Texture 1 (Square Wave)",
-        previewUrl: "https://cdn.freesound.org/previews/479/479068_preview-hq.mp3",
-        duration: 120,
-        license: "CC BY 3.0",
-        attribution: "subtletransmissions",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "atmospheric",
-          "dark",
-          "square-wave",
-          "texture"
-        ],
-        description: "Dark atmospheric texture using square wave synthesis",
-        usageNotes: "Perfect for sci-fi continuous layers with dark, electronic character. Medium duration ideal for atmospheric loops in space-themed environments."
-      },
-      {
-        id: 484060,
-        title: "Lazer 1",
-        previewUrl: "https://cdn.freesound.org/previews/484/484060_preview-hq.mp3",
-        duration: 10,
-        license: "CC BY 3.0",
-        attribution: "subtletransmissions",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "laser",
-          "effect",
-          "technological"
-        ],
-        description: "Sci-fi laser effect sound",
-        usageNotes: "Perfect for discrete node events, transitions, or special effects in sci-fi themed continuous layers. Short duration ideal for event triggers."
-      },
-      {
-        id: 757449,
-        title: "Sci-Fi Computing Transmission 01",
-        previewUrl: "https://cdn.freesound.org/previews/757/757449_preview-hq.mp3",
-        duration: 60,
-        license: "CC0",
-        attribution: "cabled_mess",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "computing",
-          "transmission",
-          "retro",
-          "analogue",
-          "communication",
-          "eurorack",
-          "modular",
-          "technological"
-        ],
-        description: "Retro Sci-Fi analogue computing or communication sound effects created on a Doepfer Eurorack system",
-        usageNotes: "Perfect atmospheric computing/transmission sound for sci-fi continuous layers, no attribution required. Modular synth-based texture ideal for technological atmospheres and data transmission themes."
-      },
-      {
-        id: 756472,
-        title: "Synthetic Watery Bubbles 01",
-        previewUrl: "https://cdn.freesound.org/previews/756/756472_preview-hq.mp3",
-        duration: 60,
-        license: "CC0",
-        attribution: "cabled_mess",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "synthetic",
-          "water",
-          "bubbles",
-          "modular",
-          "analogue",
-          "liquid",
-          "technological",
-          "texture"
-        ],
-        description: "Bubble water sounds created on an analogue modular synthesizer",
-        usageNotes: "Synthetic liquid texture perfect for sci-fi underwater or alien liquid environments, no attribution required. Modular synth-based bubbling ideal for technological aquatic atmospheres."
-      },
-      {
-        id: 123708,
-        title: "Bizarre Radio Noise",
-        previewUrl: "https://cdn.freesound.org/previews/123/123708_preview-hq.mp3",
-        duration: 311.134,
-        license: "CC0",
-        attribution: "alienistcog",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "radio",
-          "interference",
-          "electromagnetic",
-          "noise",
-          "strange",
-          "atmospheric",
-          "technological",
-          "mysterious",
-          "extended"
-        ],
-        description: "Strange radio interference picked up between radio channels at 3AM one morning. Strange EM phenomenon rather than broadcast",
-        usageNotes: "Extended 5+ minute atmospheric radio interference, no attribution required. Perfect for alien communications, technological mysteries, or dystopian sci-fi atmospheres. Natural EM phenomenon adds authentic strangeness."
-      },
-      {
-        id: 725828,
-        title: "Basic Spaceship Engine (Bass)",
-        previewUrl: "https://cdn.freesound.org/previews/725/725828_preview-hq.mp3",
-        duration: 25.557,
-        license: "CC0",
-        attribution: "clif_creates",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "spaceship",
-          "engine",
-          "bass",
-          "hum",
-          "technological",
-          "feedback",
-          "layer"
-        ],
-        description: "A very basic spaceship hum. Created from a random feedback wav that happened one day when soundflower crashed. This is pitched down and EQd to work as a bass-heavy Sci-fi background",
-        usageNotes: "Bass-heavy spaceship engine hum, no attribution required. Perfect as a layer to beef up any sci-fi atmosphere. Short duration ideal for looping. Created from accidental feedback, adding organic quality to synthetic sound."
-      },
-      {
-        id: 516327,
-        title: "ILH Space Noise - Nostromo",
-        previewUrl: "https://cdn.freesound.org/previews/516/516327_preview-hq.mp3",
-        duration: 16.302,
-        license: "CC BY 4.0",
-        attribution: "voxlab",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "spaceship",
-          "alien",
-          "nostromo",
-          "technological",
-          "harmor",
-          "pitch-shift",
-          "versatile"
-        ],
-        description: "Spaceship Noise-SFX made with IL Harmor. Reminiscent of the Nostromo spaceship from Alien 1. Sounds human-like when pitched up; 4 octaves up becomes VOX Sound/Synth Choir",
-        usageNotes: "Iconic spaceship atmosphere inspired by Alien franchise, attribution required. Short loop with pitch-shifting versatility - can transform from spaceship drone to choir sound. Perfect for creating ominous sci-fi atmospheres."
-      },
-      {
-        id: 59,
-        title: "Nostromo Room Tone",
-        previewUrl: "https://cdn.freesound.org/previews/59/59_preview-hq.mp3",
-        duration: 14.362,
-        license: "CC BY 4.0",
-        attribution: "fectoper",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "spaceship",
-          "alien",
-          "nostromo",
-          "room-tone",
-          "roland-jd800",
-          "technological",
-          "ambient"
-        ],
-        description: 'Inspired by the ambient background heard "in silence" on the Nostromo spaceship from Alien. Created using Roland JD-800 synthesizer to recreate similar "room tone"',
-        usageNotes: "Classic spaceship room tone atmosphere, attribution required. Short loop perfect for creating subtle background presence. Roland JD-800 synthesis provides vintage digital character. Complements other Nostromo-inspired samples."
-      },
-      {
-        id: 214663,
-        title: "Deep Space Ship Effect",
-        previewUrl: "https://cdn.freesound.org/previews/214/214663_preview-hq.mp3",
-        duration: 10.473,
-        license: "CC BY 4.0",
-        attribution: "hykenfreak",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "spaceship",
-          "deep-space",
-          "white-noise",
-          "drone",
-          "subtle",
-          "ambient",
-          "loop",
-          "technological"
-        ],
-        description: "Sound created using white noise generator then pitched down and EQ low pass with lots of deep reverb. Normalized for subtle ambient use, not loud playback. For spaceship background noise, distant rocket/jet takeoffs, and suspense drones",
-        usageNotes: "Designed for subtle background presence, attribution required. Very short loop explicitly created for DAW looping and crossfading. Use proper speakers/headphones for full deep frequency effect. Perfect for continuous spaceship ambience."
-      },
-      {
-        id: 275646,
-        title: "Static Error 1",
-        previewUrl: "https://cdn.freesound.org/previews/275/275646_preview-hq.mp3",
-        duration: 5.504,
-        license: "CC0",
-        attribution: "dotY21",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "static",
-          "error",
-          "glitch",
-          "technological",
-          "malfunction",
-          "digital",
-          "interference"
-        ],
-        description: "A static error sound. Glitch sounds",
-        usageNotes: "Very short glitch loop, no attribution required. Best used for technological malfunction atmospheres or layered with other samples for digital interference effects. Can create unsettling technological environments when looped."
-      },
-      {
-        id: 369826,
-        title: "Cyborg/Machine Breath 2",
-        previewUrl: "https://cdn.freesound.org/previews/369/369826_preview-hq.mp3",
-        duration: 13.3,
-        license: "CC0",
-        attribution: "dotY21",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "cyborg",
-          "machine",
-          "breath",
-          "technological",
-          "biomechanical",
-          "rhythmic",
-          "loop"
-        ],
-        description: "Another cyborg breath noise",
-        usageNotes: "Short rhythmic cyborg breathing loop, no attribution required. Perfect for creating biomechanical atmospheres or machine-life environments. Can add organic rhythm to technological soundscapes when looped."
-      },
-      {
-        id: 371183,
-        title: "Corrupted Static Noise Loopable",
-        previewUrl: "https://cdn.freesound.org/previews/371/371183_preview-hq.mp3",
-        duration: 6.494,
-        license: "CC0",
-        attribution: "dotY21",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "static",
-          "corrupted",
-          "noise",
-          "glitch",
-          "loopable",
-          "technological",
-          "interference",
-          "experimental"
-        ],
-        description: "A static noise. Glitch sounds",
-        usageNotes: "Very short loopable static texture, no attribution required. Explicitly designed for seamless looping. Perfect for creating corrupted data streams or technological interference layers."
-      },
-      {
-        id: 747181,
-        title: "High Intense Beam Morphing",
-        previewUrl: "https://cdn.freesound.org/previews/747/747181_preview-hq.mp3",
-        duration: 13.234,
-        license: "CC0",
-        attribution: "clif_creates",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "beam",
-          "laser",
-          "morphing",
-          "resonant",
-          "harmonious",
-          "technological",
-          "energy",
-          "possibly-c"
-        ],
-        description: "A harmonious/resonant beaming laser-type of sound. Pretty sure it's in C, but haven't checked to be sure",
-        usageNotes: "Short resonant beam loop, no attribution required. Tonal quality (possibly in C) makes it musically compatible. Perfect for energy weapon atmospheres or technological scanning environments. From creator of Basic Spaceship Engine sample."
-      },
-      {
-        id: 593692,
-        title: "Fantasy Sci-Fi City Forest Atmosphere",
-        previewUrl: "https://cdn.freesound.org/previews/593/593692_preview-hq.mp3",
-        duration: 234.901,
-        license: "CC0",
-        attribution: "szegvari",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "fantasy",
-          "city",
-          "forest",
-          "atmospheric",
-          "soundscape",
-          "ambient"
-        ],
-        description: "Fantasy sci-fi city forest atmospheric soundscape",
-        usageNotes: "Extended atmospheric soundscape blending fantasy, sci-fi, and natural forest elements, no attribution required. Perfect for complex sci-fi continuous layers with organic and technological fusion themes."
-      },
-      {
-        id: 743075,
-        title: "Sci-Fi Soundscape - Wind - 200",
-        previewUrl: "https://cdn.freesound.org/previews/743/743075_preview-hq.mp3",
-        duration: 69.267,
-        license: "CC BY-NC",
-        attribution: "GregorQuendel",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "soundscape",
-          "wind",
-          "synthetic",
-          "artificial",
-          "atmospheric",
-          "designed"
-        ],
-        description: 'A collection of sci-fi soundscapes that were not selected for the release of the sound effects library "Designed Atmospheres". Synthetic/artificial wind soundscape',
-        usageNotes: "Professional synthetic wind atmosphere from unused sound library content, attribution required, non-commercial use only. Perfect for alien planet atmospheres or technological wind simulations."
-      },
-      {
-        id: 743472,
-        title: "Deep Space Sound",
-        previewUrl: "https://cdn.freesound.org/previews/743/743472_preview-hq.mp3",
-        duration: 7.559,
-        license: "CC0",
-        attribution: "cliploop",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "oceanic",
-          "sci-fi",
-          "space",
-          "deep",
-          "spheric",
-          "synthetic",
-          "atmospheric",
-          "short",
-          "loop"
-        ],
-        description: "Deep spheric sound, synthetic/artificial space atmosphere",
-        usageNotes: "Very short deep space atmosphere, no attribution required. Best used as a looped texture for continuous space ambience. Deep spheric quality ideal for void or deep space environments."
-      },
-      {
-        id: 86072,
-        title: "Transfer into the Other Dimension",
-        previewUrl: "https://cdn.freesound.org/previews/860/86072_preview-hq.mp3",
-        duration: 7.006,
-        license: "CC BY-NC",
-        attribution: "harpoyume",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "sci-fi",
-          "dimensional",
-          "transfer",
-          "otherworldly",
-          "synthetic",
-          "atmospheric",
-          "short",
-          "portal"
-        ],
-        description: "Transferring sound into the other dimension. Synthetic/artificial dimensional transfer effect",
-        usageNotes: "Very short dimensional transfer atmosphere, attribution required, non-commercial use only. Ideal for portal/transition effects or looped for continuous interdimensional ambience. Perfect for representing phase shifts or reality transitions."
-      },
-      {
-        id: 697832,
-        title: "Frog Chorus Ambience",
-        previewUrl: "https://cdn.freesound.org/previews/697/697832_preview-hq.mp3",
-        duration: 8.897,
-        license: "CC BY-NC",
-        attribution: "soundshmyak",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "nature",
-          "frog",
-          "chorus",
-          "animals",
-          "natural",
-          "soundscape"
-        ],
-        description: "Natural frog chorus ambience with animal sounds",
-        usageNotes: "Short natural ambience with frog chorus, attribution required, non-commercial use only. Perfect for natural ambient layers and organic atmospheric backgrounds."
-      },
-      {
-        id: 776043,
-        title: "Melancholic Nature Soundscape",
-        previewUrl: "https://cdn.freesound.org/previews/776/776043_preview-hq.mp3",
-        duration: 98.46,
-        license: "CC BY 4.0",
-        attribution: "Universfield",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "melancholic",
-          "nature",
-          "documentary",
-          "misty",
-          "forest",
-          "mountains",
-          "rain",
-          "solitude",
-          "reflection"
-        ],
-        description: "Ambient and melancholic atmosphere perfect for nature documentaries and scenes with misty forests, fields, mountains, or rainy seasons, evoking solitude and reflection",
-        usageNotes: "Extended melancholic nature soundscape with documentary quality, attribution required. Perfect for contemplative ambient layers and reflective vault exploration sessions."
-      },
-      {
-        id: 811163,
-        title: "Morning Cicada and Bird Chorus \u2013 17-Year Brood Field Recording",
-        previewUrl: "https://cdn.freesound.org/previews/811/811163_preview-hq.mp3",
-        duration: 1538.279,
-        license: "CC0",
-        attribution: "clawback",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "nature",
-          "cicada",
-          "birds",
-          "chorus",
-          "field-recording",
-          "17-year-brood",
-          "2025",
-          "dawn",
-          "rural",
-          "rare-biological-event"
-        ],
-        description: "Vivid and immersive early morning field recording captured during the 2025 emergence of the 17-year cicada brood. Dense cicada drone forms a shimmering sonic backdrop, punctuated by calls from robins, cardinals, wrens, mourning doves, and blue jays. A neighbor's rooster adds rural charm to the natural chorus of millions of cicadas chittering, clicking, and droning.",
-        usageNotes: "Exceptional 25+ minute nature recording capturing rare 17-year cicada emergence, no attribution required. Perfect for extended ambient layers with authentic biological soundscape, ideal for nature-themed vaults or immersive exploration sessions. Longest ambient sample in collection."
-      },
-      {
-        id: 813283,
-        title: "Forest Atmosphere 005 (Poland)",
-        previewUrl: "https://cdn.freesound.org/previews/813/813283_preview-hq.mp3",
-        duration: 222.209,
-        license: "CC0",
-        attribution: "AudioPapkin",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "nature",
-          "forest",
-          "poland",
-          "birdsong",
-          "field-recording",
-          "european",
-          "pristine",
-          "natural-soundscape"
-        ],
-        description: "Ambient soundscape of a Polish forest with various birdsong and natural background sounds typical for European forest environments. Pure field recording with no human noise or mechanical sounds, capturing authentic forest atmosphere.",
-        usageNotes: "Clean Polish forest recording with authentic European birdsong, no attribution required. Perfect for natural ambient layers and European forest-themed atmospheric backgrounds. Extended duration ideal for immersive nature sessions."
-      },
-      {
-        id: 772101,
-        title: "Berlin Birds - Nightingale & Great Tit with Urban Ambience",
-        previewUrl: "https://cdn.freesound.org/previews/772/772101_preview-hq.mp3",
-        duration: 93.758,
-        license: "CC BY 4.0",
-        attribution: "MichiJung",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "urban",
-          "berlin",
-          "nightingale",
-          "great-tit",
-          "birds",
-          "traffic",
-          "construction",
-          "urban-biodiversity",
-          "summer-2024",
-          "sony-pcm-d100"
-        ],
-        description: "Unedited summer 2024 Berlin field recording capturing the interplay of natural and urban soundscapes. Nightingale and great tit bird calls contrast with construction site activity and city traffic, creating a layered urban-natural atmosphere. Recorded with Sony PCM-D100 with minimal editing.",
-        usageNotes: "Unique urban-natural soundscape blending bird calls with city sounds, attribution required. Perfect for urban biodiversity themes, documentary-style ambient layers, and explorations of nature-city intersections. Professional field recording quality."
-      },
-      {
-        id: 765399,
-        title: "Midnight Ambiance in KwaZulu-Natal",
-        previewUrl: "https://cdn.freesound.org/previews/765/765399_preview-hq.mp3",
-        duration: 176.217,
-        license: "CC BY-NC",
-        attribution: "DonnyDB",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "africa",
-          "kwazulu-natal",
-          "south-africa",
-          "midnight",
-          "night",
-          "wilderness",
-          "animal-calls",
-          "wind",
-          "vegetation",
-          "zoom-h6"
-        ],
-        description: "Serene nighttime environment of KwaZulu-Natal, South Africa, capturing the African wilderness after dark. Features distant animal calls, soft winds, and occasional rustling vegetation recorded with professional Zoom H6 equipment.",
-        usageNotes: "Authentic African wilderness nighttime atmosphere, attribution required, non-commercial use only. Perfect for immersive nature soundscapes, relaxation themes, and African wildlife ambient layers. Professional field recording quality."
-      },
-      {
-        id: 789045,
-        title: "Suburban Rain & Light Thunder",
-        previewUrl: "https://cdn.freesound.org/previews/789/789045_preview-hq.mp3",
-        duration: 360,
-        license: "CC BY 4.0",
-        attribution: "TheFieldRecordist",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "rain",
-          "thunder",
-          "suburban",
-          "thunderstorm",
-          "weather",
-          "birds",
-          "cars",
-          "atmospheric",
-          "zoom-f6",
-          "2025"
-        ],
-        description: "Rich atmospheric recording capturing the essence of a sudden, fleeting thunderstorm in a suburban environment. Features calming rain patter, distant thunder rumbles, with layered suburban life sounds including birds chirping, dog barking, and occasional cars passing on wet roads.",
-        usageNotes: "Extended 6-minute atmospheric thunderstorm with suburban life layers, attribution required. Perfect for weather-themed ambient layers, relaxation soundscapes, and immersive storm atmosphere. Professional Zoom F6 field recording quality."
-      },
-      {
-        id: 237729,
-        title: "Rain and Thunder 4",
-        previewUrl: "https://cdn.freesound.org/previews/237/237729_preview-hq.mp3",
-        duration: 32.875,
-        license: "CC0",
-        attribution: "FlatHill",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "rain",
-          "thunder",
-          "weather",
-          "storm",
-          "natural",
-          "atmospheric"
-        ],
-        description: "Rain and thunder natural weather recording",
-        usageNotes: "Medium-duration rain and thunder atmosphere, no attribution required. Perfect for weather-themed ambient layers and storm soundscapes."
-      },
-      {
-        id: 242956,
-        title: "Rain Fall Through Trees",
-        previewUrl: "https://cdn.freesound.org/previews/242/242956_preview-hq.mp3",
-        duration: 78.686,
-        license: "CC0",
-        attribution: "acollier123",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "rain",
-          "trees",
-          "nature",
-          "forest",
-          "shed",
-          "splashing",
-          "zoom-h2",
-          "uk",
-          "2014",
-          "weather",
-          "atmospheric"
-        ],
-        description: "Rain recorded under a tree using Zoom H2. Splashing on a nearby shed can be heard. Some mastering and editing done using Cool Edit Pro. 19th July 2014, UK",
-        usageNotes: "Natural rain through trees with environmental texture, no attribution required. Perfect for forest rain atmospheres and nature-based weather soundscapes. Includes authentic splashing sounds for added realism."
-      },
-      {
-        id: 17553,
-        title: "Wind Howling Nighttime",
-        previewUrl: "https://cdn.freesound.org/previews/175/17553_preview-hq.mp3",
-        duration: 58.666,
-        license: "CC BY 3.0",
-        attribution: "Dynamicell",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "wind",
-          "howling",
-          "nighttime",
-          "weather",
-          "atmospheric",
-          "sm57",
-          "mk319",
-          "logic-pro"
-        ],
-        description: "Recordings of the wind as it passes window. Recorded with SM 57 + MK319 Condenser Mic. Mixed and mastered in Logic 7 Pro",
-        usageNotes: "Atmospheric wind recording with professional mixing, attribution required. Perfect for nighttime weather atmospheres and windswept ambient layers."
-      },
-      {
-        id: 244942,
-        title: "Wind Through Trees 3b",
-        previewUrl: "https://cdn.freesound.org/previews/244/244942_preview-hq.mp3",
-        duration: 58.154,
-        license: "CC BY 4.0",
-        attribution: "spoonbender",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "wind",
-          "trees",
-          "forest",
-          "creaking",
-          "northumberland",
-          "uk",
-          "zoom-h2n",
-          "nature",
-          "atmospheric",
-          "thrunton-woods"
-        ],
-        description: "Recorded on a windy day in Thrunton woods, Northumberland, UK. Zoom H2n, recorded near a tree that was falling over and rubbing against other trees. Light processing in RX3 to clean boom sound from muscle tension",
-        usageNotes: "Unique forest wind recording with natural tree creaking sounds, attribution required. Perfect for mysterious forest atmospheres and windswept woodland soundscapes."
-      },
-      {
-        id: 158780,
-        title: "Wolves Howling",
-        previewUrl: "https://cdn.freesound.org/previews/158/158780_preview-hq.mp3",
-        duration: 33.299,
-        license: "CC0",
-        attribution: "Paresh",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "wolves",
-          "howling",
-          "wildlife",
-          "nature",
-          "sanctuary",
-          "washington",
-          "wolf-haven",
-          "animal-sounds"
-        ],
-        description: "Wolves howling - recorded at Wolf Haven International, a wolf sanctuary in Washington State",
-        usageNotes: "Authentic wolf sanctuary recording, no attribution required. Perfect for wilderness atmospheres, nature documentaries, and primal ambient soundscapes."
-      },
-      {
-        id: 458113,
-        title: "Countryside Dawn",
-        previewUrl: "https://cdn.freesound.org/previews/458/458113_preview-hq.mp3",
-        duration: 58,
-        license: "CC0",
-        attribution: "brunoboselli",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "countryside",
-          "dawn",
-          "cicadas",
-          "crickets",
-          "birds",
-          "farm",
-          "uruguay",
-          "piriapolis",
-          "nature",
-          "rural",
-          "morning"
-        ],
-        description: "Recording of a countryside natural ambience at dawn. Pretty heavy cicadas and crickets activity, birds, nearby farm animals and a mild wind background",
-        usageNotes: "Rich layered countryside atmosphere from Uruguay, no attribution required. Perfect for rural dawn atmospheres with authentic South American biodiversity. Multiple natural sound layers create immersive environment."
-      },
-      {
-        id: 138288,
-        title: "Desert at Night",
-        previewUrl: "https://cdn.freesound.org/previews/138/138288_preview-hq.mp3",
-        duration: 232.08,
-        license: "CC BY 4.0",
-        attribution: "kangaroovindaloo",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "desert",
-          "night",
-          "australia",
-          "tanami",
-          "northern-territory",
-          "nature",
-          "nocturnal",
-          "outback",
-          "wildlife"
-        ],
-        description: "The Australian Desert at night. Recorded in Tanami, Northern Territory, Australia",
-        usageNotes: "Extended Australian desert nightscape, attribution required. Nearly 4-minute authentic outback atmosphere perfect for creating remote, isolated environments. Captures unique Australian desert nocturnal soundscape."
-      },
-      {
-        id: 584903,
-        title: "Magpie",
-        previewUrl: "https://cdn.freesound.org/previews/584/584903_preview-hq.mp3",
-        duration: 11.711,
-        license: "CC0",
-        attribution: "kangaroovindaloo",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "nature",
-          "magpie",
-          "bird",
-          "forest",
-          "fryers-forest",
-          "australia",
-          "wildlife",
-          "field-recording",
-          "mid-side",
-          "professional"
-        ],
-        description: "The sound of a magpie in Fryers Forest. Recorded with a mid-side configuration using a Sennheiser MKH 416 paired with a MKH 30 into my Zoom F4.",
-        usageNotes: "Short professional field recording of Australian magpie, no attribution required. High-quality recording using professional equipment captures authentic bird vocalization. Perfect for natural ambient layers or as accent in Australian nature soundscapes."
-      },
-      {
-        id: 585077,
-        title: "Thunder Clap",
-        previewUrl: "https://cdn.freesound.org/previews/585/585077_preview-hq.mp3",
-        duration: 25.5,
-        license: "CC0",
-        attribution: "kangaroovindaloo",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "nature",
-          "thunder",
-          "weather",
-          "storm",
-          "atmospheric",
-          "natural-elements",
-          "meteorological",
-          "powerful"
-        ],
-        description: "Thunder.",
-        usageNotes: "Natural thunder clap recording, no attribution required. Short but impactful weather sound effect perfect for storm atmospheres and dramatic natural ambience. Can be used as punctuation in weather-based soundscapes."
-      },
-      {
-        id: 588652,
-        title: "Texture of Water",
-        previewUrl: "https://cdn.freesound.org/previews/588/588652_preview-hq.mp3",
-        duration: 426.81,
-        license: "CC BY 4.0",
-        attribution: "kangaroovindaloo",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "nature",
-          "water",
-          "stream",
-          "flowing",
-          "birds",
-          "pomonal",
-          "victoria",
-          "australia",
-          "soundscape",
-          "natural",
-          "aquatic"
-        ],
-        description: "A close perspective of a flowing stream with some birds in the background. Recorded in Pomonal, Victoria, Australia.",
-        usageNotes: "Extended 7+ minute water texture recording with bird ambience, attribution required. Perfect for peaceful water-based atmospheres and natural meditation soundscapes. Close-mic technique captures intimate stream details while maintaining environmental context."
-      },
-      {
-        id: 535582,
-        title: "Waves Ambience, Brittany",
-        previewUrl: "https://cdn.freesound.org/previews/535/535582_preview-hq.mp3",
-        duration: 603.115,
-        license: "CC BY 4.0",
-        attribution: "Moulaythami",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "waves",
-          "ocean",
-          "brittany",
-          "france",
-          "coast",
-          "dual-mic",
-          "professional",
-          "sub-bass",
-          "natural",
-          "beyerdynamic",
-          "superlux"
-        ],
-        description: "Professional waves crashing soundscape from Brittany coast, recorded with dual-microphone setup: Beyerdynamic MCE 85 BA facing the waves and Superlux S241 buried in sand. The innovative recording technique creates heavy, natural sub-bass frequencies mixed with clear wave sounds.",
-        usageNotes: "Extended 10+ minute professional ocean recording with innovative dual-mic technique, attribution required. Perfect for oceanic ambient layers, meditation soundscapes, and coastal atmosphere. Heavy natural sub-bass provides rich low-frequency foundation."
-      },
-      {
-        id: 523454,
-        title: "Crickets at Night in Mezos",
-        previewUrl: "https://cdn.freesound.org/previews/523/523454_preview-hq.mp3",
-        duration: 135.5,
-        license: "CC BY-NC",
-        attribution: "Guillaume.Capsowl.Voisin",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "crickets",
-          "night",
-          "mezos",
-          "france",
-          "landes",
-          "nature",
-          "evening",
-          "rural",
-          "insects",
-          "soundscape"
-        ],
-        description: "Crickets soundscape at night in French Landes nature, capturing the natural evening chorus of crickets in the rural Mezos region of southwestern France.",
-        usageNotes: "Authentic French countryside cricket soundscape, attribution required, non-commercial use only. Perfect for nighttime ambient layers, rural atmosphere, and peaceful evening soundscapes. Natural insect chorus ideal for contemplative vault exploration."
-      },
-      {
-        id: 240339,
-        title: "Forest Soundscape (Thuringian Forest)",
-        previewUrl: "https://cdn.freesound.org/previews/240/240339_preview-hq.mp3",
-        duration: 158.628,
-        license: "CC BY 4.0",
-        attribution: "Porphyr",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "forest",
-          "thuringia",
-          "germany",
-          "summer",
-          "birdsong",
-          "insects",
-          "temperate-forest",
-          "suhl",
-          "2014",
-          "european"
-        ],
-        description: "Summer forest soundscape recorded at 'Lange Bahn' near Suhl, Thuringia, Germany on June 9, 2014. Captured on a characteristic summer day at 32\xB0C with minimal wind, featuring predominantly bird songs and insect fly-bys typical of German temperate forest environments.",
-        usageNotes: "Authentic German temperate forest summer atmosphere, attribution required. Perfect for European forest ambient layers, summer nature soundscapes, and temperate woodland exploration themes. Clean recording with natural bird and insect diversity."
-      },
-      {
-        id: 785125,
-        title: "Forest Soundscape Contaminated by Urban Noise",
-        previewUrl: "https://cdn.freesound.org/previews/785/785125_preview-hq.mp3",
-        duration: 150,
-        license: "CC BY-NC",
-        attribution: "ricardoemfield",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "forest",
-          "brazil",
-          "itapoa",
-          "santa-catarina",
-          "urban-contamination",
-          "motorcycle",
-          "dog",
-          "nighttime",
-          "2025",
-          "zoom-h1n",
-          "south-america"
-        ],
-        description: "Forest soundscape from Itapo\xE1, southern Brazil, documenting the intersection of natural and urban environments with motorcycle and dog sounds contaminating the natural forest atmosphere. Recorded at 22:00 (10 PM) on January 10, 2025, using Zoom H1N in Santa Catarina state.",
-        usageNotes: "Authentic Brazilian urban-forest intersection soundscape, attribution required, non-commercial use only. Perfect for documenting environmental impact themes, urban sprawl effects on nature, and realistic modern forest environments. Nighttime recording with contemporary urban-nature conflict."
-      },
-      {
-        id: 737197,
-        title: "Rural Soundscape Snippet - Bouri\xE8ge",
-        previewUrl: "https://cdn.freesound.org/previews/737/737197_preview-hq.mp3",
-        duration: 9.575,
-        license: "CC0",
-        attribution: "Sadiquecat",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "rural",
-          "bouriege",
-          "aude",
-          "france",
-          "eurasian-collared-dove",
-          "grasshopper-warbler",
-          "great-tit",
-          "tractor",
-          "evening",
-          "zoom-h2n",
-          "ambisonic",
-          "merlin-bird-id"
-        ],
-        description: "Short rural soundscape from Bouri\xE8ge, Aude, France, recorded on May 24, 2024, around 19:20. Features scientifically identified bird species: Eurasian Collared Dove (owl-like background), Common Grasshopper Warbler (loud cricket sound), and Great Tit (squeaking bicycle pump sound), plus authentic tractor sounds. Recorded with Zoom H2n in ambisonic mode.",
-        usageNotes: "Scientifically documented short rural French soundscape, no attribution required. Perfect for brief rural transitions, authentic French countryside snippets, and ornithologically accurate bird identification themes. Professional ambisonic field recording with species verification."
-      },
-      {
-        id: 652794,
-        title: "Nature is Losing the War",
-        previewUrl: "https://cdn.freesound.org/previews/652/652794_preview-hq.mp3",
-        duration: 211.981,
-        license: "CC BY 4.0",
-        attribution: "dibko",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "environmental-commentary",
-          "birds",
-          "cars",
-          "manufacturing",
-          "factories",
-          "civilization-impact",
-          "zoom-h5",
-          "msh-6",
-          "nature-vs-industry"
-        ],
-        description: "Environmental commentary recording documenting the overwhelming of natural bird sounds by human industrial noise including cars, people, manufacturing, and factories. Captured with Zoom H5 + MSH-6, this recording illustrates the spreading impact of civilization on natural soundscapes and the growing rarity of quiet natural spaces.",
-        usageNotes: "Powerful environmental documentary soundscape, attribution required. Perfect for themes exploring environmental impact, urbanization effects on nature, and the tension between natural and industrial worlds. Professional recording highlighting contemporary environmental challenges."
-      },
-      {
-        id: 58,
-        title: "Abstract Ambient JD-800",
-        previewUrl: "https://cdn.freesound.org/previews/58/58_preview-hq.mp3",
-        duration: 59.815,
-        license: "CC BY 4.0",
-        attribution: "fectoper",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "abstract",
-          "synthesizer",
-          "roland-jd800",
-          "patch",
-          "atmospheric",
-          "synthetic"
-        ],
-        description: "A kind of abstract ambient patch programmed with a Roland JD-800 synth",
-        usageNotes: "Abstract ambient texture from classic digital synthesizer, attribution required. Nearly one-minute duration ideal for atmospheric loops. Roland JD-800's distinctive digital character adds unique texture to ambient layers."
-      },
-      {
-        id: 133015,
-        title: "Misty Limbo",
-        previewUrl: "https://cdn.freesound.org/previews/133/133015_preview-hq.mp3",
-        duration: 82.103,
-        license: "CC BY 4.0",
-        attribution: "CosmicD",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "ambient",
-          "limbo",
-          "misty",
-          "ethereal",
-          "resonators",
-          "synthetic",
-          "otherworldly",
-          "atmospheric"
-        ],
-        description: '"We are in limbo" - Resonators From Hell series. Misty, ethereal synthetic atmosphere',
-        usageNotes: 'Extended ethereal atmosphere evoking liminal spaces, attribution required. Perfect for creating mysterious, suspended atmospheres. Part of "Resonators From Hell" series adds dark undertones to misty ambience.'
-      },
-      {
-        id: 370164,
-        title: "Otherworldly Ambience",
-        previewUrl: "https://cdn.freesound.org/previews/370/370164_preview-hq.mp3",
-        duration: 39.269,
-        license: "CC0",
-        attribution: "dotY21",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "ambient",
-          "otherworldly",
-          "loop",
-          "atmospheric",
-          "mysterious",
-          "synthetic"
-        ],
-        description: "A looping ambience track with otherworldly character",
-        usageNotes: "Medium-duration loop designed for continuous playback, no attribution required. Perfect for creating alien or supernatural atmospheres. From same creator as Static Error sample."
-      },
-      {
-        id: 433935,
-        title: "Orchestral Tremolo Strings Bed",
-        previewUrl: "https://cdn.freesound.org/previews/433/433935_preview-hq.mp3",
-        duration: 440,
-        license: "CC BY-NC",
-        attribution: "james_longley",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "tremolo",
-          "bed",
-          "atmospheric",
-          "reverberant",
-          "vienna-symphonic",
-          "background",
-          "cinematic"
-        ],
-        description: "Tremolo orchestral strings in a large reverberant space, created with Vienna Symphonic in Apple Logic. Designed as an atmospheric orchestral bed.",
-        usageNotes: "Extended 7+ minute duration perfect for long ambient sessions, tremolo technique adds subtle movement without being distracting, large reverb creates spacious atmosphere, non-commercial use only."
-      },
-      {
-        id: 433936,
-        title: "Orchestral Tremolo Strings Bed 1",
-        previewUrl: "https://cdn.freesound.org/previews/433/433936_preview-hq.mp3",
-        duration: 440,
-        license: "CC BY-NC",
-        attribution: "james_longley",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "tremolo",
-          "bed",
-          "atmospheric",
-          "reverberant",
-          "vienna-symphonic",
-          "neutral",
-          "versatile"
-        ],
-        description: "Tremolo orchestral strings in a large reverberant space, created with Vienna Symphonic in Apple Logic. Neutral mood suitable for variety of situations.",
-        usageNotes: "Matching duration to BED2 provides variation options, neutral mood makes it highly versatile, professional orchestral samples with spacious reverb, non-commercial use only."
-      },
-      {
-        id: 433810,
-        title: "Orchestral Layers Improvisation",
-        previewUrl: "https://cdn.freesound.org/previews/433/433810_preview-hq.mp3",
-        duration: 254.769,
-        license: "CC BY-NC",
-        attribution: "james_longley",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "layers",
-          "improvisational",
-          "temp-music",
-          "film-scoring",
-          "vienna-symphonic",
-          "atmospheric"
-        ],
-        description: "Layers of orchestral samples from Vienna Symphonic in an improvisational track intended for temp film scoring use. Atmospheric orchestral texture.",
-        usageNotes: "Medium duration complements the 7+ minute beds, improvisational nature creates organic atmosphere, designed for non-intrusive film temp use, non-commercial only."
-      },
-      {
-        id: 433809,
-        title: "Orchestral Ambient Floating Chord",
-        previewUrl: "https://cdn.freesound.org/previews/433/433809_preview-hq.mp3",
-        duration: 156,
-        license: "CC BY-NC",
-        attribution: "james_longley",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "ambient",
-          "floating",
-          "chord",
-          "sustained",
-          "atmospheric",
-          "logic"
-        ],
-        description: "Orchestral sound created in Logic, centered around a single floating chord. Ambient orchestral texture with sustained harmonic focus.",
-        usageNotes: "Shorter duration option for variety, single chord focus provides harmonic stability, floating quality perfect for background use, non-commercial only."
-      },
-      {
-        id: 540841,
-        title: "String Ensemble Soundscape",
-        previewUrl: "https://cdn.freesound.org/previews/540/540841_preview-hq.mp3",
-        duration: 88,
-        license: "CC BY-NC",
-        attribution: "LogicMoon",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "ensemble",
-          "soundscape",
-          "improvisation",
-          "atmospheric",
-          "ambient"
-        ],
-        description: "String ensemble and soundscape improvisation. Atmospheric string texture created through improvisational performance.",
-        usageNotes: "Adds creator diversity beyond james_longley samples, shorter duration fills gap in collection, improvisational nature creates organic texture, non-commercial only."
-      },
-      {
-        id: 373153,
-        title: "Solo Contrabass Sustain F#1",
-        previewUrl: "https://cdn.freesound.org/previews/373/373153_preview-hq.mp3",
-        duration: 11.283,
-        license: "CC0",
-        attribution: "sgossner",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "contrabass",
-          "bass",
-          "sustain",
-          "vibrato",
-          "F#1",
-          "VSCO",
-          "professional"
-        ],
-        description: "Solo contrabass vibrato sustain on F#1 from VSCO 2 CE. Professional recording with spaced pair and close mic setup in Boston classroom.",
-        usageNotes: "Adds deep bass register to string collection, vibrato adds organic movement, short duration requires looping, CC0 license allows free use, professional sample library quality."
-      },
-      {
-        id: 372835,
-        title: "Cello Section Sustain E2",
-        previewUrl: "https://cdn.freesound.org/previews/372/372835_preview-hq.mp3",
-        duration: 11.641,
-        license: "CC0",
-        attribution: "sgossner",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "cello",
-          "section",
-          "sustain",
-          "vibrato",
-          "E2",
-          "VSCO",
-          "professional"
-        ],
-        description: "Cello section vibrato sustain on E2 from VSCO 2 CE. Professional recording of three cellists with spaced pair and ribbon mic in Boston classroom.",
-        usageNotes: "Mid-low register complements contrabass F#1, section sound fuller than solo, vibrato adds warmth, pairs well with other VSCO samples, CC0 license."
-      },
-      {
-        id: 374590,
-        title: "Violin Section Sustain B3",
-        previewUrl: "https://cdn.freesound.org/previews/374/374590_preview-hq.mp3",
-        duration: 13.454,
-        license: "CC0",
-        attribution: "sgossner",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "violin",
-          "section",
-          "sustain",
-          "vibrato",
-          "B3",
-          "VSCO",
-          "professional"
-        ],
-        description: "Violin section vibrato sustain on B3 from VSCO 2 CE. Professional recording of five violinists with spaced pair and ribbon mic in Boston classroom.",
-        usageNotes: "Higher register balances low strings, creates harmonic triad with bass F#1 and cello E2, five-player section for rich sound, CC0 license."
-      },
-      {
-        id: 374463,
-        title: "Viola Section Sustain F#3",
-        previewUrl: "https://cdn.freesound.org/previews/374/374463_preview-hq.mp3",
-        duration: 13.746,
-        license: "CC0",
-        attribution: "sgossner",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "viola",
-          "section",
-          "sustain",
-          "vibrato",
-          "F#3",
-          "VSCO",
-          "professional"
-        ],
-        description: "Viola section vibrato sustain on F#3 from VSCO 2 CE. Professional recording of four violists with spaced pair and close mic in Boston classroom.",
-        usageNotes: "Completes string quartet with violin/cello/bass, F#3 octave relationship with bass F#1, fills mid-range perfectly, CC0 license."
-      },
-      {
-        id: 373775,
-        title: "Solo Violin Sustain F#4",
-        previewUrl: "https://cdn.freesound.org/previews/373/373775_preview-hq.mp3",
-        duration: 13.412,
-        license: "CC0",
-        attribution: "sgossner",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "orchestral",
-          "strings",
-          "violin",
-          "solo",
-          "sustain",
-          "vibrato",
-          "F#4",
-          "VSCO",
-          "professional"
-        ],
-        description: "Solo violin vibrato sustain on F#4 from VSCO 2 CE. Professional recording in living room setting with spaced pair mics.",
-        usageNotes: "Adds highest F# completing three-octave spread (F#1-F#3-F#4), solo timbre contrasts with sections, intimate living room recording, CC0 license."
-      },
-      {
-        id: 748227,
-        title: "Soft Brass and Pad Atmosphere",
-        previewUrl: "https://cdn.freesound.org/previews/748/748227_preview-hq.mp3",
-        duration: 116.569,
-        license: "CC0",
-        attribution: "3ag1e",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "orchestral",
-          "brass",
-          "pad",
-          "soft",
-          "atmosphere",
-          "C-minor",
-          "140bpm",
-          "dark",
-          "strings",
-          "loopable"
-        ],
-        description: "Soft brass textures with dark low strings in C minor at 140 BPM. Atmospheric brass pad designed to be loopable with subtle string support.",
-        usageNotes: "Nearly 2-minute duration excellent for continuous ambience, soft brass avoids typical fanfare dramatics, C minor tonality with tempo sync at 140 BPM, CC0 license allows unrestricted use."
-      },
-      {
-        id: 361843,
-        title: "String Pad (Buzzy Electronic Texture)",
-        previewUrl: "https://cdn.freesound.org/previews/361/361843_preview-hq.mp3",
-        duration: 17.813,
-        license: "CC BY 4.0",
-        attribution: "johnnypanic",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "synthesized",
-          "strings",
-          "bass",
-          "buzzy",
-          "layered",
-          "c-note",
-          "texture"
-        ],
-        description: "Electronic pad created by layering strings, effects and samples, centered on C notes. Features a clean string pad texture with a quiet buzzy sound low in the mix, creating a hybrid electronic-orchestral atmosphere.",
-        usageNotes: "Short duration ideal for looping, harmonic center on C makes it compatible with various keys, buzzy undertone adds electronic character while maintaining string-like warmth."
-      },
-      {
-        id: 78462,
-        title: "Dance String Loop",
-        previewUrl: "https://cdn.freesound.org/previews/784/78462_preview-hq.mp3",
-        duration: 7.619,
-        license: "CC BY 3.0",
-        attribution: "mkoenig",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "dance",
-          "string",
-          "loop",
-          "126bpm",
-          "soft",
-          "dainty",
-          "synthesized"
-        ],
-        description: "Soft and dainty dance string/pad loop at 126 BPM. Electronic string texture designed for dance music production, featuring a gentle, delicate character suitable for ambient layering.",
-        usageNotes: "Very short loop perfect for continuous cycling, tempo-synced at 126 BPM for rhythmic integration, delicate texture complements heavier pads."
-      },
-      {
-        id: 250946,
-        title: "String Pad Chill",
-        previewUrl: "https://cdn.freesound.org/previews/250/250946_preview-hq.mp3",
-        duration: 16,
-        license: "CC BY 3.0",
-        attribution: "Thalamus_Lab",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "guitar",
-          "atmospheric",
-          "pitch-shift",
-          "reverb",
-          "synth",
-          "percussive-echo",
-          "experimental",
-          "chill"
-        ],
-        description: "Atmospheric guitar pads with pitch shifting and heavy reverb, layered with synth pad and percussive echo effects. Part of the Xperimental Sound Lab collection, blending processed acoustic and electronic elements.",
-        usageNotes: "Hybrid acoustic-electronic texture ideal for ambient atmospheres, heavy processing creates spacious feel, percussive elements add rhythmic interest."
-      },
-      {
-        id: 275178,
-        title: "Voice Pad 140 BPM",
-        previewUrl: "https://cdn.freesound.org/previews/275/275178_preview-hq.mp3",
-        duration: 41.142,
-        license: "CC0",
-        attribution: "Elmo_cookies",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "voice",
-          "voicepad",
-          "140bpm",
-          "synthesized",
-          "rompler",
-          "stringz2",
-          "tempo-synced"
-        ],
-        description: "Synthesized voice pad created using StringZ2 ROMpler, arranged to fit 140 BPM tempo. Vocal-style electronic pad texture suitable for ambient and electronic music production.",
-        usageNotes: "Longer duration pad with vocal characteristics, tempo-synced at 140 BPM for electronic music integration, no attribution required (CC0)."
-      },
-      {
-        id: 245756,
-        title: "Analog Strings Synth Loop",
-        previewUrl: "https://cdn.freesound.org/previews/245/245756_preview-hq.mp3",
-        duration: 18.508,
-        license: "CC BY-NC",
-        attribution: "orangefreesounds",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "analog",
-          "synthesizer",
-          "waldorf",
-          "strings",
-          "loop",
-          "hardware-synth",
-          "warm"
-        ],
-        description: "Analog strings synthesizer loop created with Waldorf analog synthesizer. Classic hardware synth sound with warm analog character and string-like timbre.",
-        usageNotes: "Classic analog warmth from hardware synthesizer, loop format ideal for continuous playback, non-commercial use only due to NC license."
-      },
-      {
-        id: 528768,
-        title: "Ethereal Pad",
-        previewUrl: "https://cdn.freesound.org/previews/528/528768_preview-hq.mp3",
-        duration: 62.895,
-        license: "CC BY-NC",
-        attribution: "XHALE303",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "ethereal",
-          "jd-800",
-          "roland",
-          "ethera",
-          "vocals",
-          "137bpm",
-          "atmospheric",
-          "digital-synth"
-        ],
-        description: "Ethereal pad combining Roland JD-800 synthesizer with Ethera vocal samples at 137 BPM. Classic digital synthesis blended with processed vocals for atmospheric texture.",
-        usageNotes: "Extended duration perfect for ambient layers, tempo-synced at 137 BPM, combines classic digital synthesis with modern vocal processing, non-commercial use only."
-      },
-      {
-        id: 170696,
-        title: "Thin Strings C2",
-        previewUrl: "https://cdn.freesound.org/previews/170/170696_preview-hq.mp3",
-        duration: 16.41,
-        license: "CC BY 4.0",
-        attribution: "AlienXXX",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "synthesized",
-          "strings",
-          "thin",
-          "maelstrom",
-          "reason",
-          "C2",
-          "high-pass",
-          "layering"
-        ],
-        description: "Thin string pad synthesized in Reason's Maelstrom with high-pass filtering, designed specifically to sit well in a mix without dominating. Root note C2.",
-        usageNotes: "Purposefully designed for background layering, high-pass filtered for non-intrusive presence, low C2 provides bass foundation without muddiness."
-      },
-      {
-        id: 432837,
-        title: "Ambient Strings",
-        previewUrl: "https://cdn.freesound.org/previews/432/432837_preview-hq.mp3",
-        duration: 44.009,
-        license: "CC0",
-        attribution: "thisusernameis",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "ambient",
-          "strings",
-          "synthesized",
-          "mystical",
-          "mystery",
-          "background",
-          "atmospheric"
-        ],
-        description: "Background synth string ambience designed for mystical mysteries. Atmospheric synthesized strings perfect for creating mysterious ambient backgrounds.",
-        usageNotes: "Explicitly designed as background ambience, extended duration ideal for seamless looping, CC0 license requires no attribution, mystical atmosphere adds intrigue."
-      },
-      {
-        id: 261032,
-        title: "Synth String Orchestral Atmosphere",
-        previewUrl: "https://cdn.freesound.org/previews/261/261032_preview-hq.mp3",
-        duration: 100.536,
-        license: "CC BY-NC",
-        attribution: "ERH",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "synthesized",
-          "strings",
-          "orchestral",
-          "atmospheric",
-          "cinematic",
-          "film",
-          "game",
-          "ambient"
-        ],
-        description: "Synth string orchestral sound designed for atmospheric use in films and games. Extended synthesized string pad with cinematic character.",
-        usageNotes: "Extended duration over 1.5 minutes perfect for continuous ambience, cinematic quality suitable for dramatic atmospheres, non-commercial use only."
-      },
-      {
-        id: 657016,
-        title: "Intro Synth Strings",
-        previewUrl: "https://cdn.freesound.org/previews/657/657016_preview-hq.mp3",
-        duration: 15.432,
-        license: "CC0",
-        attribution: "JMARTI_oficial",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "synth",
-          "strings",
-          "flanger",
-          "reverb",
-          "processed",
-          "intro",
-          "atmospheric",
-          "stereo"
-        ],
-        description: "Synth strings with various notes, processed through stereo imaging, dual EQ, flanger, and reverb for atmospheric texture.",
-        usageNotes: "Flanger effect adds movement to the pad, multiple processing creates spacious atmosphere, CC0 license allows unrestricted use."
-      },
-      {
-        id: 204613,
-        title: "String Synth Pad",
-        previewUrl: "https://cdn.freesound.org/previews/204/204613_preview-hq.mp3",
-        duration: 18,
-        license: "CC BY 4.0",
-        attribution: "Mick Gibbs",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "synth",
-          "strings",
-          "bell-curve",
-          "mixcraft",
-          "synthesized",
-          "ambient"
-        ],
-        description: "Synth pad created in Mix Craft and edited in Cool Edit Pro. Features string-like synthesis with bell curve envelope shaping.",
-        usageNotes: "Bell curve envelope provides smooth attack and release, straightforward pad suitable for layering, 18-second duration ideal for looping."
-      },
-      {
-        id: 639568,
-        title: "Beautiful Bed in D Minor",
-        previewUrl: "https://cdn.freesound.org/previews/639/639568_preview-hq.mp3",
-        duration: 88.225,
-        license: "CC BY 4.0",
-        attribution: "Vospi",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "bed",
-          "D-minor",
-          "atmospheric",
-          "mystical",
-          "cinematic",
-          "detuned",
-          "synth",
-          "strings"
-        ],
-        description: "Pad bed atmosphere in D minor, created with synths, strings, delay, distortion, and resampling. Features detuned quality perfect for mystical and cinematic backgrounds.",
-        usageNotes: "Extended duration ideal for scene dressing, detuned character adds depth without prominence, explicitly designed as background atmosphere."
-      },
-      {
-        id: 366013,
-        title: "Simple D Minor Pad/Drone",
-        previewUrl: "https://cdn.freesound.org/previews/366/366013_preview-hq.mp3",
-        duration: 106.989,
-        license: "CC0",
-        attribution: "cabled_mess",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "drone",
-          "D-minor",
-          "waldorf-blofeld",
-          "korg-monotribe",
-          "tape-emulation",
-          "loop",
-          "layered",
-          "minimalistic"
-        ],
-        description: "Simple D minor pad created by layering two minimalistic Waldorf Blofeld patches with faint Korg Monotribe. Features U-He Satin tape emulation for warmth.",
-        usageNotes: "Designed as loop for continuous playback, tape emulation adds analog warmth, minimalistic approach ensures non-intrusive texture, CC0 license allows free use."
-      },
-      {
-        id: 60,
-        title: "Phaedra (Tangerine Dream Inspired)",
-        previewUrl: "https://cdn.freesound.org/previews/60/60_preview-hq.mp3",
-        duration: 18.495,
-        license: "CC BY 4.0",
-        attribution: "fectoper",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "pad",
-          "tangerine-dream",
-          "phaedra",
-          "berlin-school",
-          "1970s",
-          "vintage",
-          "sequencer",
-          "atmospheric"
-        ],
-        description: "A sound that is reminiscent from Tangerine Dream's Phaedra sonorities (1974). Classic Berlin School electronic music style",
-        usageNotes: "Classic 1970s Berlin School electronic atmosphere, attribution required. Short loop capturing vintage analog sequencer aesthetics. Perfect for retro-futuristic or cosmic electronic atmospheres."
-      },
-      {
-        id: 632741,
-        title: "Countdown",
-        previewUrl: "https://cdn.freesound.org/previews/632/632741_preview-hq.mp3",
-        duration: 66.133,
-        license: "CC0",
-        attribution: "xkeril",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "texture",
-          "pulsing",
-          "signal",
-          "strings",
-          "countdown",
-          "hawkshaw-inspired",
-          "retro",
-          "rhythmic"
-        ],
-        description: "Pulsing signal over strings, heavily inspired by Alan Hawkshaw's countdown theme. Electronic texture combining rhythmic pulsing elements with string backing for retro-futuristic atmosphere.",
-        usageNotes: "Extended duration with rhythmic pulse provides movement and tension, CC0 license allows unrestricted use, perfect for sci-fi or retro-tech atmospheres."
-      },
-      {
-        id: 22644,
-        title: "Bow Regain",
-        previewUrl: "https://cdn.freesound.org/previews/226/22644_preview-hq.mp3",
-        duration: 6.628,
-        license: "CC BY 4.0",
-        attribution: "sherlock",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "texture",
-          "frequencies",
-          "synth",
-          "brief",
-          "experimental",
-          "abstract"
-        ],
-        description: 'Electronic texture with "touching frequencies" - cryptic but intriguing sonic element from the synths/electronic category.',
-        usageNotes: "Very brief texture suitable for rapid cycling or accent moments, mysterious sonic character adds intrigue, requires attribution."
-      },
-      {
-        id: 658e3,
-        title: "Synthesizer Effects Texture",
-        previewUrl: "https://cdn.freesound.org/previews/658/658000_preview-hq.mp3",
-        duration: 12.861,
-        license: "CC0",
-        attribution: "gmortizwavs",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "texture",
-          "synthesizer",
-          "vocoder",
-          "effects",
-          "processed",
-          "slide",
-          "atmospheric",
-          "stereo"
-        ],
-        description: "Synthesizer texture featuring E5-G5-B5-E6 note sequence with slide, processed through compression, EQ, filter, vocodex, reverb, and delay for atmospheric effect.",
-        usageNotes: "Complex effects chain creates unique texture, note sequence with slide adds movement, CC0 license requires no attribution, vocoder adds distinctive character."
-      },
-      {
-        id: 655544,
-        title: "Dark Pluck Texture",
-        previewUrl: "https://cdn.freesound.org/previews/655/655544_preview-hq.mp3",
-        duration: 8.575,
-        license: "CC0",
-        attribution: "gmortizwavs",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "texture",
-          "dark",
-          "pluck",
-          "bass",
-          "C1",
-          "distorted",
-          "reverb",
-          "processed",
-          "low-frequency"
-        ],
-        description: "Dark plucked texture on C1 (low bass frequency), heavily processed with stereo imaging, master smoothing, dual low-frequency EQ, quadruple reverb, and distortion.",
-        usageNotes: "Deep bass texture with heavy atmospheric processing, multiple reverbs create spatial depth, CC0 license allows free use, brief duration ideal for dark accents."
-      },
-      {
-        id: 29593,
-        title: "Morphed Choir Atmosphere",
-        previewUrl: "https://cdn.freesound.org/previews/295/29593_preview-hq.mp3",
-        duration: 10.736,
-        license: "CC BY 4.0",
-        attribution: "ERH",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "texture",
-          "morphed",
-          "choir",
-          "voices",
-          "strings",
-          "ethereal",
-          "atmospheric",
-          "plaintive",
-          "background"
-        ],
-        description: "Angelic voices, strings, and synthesized sounds morphed together creating a strange plaintive texture. Designed as ethereal atmosphere/background for music and film.",
-        usageNotes: "Hybrid texture combining organic and synthetic elements, explicitly designed for background use, unique morphed character adds otherworldly atmosphere."
-      },
-      {
-        id: 141675,
-        title: "Cinematic Layer Texture",
-        previewUrl: "https://cdn.freesound.org/previews/141/141675_preview-hq.mp3",
-        duration: 10,
-        license: "CC BY 4.0",
-        attribution: "johnnypanic",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "texture",
-          "cinematic",
-          "strings",
-          "layered",
-          "reverb",
-          "delay",
-          "atmospheric",
-          "processed"
-        ],
-        description: "Layered strings texture with reverb and delay processing. Despite description mentioning bells and birds, actual sound is atmospheric string layers.",
-        usageNotes: "Brief atmospheric texture with processed string layers, suitable for short ambient accents, deamplified for subtle presence."
-      },
-      {
-        id: 614220,
-        title: "Strings Pad with LFO Modulation",
-        previewUrl: "https://cdn.freesound.org/previews/614/614220_preview-hq.mp3",
-        duration: 28.27,
-        license: "CC0",
-        attribution: "martinbeltov",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "electronic",
-          "texture",
-          "strings",
-          "pad",
-          "LFO",
-          "modulation",
-          "filters",
-          "crazy",
-          "movement",
-          "synthesized"
-        ],
-        description: "String pad with intense LFO modulations on filters, creating dynamic movement and texture through synthesis modulation.",
-        usageNotes: "Heavy LFO modulation creates rhythmic movement and interest, filter sweeps add dynamic texture, CC0 license requires no attribution."
-      },
-      {
-        id: 249612,
-        title: "Glowing Pad",
-        previewUrl: "https://cdn.freesound.org/previews/249/249612_preview-hq.mp3",
-        duration: 11.181,
-        license: "CC0",
-        attribution: "staticpony1",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "minimal",
-          "electronic",
-          "texture",
-          "glowing",
-          "pad",
-          "experimental",
-          "ambience",
-          "u-he",
-          "vst",
-          "synth",
-          "atmospheric"
-        ],
-        description: "Experimental glowing pad texture created with U-he VST synthesizer, designed as atmospheric ambience.",
-        usageNotes: "Brief luminous texture ideal for accent moments, experimental nature adds unique character, CC0 license allows free use."
-      },
-      {
-        id: 184194,
-        title: "Resonant Bass Flute and Viola",
-        previewUrl: "https://cdn.freesound.org/previews/184/184194_preview-hq.mp3",
-        duration: 55.205,
-        license: "CC0",
-        attribution: "milo",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "minimal",
-          "sparse",
-          "bass-flute",
-          "viola-da-gamba",
-          "airy",
-          "drone",
-          "pad",
-          "acoustic",
-          "resonant",
-          "atmospheric"
-        ],
-        description: "Airy drone pad created with bass flute and viola da gamba. Resonant acoustic instruments producing minimal, sparse atmospheric texture.",
-        usageNotes: "Extended acoustic drone with natural resonance, sparse instrumentation creates contemplative space, CC0 license allows unrestricted use."
-      },
-      {
-        id: 536287,
-        title: "Water-phoney Sparse",
-        previewUrl: "https://cdn.freesound.org/previews/536/536287_preview-hq.mp3",
-        duration: 87.379,
-        license: "CC BY-NC",
-        attribution: "Timbre",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "minimal",
-          "sparse",
-          "waterphone",
-          "synthesized",
-          "ethereal",
-          "haunting",
-          "atmospheric",
-          "synthetic"
-        ],
-        description: "Synthesized sound somewhat like WaterPhone, creating sparse ethereal textures. Synthetic interpretation of the haunting waterphone instrument.",
-        usageNotes: "Waterphone-like textures create otherworldly atmosphere, explicitly sparse design fits minimal aesthetic, synthetic nature adds modern edge, non-commercial use only."
-      },
-      {
-        id: 343797,
-        title: "Drippy Faucet",
-        previewUrl: "https://cdn.freesound.org/previews/343/343797_preview-hq.mp3",
-        duration: 8.173,
-        license: "CC0",
-        attribution: "zmadyun",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "minimal",
-          "sparse",
-          "water",
-          "drip",
-          "faucet",
-          "rhythmic",
-          "meditative",
-          "percussive",
-          "repetitive"
-        ],
-        description: "Leaky faucet dripping slowly",
-        usageNotes: "Short loop of water drips creates rhythmic minimal texture, no attribution required. Perfect for meditative sparse soundscapes or rhythmic minimal layers. Loop for extended use."
-      },
-      {
-        id: 400601,
-        title: "Lowkey String Loop",
-        previewUrl: "https://cdn.freesound.org/previews/400/400601_preview-hq.mp3",
-        duration: 16,
-        license: "CC0",
-        attribution: "visual",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "minimal",
-          "contemplative",
-          "strings",
-          "loop",
-          "delay",
-          "120bpm",
-          "lowkey",
-          "understated",
-          "ambient"
-        ],
-        description: "Slow, understated string loop with delay effect at 120 BPM. Minimal and contemplative texture perfect for reflective atmospheres.",
-        usageNotes: "Short loop ideal for continuous playback, delay effect adds spatial depth, tempo-synced at 120 BPM, CC0 license requires no attribution."
-      },
-      {
-        id: 646300,
-        title: "Balalaika Swell",
-        previewUrl: "https://cdn.freesound.org/previews/646/646300_preview-hq.mp3",
-        duration: 20.062,
-        license: "CC BY 4.0",
-        attribution: "zacnie",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "minimal",
-          "contemplative",
-          "balalaika",
-          "swell",
-          "dreamy",
-          "orchestral",
-          "ambient",
-          "ethnic",
-          "strings"
-        ],
-        description: "Dreamy orchestral swell featuring balalaikas, designed for minimalist ambient use. Gentle dynamics with ethnic string character.",
-        usageNotes: "Unique ethnic string texture adds distinctive character, gradual swell perfect for contemplative moments, described as ideal for minimalist ambient."
-      },
-      {
-        id: 120931,
-        title: "Accordion Pad C Minor",
-        previewUrl: "https://cdn.freesound.org/previews/120/120931_preview-hq.mp3",
-        duration: 21.412,
-        license: "CC BY 4.0",
-        attribution: "juskiddink",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "minimal",
-          "contemplative",
-          "accordion",
-          "pad",
-          "C-minor",
-          "filter-modulation",
-          "organic",
-          "nostalgic",
-          "hybrid"
-        ],
-        description: "Accordion C minor chord with filter modulation effects. Sustained pad texture with organic accordion character enhanced by electronic processing.",
-        usageNotes: "Accordion brings warm organic texture, filter modulation adds subtle movement, C minor tonality for melancholic atmosphere, unique instrumental choice."
-      },
-      {
-        id: 805342,
-        title: "Heartbeat of Venus",
-        previewUrl: "https://cdn.freesound.org/previews/805/805342_preview-hq.mp3",
-        duration: 168.75,
-        license: "CC BY 4.0",
-        attribution: "Dave_Girtsman",
-        fadeIn: 2,
-        fadeOut: 3,
-        enabled: false,
-        tags: [
-          "minimal",
-          "contemplative",
-          "ethereal",
-          "hypnotic",
-          "dreamlike",
-          "weightless",
-          "melancholic",
-          "atmospheric",
-          "reverb"
-        ],
-        description: "Drifts between dream and memory in slow, hypnotic waves. Ethereal textures and reverb-soaked atmospheres create weightlessness with subtle melancholic undertones. Minimal but emotionally resonant.",
-        usageNotes: "Extended duration perfect for introspective moments, hypnotic waves provide gentle movement, minimal approach ensures non-intrusive presence, emotionally evocative without being prominent."
-      }
-    ];
-  }
-});
-
 // src/main.ts
 var main_exports = {};
 __export(main_exports, {
   default: () => SonigraphPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian35 = require("obsidian");
+var import_obsidian36 = require("obsidian");
 init_constants();
 
 // src/ui/settings.ts
@@ -65398,7 +62754,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
     advancedSection.createEl("summary", { text: "Advanced", cls: "osp-advanced-summary" });
     advancedSection.open = false;
     new import_obsidian.Setting(advancedSection).setName("Logging level").setDesc('Control the verbosity of plugin logs. Default is "Warnings".').addDropdown(
-      (dropdown) => dropdown.addOption("off", "Off").addOption("error", "Errors Only").addOption("warn", "Warnings").addOption("info", "Info").addOption("debug", "Debug").setValue(LoggerFactory.getLogLevel()).onChange((value) => {
+      (dropdown) => dropdown.addOption("off", "off").addOption("error", "Errors only").addOption("warn", "warnings").addOption("info", "info").addOption("debug", "debug").setValue(LoggerFactory.getLogLevel()).onChange((value) => {
         void LoggerFactory.setLogLevel(value);
         logger2.info("settings-change", "Log level changed", { level: value });
       })
@@ -65429,7 +62785,7 @@ var SonigraphSettingTab = class extends import_obsidian.PluginSettingTab {
 init_control_panel();
 
 // src/ui/SonicGraphView.ts
-var import_obsidian30 = require("obsidian");
+var import_obsidian31 = require("obsidian");
 init_GraphDataExtractor();
 init_GraphRenderer();
 
@@ -66313,7 +63669,7 @@ var TemporalGraphAnimator = class {
 // src/graph/musical-mapper.ts
 init_constants();
 init_logging();
-var import_obsidian24 = require("obsidian");
+var import_obsidian25 = require("obsidian");
 
 // src/audio/mapping/ObsidianMetadataMapper.ts
 init_logging();
@@ -68458,7 +65814,7 @@ var MetadataListener = class {
 };
 
 // src/audio/mapping/ContentAwareMapper.ts
-var import_obsidian19 = require("obsidian");
+var import_obsidian20 = require("obsidian");
 
 // src/audio/configs/types.ts
 var FORMAT_PLACEHOLDER = "[format]";
@@ -69896,7 +67252,7 @@ init_logging();
 var logger38 = getLogger("content-aware-mapper");
 
 // src/audio/mapping/ConnectionTypeMapper.ts
-var import_obsidian20 = require("obsidian");
+var import_obsidian21 = require("obsidian");
 
 // src/audio/mapping/ConnectionTypeMappingConfig.ts
 var DEFAULT_CONNECTION_CHARACTERISTICS = {
@@ -70293,18 +67649,18 @@ init_logging();
 var logger39 = getLogger("connection-type-mapper");
 
 // src/audio/mapping/ConnectionTypeMappingPanel.ts
-var import_obsidian21 = require("obsidian");
+var import_obsidian22 = require("obsidian");
 init_logging();
 var logger40 = getLogger("connection-type-mapping-panel");
 
 // src/audio/mapping/ConnectionTypePresetManager.ts
-var import_obsidian22 = require("obsidian");
+var import_obsidian23 = require("obsidian");
 init_logging();
 var logger41 = getLogger("connection-type-preset-manager");
 
 // src/audio/mapping/DepthBasedMapper.ts
 init_logging();
-var import_obsidian23 = require("obsidian");
+var import_obsidian24 = require("obsidian");
 
 // src/audio/mapping/ContextualModifier.ts
 init_logging();
@@ -73202,7 +70558,7 @@ var DepthBasedMapper = class {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
     try {
       const file = this.app.vault.getAbstractFileByPath(node.path);
-      if (!(file instanceof import_obsidian23.TFile)) {
+      if (!(file instanceof import_obsidian24.TFile)) {
         logger50.warn("file-not-found", `File not found: ${node.path}`);
         return null;
       }
@@ -74746,7 +72102,7 @@ var CommunityAudioAnalyzer = class {
   /**
    * Detect communities from graph data using Louvain algorithm
    */
-  async detectCommunities(nodes, links) {
+  detectCommunities(nodes, links) {
     if (!this.isInitialized || !this.settings.enabled) {
       return [];
     }
@@ -79198,7 +76554,7 @@ var MusicalMapper = class {
       const analysisResults = [];
       for (const node of nodes) {
         const file = this.app.vault.getAbstractFileByPath(node.path);
-        if (file && file instanceof import_obsidian24.TFile) {
+        if (file && file instanceof import_obsidian25.TFile) {
           void files.push(file);
           const analysis = this.metadataMapper.analyzeFile(file);
           void analysisResults.push(analysis);
@@ -81430,7 +78786,7 @@ var NoteVisualizationManager = class {
 init_types();
 var logger78 = getLogger("SonicGraphView");
 var VIEW_TYPE_SONIC_GRAPH = "sonic-graph-view";
-var SonicGraphView = class extends import_obsidian30.ItemView {
+var SonicGraphView = class extends import_obsidian31.ItemView {
   // Musical phrase length
   constructor(leaf, plugin) {
     super(leaf);
@@ -81619,13 +78975,13 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void logger78.info("sonic-graph-init", "Starting graph initialization - THIS IS THE CRITICAL STEP");
       this.initializeGraph().catch((error) => {
         void logger78.error("sonic-graph-init", "Graph initialization failed:", error);
-        new import_obsidian30.Notice("Failed to initialize Sonic Graph: " + error.message);
+        new import_obsidian31.Notice("Failed to initialize Sonic Graph: " + error.message);
       });
       void this.registerWorkspaceListener();
     } catch (error) {
       logger78.error("ui", "Error opening Sonic Graph view:", error.message);
       logger78.error("ui", "Error stack:", error.stack);
-      new import_obsidian30.Notice("Failed to open Sonic Graph view: " + error.message);
+      new import_obsidian31.Notice("Failed to open Sonic Graph view: " + error.message);
     }
   }
   /**
@@ -81773,7 +79129,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void logger78.info("continuous-layers", "Continuous layers initialized successfully");
     } catch (error) {
       void logger78.error("continuous-layers", "Failed to initialize continuous layers", error);
-      new import_obsidian30.Notice("Failed to initialize continuous audio layers");
+      new import_obsidian31.Notice("Failed to initialize continuous audio layers");
     }
   }
   /**
@@ -81816,8 +79172,10 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const onMouseUp = () => {
       if (this.isDraggingDivider) {
         this.isDraggingDivider = false;
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
+        document.body.setCssProps({
+          cursor: "",
+          userSelect: ""
+        });
         void logger78.info("visual-display", "Saved visual display height", this.visualDisplayHeight);
       }
     };
@@ -81940,7 +79298,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void logger78.info("visual-display", "Visualization manager initialized successfully");
     } catch (error) {
       void logger78.error("visual-display", "Failed to initialize visualization manager", error);
-      new import_obsidian30.Notice("Failed to initialize visual note display");
+      new import_obsidian31.Notice("Failed to initialize visual note display");
     }
   }
   /**
@@ -82094,7 +79452,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     titleContainer.createEl("h1", { text: "Sonic Graph", cls: "sonic-graph-title" });
     const playControlsGroup = this.headerContainer.createDiv({ cls: "sonic-graph-header-play-controls" });
     const playButtonContainer = playControlsGroup.createDiv({ cls: "sonic-graph-play-button-container" });
-    this.playButton = new import_obsidian30.ButtonComponent(playButtonContainer);
+    this.playButton = new import_obsidian31.ButtonComponent(playButtonContainer);
     this.playButton.setButtonText("Play").onClick(() => this.toggleAnimation());
     const speedContainer = playControlsGroup.createDiv({ cls: "sonic-graph-speed-container" });
     speedContainer.createEl("label", { text: "Speed:", cls: "sonic-graph-speed-label" });
@@ -82135,7 +79493,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     });
     const exportIcon = createLucideIcon("download", 16);
     void exportBtn.insertBefore(exportIcon, exportBtn.firstChild);
-    exportBtn.addEventListener("click", () => this.openExportModal());
+    exportBtn.addEventListener("click", () => void this.openExportModal());
   }
   /**
    * Create main content area with graph and settings panel
@@ -82252,7 +79610,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         excludeFolders: this.graphDataExtractor["excludeFolders"],
         excludeFiles: this.graphDataExtractor["excludeFiles"]
       });
-      const graphData = await this.executeWhenIdle(async () => {
+      const graphData = await this.executeWhenIdle(() => {
         return this.graphDataExtractor.extractGraphData();
       });
       logger78.info("sonic-graph-data", `Graph extraction completed: ${graphData.nodes.length} nodes, ${graphData.links.length} links`);
@@ -82401,7 +79759,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void this.hideProgressIndicator();
       const loadingIndicators = this.graphContainer.querySelectorAll(".sonic-graph-loading");
       loadingIndicators.forEach((indicator) => indicator.remove());
-      new import_obsidian30.Notice(`Failed to load graph data: ${error.message}`);
+      new import_obsidian31.Notice(`Failed to load graph data: ${error.message}`);
       this.showErrorState(error.message);
     }
   }
@@ -82411,7 +79769,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
   async toggleAnimation() {
     var _a, _b, _c;
     if (!this.graphRenderer) {
-      new import_obsidian30.Notice("Graph not ready");
+      new import_obsidian31.Notice("Graph not ready");
       return;
     }
     if (!this.isTimelineView) {
@@ -82425,7 +79783,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         if (!status.isInitialized) {
           void logger78.info("audio", "Audio engine not initialized - initializing for animation");
           await this.plugin.audioEngine.initialize();
-          new import_obsidian30.Notice("Audio engine initialized");
+          new import_obsidian31.Notice("Audio engine initialized");
         } else {
           void logger78.info("audio", "Reinitializing audio engine for animation to ensure fresh state");
           await this.plugin.audioEngine.initialize();
@@ -82435,18 +79793,18 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
             enabledCount: enabledInstruments.length,
             audioContext: this.plugin.audioEngine.getStatus().audioContext
           });
-          new import_obsidian30.Notice("Audio engine ready for animation");
+          new import_obsidian31.Notice("Audio engine ready for animation");
         }
         void logger78.info("audio", "Audio engine ready for Sonic Graph animation");
       } catch (audioError) {
         logger78.warn("Failed to check audio engine for animation", audioError.message);
-        new import_obsidian30.Notice("Audio check failed - animation may be silent");
+        new import_obsidian31.Notice("Audio check failed - animation may be silent");
       }
       if (!this.temporalAnimator) {
         await this.initializeTemporalAnimator();
       }
       if (!this.temporalAnimator) {
-        new import_obsidian30.Notice("Failed to initialize animation");
+        new import_obsidian31.Notice("Failed to initialize animation");
         this.isAnimating = false;
         return;
       }
@@ -82472,7 +79830,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         void logger78.debug("visual-display", "Visualization started");
       }
       void logger78.info("ui", "Starting Sonic Graph temporal animation");
-      new import_obsidian30.Notice("Sonic Graph animation started");
+      new import_obsidian31.Notice("Sonic Graph animation started");
     } else {
       this.playButton.setButtonText("Play");
       const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
@@ -82490,7 +79848,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         void this.continuousLayerManager.stop();
       }
       void logger78.info("ui", "Pausing Sonic Graph animation");
-      new import_obsidian30.Notice("Animation paused");
+      new import_obsidian31.Notice("Animation paused");
     }
   }
   /**
@@ -82503,21 +79861,20 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         await this.initializeTemporalAnimator();
       } catch (error) {
         void logger78.error("Failed to initialize temporal animator for export", error);
-        new import_obsidian30.Notice("Failed to initialize timeline for export. Please try switching to Timeline View first.");
+        new import_obsidian31.Notice("Failed to initialize timeline for export. Please try switching to Timeline View first.");
         return;
       }
     }
     if (!this.temporalAnimator) {
-      new import_obsidian30.Notice("Export requires Timeline View to be initialized. Please switch to Timeline View and try again.");
+      new import_obsidian31.Notice("Export requires Timeline View to be initialized. Please switch to Timeline View and try again.");
       return;
     }
-    const { ExportModal: ExportModal2 } = (init_ExportModal(), __toCommonJS(ExportModal_exports));
-    const modal = new ExportModal2(
+    const modal = await Promise.resolve().then(() => (init_ExportModal(), ExportModal_exports)).then((m2) => new m2.ExportModal(
       this.app,
       this.plugin,
       this.plugin.audioEngine,
       this.temporalAnimator
-    );
+    ));
     void modal.open();
     void logger78.info("ui", "Opened export modal");
   }
@@ -82645,7 +80002,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const button = linkSection.createEl("button", {
       cls: "sonic-graph-control-center-button"
     });
-    (0, import_obsidian30.setIcon)(button, "layout-panel-left");
+    (0, import_obsidian31.setIcon)(button, "layout-panel-left");
     void button.appendText("Control Center");
     button.addEventListener("click", () => {
       void this.toggleSettings();
@@ -82661,8 +80018,8 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       return;
     }
     const section = container.createDiv({ cls: "sonic-graph-settings-section adaptive-detail-override" });
-    section.createEl("div", { text: "Adaptive detAIL", cls: "sonic-graph-settings-section-title" });
-    new import_obsidian30.Setting(section).setName("Disable for this session").setDesc("The adaptive detail system automatically hides nodes and links based on zoom level to improve performance. disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
+    section.createEl("div", { text: "Adaptive detail", cls: "sonic-graph-settings-section-title" });
+    new import_obsidian31.Setting(section).setName("Disable for this session").setDesc("The adaptive detail system automatically hides nodes and links based on zoom level to improve performance. Disable this to see all nodes/links regardless of zoom, but expect slower performance on large graphs.").addToggle(
       (toggle) => toggle.setValue(false).onChange((isOverridden) => {
         if (this.adaptiveDetailManager) {
           this.adaptiveDetailManager.setSessionOverride(isOverridden);
@@ -82772,7 +80129,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: Math.round(settings.tagInfluence.weight * 100) + "%",
       cls: "sonic-graph-weight-value"
     });
-    (0, import_obsidian30.setTooltip)(tagWeightSlider, "Controls how strongly notes with shared tags are attracted to each other. Higher values create tighter tag-based clusters. Files with common tags will group together, making it easier to see thematic relationships in your vault.", {
+    (0, import_obsidian31.setTooltip)(tagWeightSlider, "Controls how strongly notes with shared tags are attracted to each other. Higher values create tighter tag-based clusters. Files with common tags will group together, making it easier to see thematic relationships in your vault.", {
       placement: "top"
     });
     tagWeightSlider.addEventListener("input", (e) => {
@@ -82805,7 +80162,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         text: Math.round(settings.temporalPositioning.weight * 100) + "%",
         cls: "sonic-graph-weight-value"
       });
-      (0, import_obsidian30.setTooltip)(temporalWeightSlider, "Controls how creation time influences node positioning. Higher values organize nodes along a temporal axis - newer files gravitate toward center, older files toward periphery. Helps visualize the evolution of your knowledge over time.", {
+      (0, import_obsidian31.setTooltip)(temporalWeightSlider, "Controls how creation time influences node positioning. Higher values organize nodes along a temporal axis - newer files gravitate toward center, older files toward periphery. Helps visualize the evolution of your knowledge over time.", {
         placement: "top"
       });
       temporalWeightSlider.addEventListener("input", (e) => {
@@ -82839,7 +80196,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         text: Math.round(settings.hubCentrality.weight * 100) + "%",
         cls: "sonic-graph-weight-value"
       });
-      (0, import_obsidian30.setTooltip)(hubWeightSlider, "Controls how strongly highly connected nodes are pulled toward the graph center. Higher values make hub notes (with many links) more prominent by positioning them centrally. Creates natural hub-and-spoke patterns.", {
+      (0, import_obsidian31.setTooltip)(hubWeightSlider, "Controls how strongly highly connected nodes are pulled toward the graph center. Higher values make hub notes (with many links) more prominent by positioning them centrally. Creates natural hub-and-spoke patterns.", {
         placement: "top"
       });
       hubWeightSlider.addEventListener("input", (e) => {
@@ -82865,7 +80222,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void debugSwitch.addClass("active");
     }
     debugSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-    (0, import_obsidian30.setTooltip)(debugSwitch, "Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.", {
+    (0, import_obsidian31.setTooltip)(debugSwitch, "Shows visual debugging overlays: temporal zones (green/blue/gray circles), tag connections (orange dashed lines), and hub indicators (red circles). Useful for understanding how content-aware forces affect node positioning.", {
       placement: "left"
     });
     debugSwitch.addEventListener("click", () => {
@@ -82897,12 +80254,12 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     ["louvain", "modularity", "hybrid"].forEach((algorithm) => {
       const option = algorithmSelect.createEl("option");
       option.value = algorithm;
-      option.textContent = algorithm === "louvain" ? "Louvain (Fast)" : algorithm === "modularity" ? "Modularity (Quality)" : "Hybrid (Recommended)";
+      option.textContent = algorithm === "louvain" ? "Louvain (fast)" : algorithm === "modularity" ? "Modularity (quality)" : "Hybrid (recommended)";
       if (algorithm === settings.algorithm) {
         option.selected = true;
       }
     });
-    (0, import_obsidian30.setTooltip)(algorithmSelect, "Choose the clustering algorithm for automatic group detection. Louvain (Fast) prioritizes speed for large graphs, Modularity (Quality) emphasizes cluster quality, and Hybrid (Recommended) balances both speed and quality for optimal results.", {
+    (0, import_obsidian31.setTooltip)(algorithmSelect, "Choose the clustering algorithm for automatic group detection. Louvain (fast) prioritizes speed for large graphs, Modularity (quality) emphasizes cluster quality, and Hybrid (recommended) balances both speed and quality for optimal results.", {
       placement: "top"
     });
     algorithmSelect.addEventListener("change", (e) => {
@@ -82981,7 +80338,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       const minSize = parseInt(target.value);
       void this.updateClusteringParameter("minClusterSize", minSize);
     });
-    (0, import_obsidian30.setTooltip)(minSizeInput, "Set the minimum number of files required to form a cluster. Higher values (8-10) create fewer, larger clusters suitable for broad topic groupings. Lower values (2-4) allow more granular clustering but may create many small groups.", {
+    (0, import_obsidian31.setTooltip)(minSizeInput, "Set the minimum number of files required to form a cluster. Higher values (8-10) create fewer, larger clusters suitable for broad topic groupings. Lower values (2-4) allow more granular clustering but may create many small groups.", {
       placement: "top",
       delay: 500
     });
@@ -83004,13 +80361,13 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       const maxClusters = parseInt(target.value);
       void this.updateClusteringParameter("maxClusters", maxClusters);
     });
-    (0, import_obsidian30.setTooltip)(maxClustersInput, "Limit the total number of clusters created. Lower values (3-8) force broader groupings suitable for high-level organization. Higher values (15-25) allow more detailed clustering but may create too many small groups to manage effectively.", {
+    (0, import_obsidian31.setTooltip)(maxClustersInput, "Limit the total number of clusters created. Lower values (3-8) force broader groupings suitable for high-level organization. Higher values (15-25) allow more detailed clustering but may create too many small groups to manage effectively.", {
       placement: "top",
       delay: 500
     });
     const visualizationHeader = section.createDiv({ cls: "sonic-graph-visualization-header" });
     visualizationHeader.createEl("h4", { text: "Visualization", cls: "sonic-graph-visualization-title" });
-    new import_obsidian30.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. labels help identify the content theme of each group, such as "projects", "daily notes", or topic-based clusters.').addToggle(
+    new import_obsidian31.Setting(section).setName("Show cluster labels").setDesc('Display auto-generated names for each cluster. labels help identify the content theme of each group, such as "projects", "daily notes", or topic-based clusters.').addToggle(
       (toggle) => toggle.setValue(settings.visualization.showClusterLabels).onChange((value) => {
         void this.updateClusteringVisualization("showClusterLabels", value);
       })
@@ -83087,7 +80444,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     });
     const settings = this.getSonicGraphSettings().connectionTypeMapping;
-    new import_obsidian30.Setting(content).setName("Enable connection type audio differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
+    new import_obsidian31.Setting(content).setName("Enable connection type audio differentiation").setDesc("Map different types of connections (wikilinks, embeds, etc.) to distinct audio characteristics").addToggle(
       (toggle) => toggle.setValue(settings.enabled || false).onChange(async (value) => {
         try {
           const currentSettings = this.getSonicGraphSettings();
@@ -83109,42 +80466,42 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         }
       })
     );
-    new import_obsidian30.Setting(content).setName("Independent from content-aware mapping").setDesc("Operate independently of phase 4.1 content-aware mapping system").addToggle(
+    new import_obsidian31.Setting(content).setName("Independent from content-aware mapping").setDesc("Operate independently of phase 4.1 content-aware mapping system").addToggle(
       (toggle) => toggle.setValue(settings.independentFromContentAware).onChange((value) => {
         this.updateConnectionTypeMappingConfig("independentFromContentAware", value);
       })
     );
-    new import_obsidian30.Setting(content).setName("Connection volume mix").setDesc("Overall volume level for connection audio").addSlider(
+    new import_obsidian31.Setting(content).setName("Connection volume mix").setDesc("Overall volume level for connection audio").addSlider(
       (slider) => slider.setLimits(0, 100, 5).setValue(settings.globalSettings.connectionVolumeMix * 100).setDynamicTooltip().onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("connectionVolumeMix", value / 100);
       })
     );
-    new import_obsidian30.Setting(content).setName("Maximum simultaneous connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
+    new import_obsidian31.Setting(content).setName("Maximum simultaneous connections").setDesc("Limit concurrent connection sounds for performance").addSlider(
       (slider) => slider.setLimits(5, 50, 1).setValue(settings.globalSettings.maxSimultaneousConnections).setDynamicTooltip().onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("maxSimultaneousConnections", value);
       })
     );
     const connectionTypesSection = content.createDiv({ cls: "connection-types-toggles" });
     connectionTypesSection.createEl("h5", { text: "Connection types", cls: "connection-type-subsection-title" });
-    new import_obsidian30.Setting(connectionTypesSection).setName("Wikilinks ([[internal links]])").setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+    new import_obsidian31.Setting(connectionTypesSection).setName("Wikilinks ([[internal links]])").setDesc(`${settings.mappings.wikilink.instrumentFamily} family - ${settings.mappings.wikilink.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
       (toggle) => toggle.setValue(settings.mappings.wikilink.enabled).onChange((value) => {
         this.updateConnectionTypeMapping("wikilink", "enabled", value);
       })
     );
-    new import_obsidian30.Setting(connectionTypesSection).setName("Embeds (![[embedded content]])").setDesc(`${settings.mappings.embed.instrumentFamily} family - ${settings.mappings.embed.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+    new import_obsidian31.Setting(connectionTypesSection).setName("Embeds (![[embedded content]])").setDesc(`${settings.mappings.embed.instrumentFamily} family - ${settings.mappings.embed.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
       (toggle) => toggle.setValue(settings.mappings.embed.enabled).onChange((value) => {
         this.updateConnectionTypeMapping("embed", "enabled", value);
       })
     );
     if (settings.mappings.markdown) {
-      new import_obsidian30.Setting(connectionTypesSection).setName("Markdown links ([link](path))").setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+      new import_obsidian31.Setting(connectionTypesSection).setName("Markdown links ([link](path))").setDesc(`${settings.mappings.markdown.instrumentFamily} family - ${settings.mappings.markdown.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
         (toggle) => toggle.setValue(settings.mappings.markdown.enabled).onChange((value) => {
           this.updateConnectionTypeMapping("markdown", "enabled", value);
         })
       );
     }
     if (settings.mappings.tag) {
-      new import_obsidian30.Setting(connectionTypesSection).setName("Tag connections (shared tags)").setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
+      new import_obsidian31.Setting(connectionTypesSection).setName("Tag connections (shared tags)").setDesc(`${settings.mappings.tag.instrumentFamily} family - ${settings.mappings.tag.enabled ? "ENABLED" : "DISABLED"}`).addToggle(
         (toggle) => toggle.setValue(settings.mappings.tag.enabled).onChange((value) => {
           this.updateConnectionTypeMapping("tag", "enabled", value);
         })
@@ -83152,12 +80509,12 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     }
     const performanceSection = section.createDiv({ cls: "connection-type-performance" });
     performanceSection.createEl("h5", { text: "Performance", cls: "connection-type-subsection-title" });
-    new import_obsidian30.Setting(performanceSection).setName("Enable caching").setDesc("Cache connection analysis results for better performance").addToggle(
+    new import_obsidian31.Setting(performanceSection).setName("Enable caching").setDesc("Cache connection analysis results for better performance").addToggle(
       (toggle) => toggle.setValue(settings.globalSettings.enableCaching).onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("enableCaching", value);
       })
     );
-    new import_obsidian30.Setting(performanceSection).setName("Selective processing").setDesc("Only process visible connections to improve performance").addToggle(
+    new import_obsidian31.Setting(performanceSection).setName("Selective processing").setDesc("Only process visible connections to improve performance").addToggle(
       (toggle) => toggle.setValue(settings.globalSettings.selectiveProcessing).onChange((value) => {
         this.updateConnectionTypeMappingGlobalSetting("selectiveProcessing", value);
       })
@@ -83178,7 +80535,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     settings.connectionTypeMapping[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     void this.plugin.saveSettings();
-    logger78.debug("connection-type-mapping", `Updated config: ${key} = ${String(value)}`);
+    logger78.debug("connection-type-mapping", `Updated config: ${key} = ${typeof value === "object" ? JSON.stringify(value) : String(value)}`);
   }
   /**
    * Update connection type mapping global setting
@@ -83191,7 +80548,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     settings.connectionTypeMapping.globalSettings[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     void this.plugin.saveSettings();
-    logger78.debug("connection-type-mapping", `Updated global setting: ${key} = ${String(value)}`);
+    logger78.debug("connection-type-mapping", `Updated global setting: ${key} = ${typeof value === "object" ? JSON.stringify(value) : String(value)}`);
   }
   /**
    * Update specific connection type mapping
@@ -83207,7 +80564,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     mapping[key] = value;
     this.plugin.settings.sonicGraphSettings = settings;
     void this.plugin.saveSettings();
-    logger78.debug("connection-type-mapping", `Updated ${connectionType} mapping: ${key} = ${String(value)}`);
+    logger78.debug("connection-type-mapping", `Updated ${connectionType} mapping: ${key} = ${typeof value === "object" ? JSON.stringify(value) : String(value)}`);
   }
   /**
    * Helper method to create weight sliders for clustering factors
@@ -83233,7 +80590,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-weight-value"
     });
     if (tooltipText) {
-      (0, import_obsidian30.setTooltip)(weightSlider, tooltipText, {
+      (0, import_obsidian31.setTooltip)(weightSlider, tooltipText, {
         placement: "top"
       });
     }
@@ -83277,7 +80634,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       densityValueDisplay.textContent = density + "%";
       void this.updateAudioDensity(density);
     });
-    (0, import_obsidian30.setTooltip)(densitySlider, "Controls how frequently notes play during timeline animation. 100% = every file plays audio, 5% = only 5% of files play audio. Use lower values for large graphs to prevent audio overload.", {
+    (0, import_obsidian31.setTooltip)(densitySlider, "Controls how frequently notes play during timeline animation. 100% = every file plays audio, 5% = only 5% of files play audio. Use lower values for large graphs to prevent audio overload.", {
       placement: "top"
     });
     const densityLabels = densityContainer.createDiv({ cls: "sonic-graph-density-labels" });
@@ -83308,7 +80665,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       durationValueDisplay.textContent = duration2 + " seconds";
       void this.updateAnimationDuration(duration2);
     });
-    (0, import_obsidian30.setTooltip)(durationSlider, "Controls how long the timeline animation lasts. Shorter durations make the animation faster, longer durations make it more contemplative. Range: 10-300 seconds.", {
+    (0, import_obsidian31.setTooltip)(durationSlider, "Controls how long the timeline animation lasts. Shorter durations make the animation faster, longer durations make it more contemplative. Range: 10-300 seconds.", {
       placement: "top"
     });
     const durationLabels = durationContainer.createDiv({ cls: "sonic-graph-density-labels" });
@@ -83331,7 +80688,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void toggleSwitch.toggleClass("active", !isActive);
       void this.updateLoopAnimation(!isActive);
     });
-    (0, import_obsidian30.setTooltip)(toggleSwitch, "When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.", {
+    (0, import_obsidian31.setTooltip)(toggleSwitch, "When enabled, the timeline animation automatically restarts from the beginning when it completes. Useful for continuous visualization during presentations.", {
       placement: "left"
     });
     const timeWindowItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -83362,7 +80719,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     timeWindowSelect.addEventListener("change", () => {
       void this.updateTimeWindow(timeWindowSelect.value);
     });
-    (0, import_obsidian30.setTooltip)(timeWindowSelect, 'Filter which files appear in the timeline. "All time" shows your complete file history (default). Past options filter to recent files only for focused analysis.', {
+    (0, import_obsidian31.setTooltip)(timeWindowSelect, 'Filter which files appear in the timeline. "All time" shows your complete file history (default). Past options filter to recent files only for focused analysis.', {
       placement: "top"
     });
     const granularityItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -83393,7 +80750,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     granularitySelect.addEventListener("change", () => {
       void this.updateTimelineGranularity(granularitySelect.value);
     });
-    (0, import_obsidian30.setTooltip)(granularitySelect, "Select animation granularity for the timeline. All files are shown, but granularity affects pacing: Hour = fast progression through time, Year = slower, broader view. Helps prevent audio crackling from simultaneous events.", {
+    (0, import_obsidian31.setTooltip)(granularitySelect, "Select animation granularity for the timeline. All files are shown, but granularity affects pacing: Hour = fast progression through time, Year = slower, broader view. Helps prevent audio crackling from simultaneous events.", {
       placement: "top"
     });
     const customRangeItem = section.createDiv({
@@ -83442,10 +80799,10 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     customUnitSelect.addEventListener("change", () => {
       this.updateCustomRange(parseInt(customValueInput.value) || 1, customUnitSelect.value);
     });
-    (0, import_obsidian30.setTooltip)(customValueInput, 'Enter a number for your custom time range (e.g., 3 for "3 months"). Only used when Custom Range is selected.', {
+    (0, import_obsidian31.setTooltip)(customValueInput, 'Enter a number for your custom time range (e.g., 3 for "3 months"). Only used when Custom Range is selected.', {
       placement: "top"
     });
-    (0, import_obsidian30.setTooltip)(customUnitSelect, "Select the time unit for your custom range (years, months, weeks, days, or hours).", {
+    (0, import_obsidian31.setTooltip)(customUnitSelect, "Select the time unit for your custom range (years, months, weeks, days, or hours).", {
       placement: "top"
     });
     const spreadingItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -83459,9 +80816,9 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-select"
     });
     const spreadingModes = [
-      { value: "none", text: "None - no spreading", desc: "Events play exactly when files were created. May cause audio crackling if many files were created simultaneously." },
-      { value: "gentle", text: "Gentle - light spreading", desc: "Slightly separates clustered events over a small time window. Recommended for most users." },
-      { value: "aggressive", text: "Aggressive - strong spreading", desc: "Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations." }
+      { value: "none", text: "none - no spreading", desc: "Events play exactly when files were created. May cause audio crackling if many files were created simultaneously." },
+      { value: "gentle", text: "gentle - light spreading", desc: "Slightly separates clustered events over a small time window. Recommended for most users." },
+      { value: "aggressive", text: "aggressive - strong spreading", desc: "Spreads clustered events over a larger time window. Use when experiencing audio crackling with many simultaneous file creations." }
     ];
     spreadingModes.forEach((mode) => {
       const option = spreadingSelect.createEl("option", {
@@ -83475,7 +80832,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     spreadingSelect.addEventListener("change", () => {
       void this.updateEventSpreadingMode(spreadingSelect.value);
     });
-    (0, import_obsidian30.setTooltip)(spreadingSelect, "Choose how to handle simultaneous file creation events to prevent audio crackling. None plays all events at once, Gentle spreads them slightly, Aggressive spreads them more widely over time.", {
+    (0, import_obsidian31.setTooltip)(spreadingSelect, "Choose how to handle simultaneous file creation events to prevent audio crackling. None plays all events at once, Gentle spreads them slightly, Aggressive spreads them more widely over time.", {
       placement: "left"
     });
   }
@@ -83497,7 +80854,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       if (option.includes("Auto"))
         optionEl.selected = true;
     });
-    (0, import_obsidian30.setTooltip)(detectionSelect, "The temporal clustering system automatically detects patterns in your timeline data (Dense=frequent events, Balanced=moderate spacing, Sparse=infrequent events). Override this to force a specific audio rhythm regardless of your data patterns.", {
+    (0, import_obsidian31.setTooltip)(detectionSelect, "The temporal clustering system automatically detects patterns in your timeline data (Dense=frequent events, Balanced=moderate spacing, Sparse=infrequent events). Override this to force a specific audio rhythm regardless of your data patterns.", {
       placement: "top"
     });
     const durationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -83515,7 +80872,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: `${this.getSonicGraphSettings().audio.noteDuration.toFixed(1)}s`,
       cls: "sonic-graph-slider-value"
     });
-    (0, import_obsidian30.setTooltip)(durationSlider, "Controls how long each synthesized note plays when a node appears during animation. Shorter durations (0.1s) create staccato effects, longer durations (2.0s) create sustained tones that overlap and build harmonies.", {
+    (0, import_obsidian31.setTooltip)(durationSlider, "Controls how long each synthesized note plays when a node appears during animation. Shorter durations (0.1s) create staccato effects, longer durations (2.0s) create sustained tones that overlap and build harmonies.", {
       placement: "top"
     });
     durationSlider.addEventListener("input", () => {
@@ -83547,7 +80904,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Advanced audio mapping features for richer soundscapes",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian30.Setting(container).setName("Enable content-aware mapping").setDesc("Use file types, tags, and folder structure to select instruments").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable content-aware mapping").setDesc("Use file types, tags, and folder structure to select instruments").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
@@ -83563,7 +80920,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     );
     if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.contentAwareMapping) == null ? void 0 : _b.enabled) {
-      new import_obsidian30.Setting(container).setName("Instrument frontmatter property").setDesc('Frontmatter property name for instrument selection (e.g., "instrument: piano")').addText(
+      new import_obsidian31.Setting(container).setName("Instrument frontmatter property").setDesc('Frontmatter property name for instrument selection (e.g., "instrument: piano")').addText(
         (text) => {
           var _a2, _b2;
           return text.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.frontmatterPropertyName) || "instrument").onChange(async (value) => {
@@ -83575,7 +80932,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
           });
         }
       );
-      new import_obsidian30.Setting(container).setName("Musical mood property").setDesc('Frontmatter property for musical mood (e.g., "musical-mood: contemplative")').addText(
+      new import_obsidian31.Setting(container).setName("Musical mood property").setDesc('Frontmatter property for musical mood (e.g., "musical-mood: contemplative")').addText(
         (text) => {
           var _a2, _b2;
           return text.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.moodPropertyName) || "musical-mood").onChange(async (value) => {
@@ -83587,10 +80944,10 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
           });
         }
       );
-      new import_obsidian30.Setting(container).setName("Instrument distribution").setDesc("How to distribute instruments across similar files").addDropdown(
+      new import_obsidian31.Setting(container).setName("Instrument distribution").setDesc("How to distribute instruments across similar files").addDropdown(
         (dropdown) => {
           var _a2, _b2;
-          return dropdown.addOption("balanced", "Balanced - Prevent clustering").addOption("random", "Random - Natural variation").addOption("semantic", "Semantic - Based on content").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.distributionStrategy) || "balanced").onChange(async (value) => {
+          return dropdown.addOption("balanced", "balanced - prevent clustering").addOption("random", "random - natural variation").addOption("semantic", "semantic - based on content").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.contentAwareMapping) == null ? void 0 : _b2.distributionStrategy) || "balanced").onChange(async (value) => {
             if (!this.plugin.settings.audioEnhancement.contentAwareMapping.distributionStrategy) {
               this.plugin.settings.audioEnhancement.contentAwareMapping.distributionStrategy = "balanced";
             }
@@ -83622,7 +80979,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Ambient background layers that evolve with your vault structure and activity",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian30.Setting(container).setName("Enable continuous layers").setDesc("Add ambient background audio that responds to vault size, activity, and animation progress").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable continuous layers").setDesc("Add ambient background audio that responds to vault size, activity, and animation progress").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.enabled) || false).onChange(async (value) => {
@@ -83645,10 +81002,10 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   createContinuousLayerControls(container) {
     var _a, _b;
-    new import_obsidian30.Setting(container).setName("Musical genre").setDesc("Choose the ambient genre for continuous layers").addDropdown(
+    new import_obsidian31.Setting(container).setName("Musical genre").setDesc("Choose the ambient genre for continuous layers").addDropdown(
       (dropdown) => {
         var _a2, _b2;
-        return dropdown.addOption("ambient", "Ambient - Gentle evolving textures").addOption("drone", "Drone - Sustained atmospheric tones").addOption("orchestral", "Orchestral - Classical instruments in sustained arrangements").addOption("electronic", "Electronic - Synthesized pads and evolving textures").addOption("minimal", "Minimal - Sparse, contemplative elements").addOption("oceanic", "Oceanic - Whale songs and ocean sounds").addOption("sci-fi", "Sci-Fi - Futuristic atmospheric sounds").addOption("experimental", "Experimental - Unconventional sound design").addOption("industrial", "Industrial - Mechanical drones and factory ambience").addOption("urban", "Urban - City soundscapes and human activity").addOption("nature", "Nature - Forest ambience, rain, wind").addOption("mechanical", "Mechanical - Machine hums and motor drones").addOption("organic", "Organic - Acoustic instruments with natural processing").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.genre) || "ambient").onChange(async (value) => {
+        return dropdown.addOption("ambient", "ambient - gentle evolving textures").addOption("drone", "drone - sustained atmospheric tones").addOption("orchestral", "orchestral - classical instruments in sustained arrangements").addOption("electronic", "electronic - synthesized pads and evolving textures").addOption("minimal", "minimal - sparse, contemplative elements").addOption("oceanic", "oceanic - whale songs and ocean sounds").addOption("sci-fi", "Sci-fi - futuristic atmospheric sounds").addOption("experimental", "experimental - unconventional sound design").addOption("industrial", "industrial - mechanical drones and factory ambience").addOption("urban", "urban - city soundscapes and human activity").addOption("nature", "nature - forest ambience, rain, wind").addOption("mechanical", "mechanical - machine hums and motor drones").addOption("organic", "organic - acoustic instruments with natural processing").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.genre) || "ambient").onChange(async (value) => {
           var _a3;
           if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers)) {
             return;
@@ -83659,7 +81016,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         });
       }
     );
-    new import_obsidian30.Setting(container).setName("Layer intensity").setDesc("Control the volume and prominence of continuous layers").addSlider(
+    new import_obsidian31.Setting(container).setName("Layer intensity").setDesc("Control the volume and prominence of continuous layers").addSlider(
       (slider) => {
         var _a2, _b2;
         return slider.setLimits(0, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.intensity) || 0.5).setDynamicTooltip().onChange(async (value) => {
@@ -83672,7 +81029,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         });
       }
     );
-    new import_obsidian30.Setting(container).setName("Adaptive intensity").setDesc("Layer intensity responds to vault size and activity level").addToggle(
+    new import_obsidian31.Setting(container).setName("Adaptive intensity").setDesc("Layer intensity responds to vault size and activity level").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.adaptiveIntensity) || true).onChange(async (value) => {
@@ -83685,7 +81042,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         });
       }
     );
-    new import_obsidian30.Setting(container).setName("Evolution rate").setDesc("How quickly the ambient layers change and evolve").addSlider(
+    new import_obsidian31.Setting(container).setName("Evolution rate").setDesc("How quickly the ambient layers change and evolve").addSlider(
       (slider) => {
         var _a2, _b2;
         return slider.setLimits(0.1, 1, 0.1).setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.evolutionRate) || 0.3).setDynamicTooltip().onChange(async (value) => {
@@ -83698,7 +81055,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         });
       }
     );
-    new import_obsidian30.Setting(container).setName("Enable rhythmic layer").setDesc("Add subtle percussion that responds to vault activity").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable rhythmic layer").setDesc("Add subtle percussion that responds to vault activity").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.rhythmicEnabled) || false).onChange(async (value) => {
@@ -83711,7 +81068,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         });
       }
     );
-    new import_obsidian30.Setting(container).setName("Enable harmonic layer").setDesc("Add evolving chord progressions based on vault structure").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable harmonic layer").setDesc("Add evolving chord progressions based on vault structure").addToggle(
       (toggle) => {
         var _a2, _b2;
         return toggle.setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.harmonicEnabled) || false).onChange(async (value) => {
@@ -83725,10 +81082,10 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     );
     if ((_b = (_a = this.plugin.settings.audioEnhancement) == null ? void 0 : _a.continuousLayers) == null ? void 0 : _b.harmonicEnabled) {
-      new import_obsidian30.Setting(container).setName("Musical scale").setDesc("Scale for harmonic progressions").addDropdown(
+      new import_obsidian31.Setting(container).setName("Musical scale").setDesc("Scale for harmonic progressions").addDropdown(
         (dropdown) => {
           var _a2, _b2;
-          return dropdown.addOption("major", "Major - Bright and uplifting").addOption("minor", "Minor - Contemplative and introspective").addOption("dorian", "Dorian - Medieval and mysterious").addOption("pentatonic_major", "Pentatonic Major - Simple and peaceful").addOption("pentatonic_minor", "Pentatonic Minor - Eastern and meditative").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.scale) || "major").onChange(async (value) => {
+          return dropdown.addOption("major", "major - bright and uplifting").addOption("minor", "minor - contemplative and introspective").addOption("dorian", "dorian - medieval and mysterious").addOption("pentatonic_major", "Pentatonic major - simple and peaceful").addOption("pentatonic_minor", "Pentatonic minor - eastern and meditative").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.scale) || "major").onChange(async (value) => {
             var _a3;
             if (!((_a3 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a3.continuousLayers)) {
               return;
@@ -83738,7 +81095,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
           });
         }
       );
-      new import_obsidian30.Setting(container).setName("Musical key").setDesc("Root key for harmonic progressions").addDropdown(
+      new import_obsidian31.Setting(container).setName("Musical key").setDesc("Root key for harmonic progressions").addDropdown(
         (dropdown) => {
           var _a2, _b2;
           return dropdown.addOption("C", "C").addOption("C#", "C#").addOption("D", "D").addOption("D#", "D#").addOption("E", "E").addOption("F", "F").addOption("F#", "F#").addOption("G", "G").addOption("G#", "G#").addOption("A", "A").addOption("A#", "A#").addOption("B", "B").setValue(((_b2 = (_a2 = this.plugin.settings.audioEnhancement) == null ? void 0 : _a2.continuousLayers) == null ? void 0 : _b2.key) || "C").onChange(async (value) => {
@@ -83754,7 +81111,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     }
     const performanceNote = container.createDiv({ cls: "sonic-graph-setting-item" });
     performanceNote.createEl("div", {
-      text: "Continuous layers target <5% additional cpu usage and work alongside existing node-based audio",
+      text: "Continuous layers target <5% additional CPU usage and work alongside existing node-based audio",
       cls: "sonic-graph-setting-description sonic-graph-info"
     });
   }
@@ -83773,7 +81130,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Generate unique audio themes for different cluster types with dynamic transitions",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian30.Setting(container).setName("Enable cluster audio").setDesc("Generate unique sonic characteristics for tag-based, temporal, link-dense, and community clusters").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable cluster audio").setDesc("Generate unique sonic characteristics for tag-based, temporal, link-dense, and community clusters").addToggle(
       (toggle) => {
         var _a2;
         return toggle.setValue(((_a2 = this.plugin.settings.clusterAudio) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -83821,7 +81178,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   createClusterAudioDetailSettings(container) {
     const settings = this.plugin.settings.clusterAudio;
-    new import_obsidian30.Setting(container).setName("Global cluster volume").setDesc("Master volume for all cluster audio themes").addSlider(
+    new import_obsidian31.Setting(container).setName("Global cluster volume").setDesc("Master volume for all cluster audio themes").addSlider(
       (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.globalVolume).setDynamicTooltip().onChange(async (value) => {
         settings.globalVolume = value;
         await this.plugin.saveSettings();
@@ -83880,20 +81237,20 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Audio effects when nodes join, leave, or clusters form/dissolve",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian30.Setting(container).setName("Enable transitions").setDesc("Play audio effects during cluster changes (join, leave, formation, dissolution)").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable transitions").setDesc("Play audio effects during cluster changes (join, leave, formation, dissolution)").addToggle(
       (toggle) => toggle.setValue(settings.transitionsEnabled).onChange(async (value) => {
         settings.transitionsEnabled = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.transitionsEnabled) {
-      new import_obsidian30.Setting(container).setName("Transition volume").setDesc("Volume level for cluster transition effects").addSlider(
+      new import_obsidian31.Setting(container).setName("Transition volume").setDesc("Volume level for cluster transition effects").addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.transitionVolume).setDynamicTooltip().onChange(async (value) => {
           settings.transitionVolume = value;
           await this.plugin.saveSettings();
         })
       );
-      new import_obsidian30.Setting(container).setName("Transition speed").setDesc("Speed of cluster transition effects (higher = faster)").addSlider(
+      new import_obsidian31.Setting(container).setName("Transition speed").setDesc("Speed of cluster transition effects (higher = faster)").addSlider(
         (slider) => slider.setLimits(0.1, 5, 0.1).setValue(settings.transitionSpeed).setDynamicTooltip().onChange(async (value) => {
           settings.transitionSpeed = value;
           await this.plugin.saveSettings();
@@ -83905,27 +81262,27 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Advanced settings",
       cls: "sonic-graph-setting-label"
     });
-    new import_obsidian30.Setting(container).setName("Real-time updates").setDesc("Update cluster audio immediately as clusters change during animation").addToggle(
+    new import_obsidian31.Setting(container).setName("Real-time updates").setDesc("Update cluster audio immediately as clusters change during animation").addToggle(
       (toggle) => toggle.setValue(settings.realTimeUpdates).onChange(async (value) => {
         settings.realTimeUpdates = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian30.Setting(container).setName("Strength modulation").setDesc("Modulate audio based on cluster strength (cohesion)").addToggle(
+    new import_obsidian31.Setting(container).setName("Strength modulation").setDesc("Modulate audio based on cluster strength (cohesion)").addToggle(
       (toggle) => toggle.setValue(settings.strengthModulation).onChange(async (value) => {
         settings.strengthModulation = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.strengthModulation) {
-      new import_obsidian30.Setting(container).setName("Strength sensitivity").setDesc("How responsive cluster audio is to strength changes").addSlider(
+      new import_obsidian31.Setting(container).setName("Strength sensitivity").setDesc("How responsive cluster audio is to strength changes").addSlider(
         (slider) => slider.setLimits(0.1, 2, 0.1).setValue(settings.strengthSensitivity).setDynamicTooltip().onChange(async (value) => {
           settings.strengthSensitivity = value;
           await this.plugin.saveSettings();
         })
       );
     }
-    new import_obsidian30.Setting(container).setName("Spatial audio").setDesc("Use cluster positions for stereo panning").addToggle(
+    new import_obsidian31.Setting(container).setName("Spatial audio").setDesc("Use cluster positions for stereo panning").addToggle(
       (toggle) => toggle.setValue(settings.spatialAudio).onChange(async (value) => {
         settings.spatialAudio = value;
         await this.plugin.saveSettings();
@@ -83936,13 +81293,13 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Performance settings",
       cls: "sonic-graph-setting-label"
     });
-    new import_obsidian30.Setting(container).setName("Max simultaneous clusters").setDesc("Limit concurrent cluster audio for performance").addSlider(
+    new import_obsidian31.Setting(container).setName("Max simultaneous clusters").setDesc("Limit concurrent cluster audio for performance").addSlider(
       (slider) => slider.setLimits(1, 10, 1).setValue(settings.maxSimultaneousClusters).setDynamicTooltip().onChange(async (value) => {
         settings.maxSimultaneousClusters = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian30.Setting(container).setName("Update throttle (ms)").setDesc("Throttle cluster updates to prevent audio crackling").addSlider(
+    new import_obsidian31.Setting(container).setName("Update throttle (ms)").setDesc("Throttle cluster updates to prevent audio crackling").addSlider(
       (slider) => slider.setLimits(50, 1e3, 50).setValue(settings.updateThrottleMs).setDynamicTooltip().onChange(async (value) => {
         settings.updateThrottleMs = value;
         await this.plugin.saveSettings();
@@ -83983,27 +81340,29 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     enabledToggle.checked = ((_a = this.plugin.settings.hubOrchestration) == null ? void 0 : _a.enabled) || false;
-    enabledToggle.addEventListener("change", async () => {
-      if (!this.plugin.settings.hubOrchestration) {
-        this.plugin.settings.hubOrchestration = {
-          enabled: enabledToggle.checked,
-          hubThreshold: 0.6,
-          prominenceMultiplier: 2,
-          orchestrationMode: "balanced",
-          transitionsEnabled: true,
-          centralityWeights: {
-            degree: 0.3,
-            betweenness: 0.3,
-            eigenvector: 0.2,
-            pageRank: 0.2
-          },
-          hubInstrumentPreference: ["piano", "trumpet", "violin", "lead-synth"]
-        };
-      } else {
-        this.plugin.settings.hubOrchestration.enabled = enabledToggle.checked;
-      }
-      await this.plugin.saveSettings();
-      void this.refreshHubOrchestrationSettings();
+    enabledToggle.addEventListener("change", () => {
+      void (async () => {
+        if (!this.plugin.settings.hubOrchestration) {
+          this.plugin.settings.hubOrchestration = {
+            enabled: enabledToggle.checked,
+            hubThreshold: 0.6,
+            prominenceMultiplier: 2,
+            orchestrationMode: "balanced",
+            transitionsEnabled: true,
+            centralityWeights: {
+              degree: 0.3,
+              betweenness: 0.3,
+              eigenvector: 0.2,
+              pageRank: 0.2
+            },
+            hubInstrumentPreference: ["piano", "trumpet", "violin", "lead-synth"]
+          };
+        } else {
+          this.plugin.settings.hubOrchestration.enabled = enabledToggle.checked;
+        }
+        await this.plugin.saveSettings();
+        void this.refreshHubOrchestrationSettings();
+      })();
     });
     if ((_b = this.plugin.settings.hubOrchestration) == null ? void 0 : _b.enabled) {
       void this.createHubOrchestrationDetailSettings(container);
@@ -84035,9 +81394,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         option.selected = true;
       }
     });
-    modeSelect.addEventListener("change", async () => {
-      settings.orchestrationMode = modeSelect.value;
-      await this.plugin.saveSettings();
+    modeSelect.addEventListener("change", () => {
+      void (async () => {
+        settings.orchestrationMode = modeSelect.value;
+        await this.plugin.saveSettings();
+      })();
     });
     const thresholdItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     thresholdItem.createEl("label", {
@@ -84061,11 +81422,13 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: `${(settings.hubThreshold * 100).toFixed(0)}%`,
       cls: "sonic-graph-slider-value"
     });
-    thresholdSlider.addEventListener("input", async () => {
-      const value = parseFloat(thresholdSlider.value);
-      thresholdValue.textContent = `${(value * 100).toFixed(0)}%`;
-      settings.hubThreshold = value;
-      await this.plugin.saveSettings();
+    thresholdSlider.addEventListener("input", () => {
+      void (async () => {
+        const value = parseFloat(thresholdSlider.value);
+        thresholdValue.textContent = `${(value * 100).toFixed(0)}%`;
+        settings.hubThreshold = value;
+        await this.plugin.saveSettings();
+      })();
     });
     const prominenceItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     prominenceItem.createEl("label", {
@@ -84089,11 +81452,13 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: `${settings.prominenceMultiplier.toFixed(1)}x`,
       cls: "sonic-graph-slider-value"
     });
-    prominenceSlider.addEventListener("input", async () => {
-      const value = parseFloat(prominenceSlider.value);
-      prominenceValue.textContent = `${value.toFixed(1)}x`;
-      settings.prominenceMultiplier = value;
-      await this.plugin.saveSettings();
+    prominenceSlider.addEventListener("input", () => {
+      void (async () => {
+        const value = parseFloat(prominenceSlider.value);
+        prominenceValue.textContent = `${value.toFixed(1)}x`;
+        settings.prominenceMultiplier = value;
+        await this.plugin.saveSettings();
+      })();
     });
     const weightsHeader = container.createDiv({ cls: "sonic-graph-setting-item" });
     weightsHeader.createEl("h4", {
@@ -84112,9 +81477,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       0,
       1,
       0.05,
-      async (value) => {
-        settings.centralityWeights.degree = value;
-        await this.plugin.saveSettings();
+      (value) => {
+        void (async () => {
+          settings.centralityWeights.degree = value;
+          await this.plugin.saveSettings();
+        })();
       }
     );
     this.createWeightSlider(
@@ -84125,9 +81492,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       0,
       1,
       0.05,
-      async (value) => {
-        settings.centralityWeights.betweenness = value;
-        await this.plugin.saveSettings();
+      (value) => {
+        void (async () => {
+          settings.centralityWeights.betweenness = value;
+          await this.plugin.saveSettings();
+        })();
       }
     );
     this.createWeightSlider(
@@ -84138,9 +81507,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       0,
       1,
       0.05,
-      async (value) => {
-        settings.centralityWeights.eigenvector = value;
-        await this.plugin.saveSettings();
+      (value) => {
+        void (async () => {
+          settings.centralityWeights.eigenvector = value;
+          await this.plugin.saveSettings();
+        })();
       }
     );
     this.createWeightSlider(
@@ -84151,9 +81522,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       0,
       1,
       0.05,
-      async (value) => {
-        settings.centralityWeights.pageRank = value;
-        await this.plugin.saveSettings();
+      (value) => {
+        void (async () => {
+          settings.centralityWeights.pageRank = value;
+          await this.plugin.saveSettings();
+        })();
       }
     );
     const transitionsItem = container.createDiv({ cls: "sonic-graph-setting-item" });
@@ -84170,9 +81543,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     transitionsToggle.checked = settings.transitionsEnabled;
-    transitionsToggle.addEventListener("change", async () => {
-      settings.transitionsEnabled = transitionsToggle.checked;
-      await this.plugin.saveSettings();
+    transitionsToggle.addEventListener("change", () => {
+      void (async () => {
+        settings.transitionsEnabled = transitionsToggle.checked;
+        await this.plugin.saveSettings();
+      })();
     });
     const performanceNote = container.createDiv({ cls: "sonic-graph-setting-item" });
     performanceNote.createEl("div", {
@@ -84219,7 +81594,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Generate distinct audio themes for detected community structures with evolution tracking",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian30.Setting(container).setName("Enable community detection audio").setDesc("Generate audio themes for large stable, small dynamic, bridge, isolated, and hierarchical communities").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable community detection audio").setDesc("Generate audio themes for large stable, small dynamic, bridge, isolated, and hierarchical communities").addToggle(
       (toggle) => {
         var _a2;
         return toggle.setValue(((_a2 = this.plugin.settings.communityDetection) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -84263,7 +81638,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   createCommunityDetectionDetailSettings(container) {
     const settings = this.plugin.settings.communityDetection;
-    new import_obsidian30.Setting(container).setName("Theme intensity").setDesc("Overall intensity of community audio themes").addSlider(
+    new import_obsidian31.Setting(container).setName("Theme intensity").setDesc("Overall intensity of community audio themes").addSlider(
       (slider) => slider.setLimits(0, 2, 0.1).setValue(settings.themeIntensity).setDynamicTooltip().onChange(async (value) => {
         settings.themeIntensity = value;
         await this.plugin.saveSettings();
@@ -84322,20 +81697,20 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Configure how communities are detected and classified",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian30.Setting(container).setName("Large community threshold").setDesc('Minimum size for a community to be considered "large" (default: 15 nodes)').addSlider(
+    new import_obsidian31.Setting(container).setName("Large community threshold").setDesc('Minimum size for a community to be considered "large" (default: 15 nodes)').addSlider(
       (slider) => slider.setLimits(5, 30, 1).setValue(settings.largeCommunitySizeThreshold).setDynamicTooltip().onChange(async (value) => {
         settings.largeCommunitySizeThreshold = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian30.Setting(container).setName("Hierarchy analysis").setDesc("Detect nested community structures for hierarchical themes").addToggle(
+    new import_obsidian31.Setting(container).setName("Hierarchy analysis").setDesc("Detect nested community structures for hierarchical themes").addToggle(
       (toggle) => toggle.setValue(settings.hierarchyAnalysis).onChange(async (value) => {
         settings.hierarchyAnalysis = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.hierarchyAnalysis) {
-      new import_obsidian30.Setting(container).setName("Containment threshold").setDesc("Minimum overlap ratio to consider nested hierarchy (0-1)").addSlider(
+      new import_obsidian31.Setting(container).setName("Containment threshold").setDesc("Minimum overlap ratio to consider nested hierarchy (0-1)").addSlider(
         (slider) => slider.setLimits(0.3, 1, 0.05).setValue(settings.hierarchyContainmentThreshold).setDynamicTooltip().onChange(async (value) => {
           settings.hierarchyContainmentThreshold = value;
           await this.plugin.saveSettings();
@@ -84347,14 +81722,14 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Spatial audio",
       cls: "sonic-graph-setting-label"
     });
-    new import_obsidian30.Setting(container).setName("Enable spatial audio").setDesc("Position community themes in stereo field based on community centroid").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable spatial audio").setDesc("Position community themes in stereo field based on community centroid").addToggle(
       (toggle) => toggle.setValue(settings.spatialAudio).onChange(async (value) => {
         settings.spatialAudio = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.spatialAudio) {
-      new import_obsidian30.Setting(container).setName("Spatial width").setDesc("Width of stereo field for spatial positioning (0 = mono, 1 = full stereo)").addSlider(
+      new import_obsidian31.Setting(container).setName("Spatial width").setDesc("Width of stereo field for spatial positioning (0 = mono, 1 = full stereo)").addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.spatialWidth).setDynamicTooltip().onChange(async (value) => {
           settings.spatialWidth = value;
           await this.plugin.saveSettings();
@@ -84382,7 +81757,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Audio feedback for community evolution events (merge, split, growth, decline, etc.)",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian30.Setting(container).setName("Enable evolution audio").setDesc("Play audio events when communities merge, split, grow, decline, or change structure").addToggle(
+    new import_obsidian31.Setting(container).setName("Enable evolution audio").setDesc("Play audio events when communities merge, split, grow, decline, or change structure").addToggle(
       (toggle) => {
         var _a2;
         return toggle.setValue(((_a2 = this.plugin.settings.communityEvolution) == null ? void 0 : _a2.enabled) || false).onChange(async (value) => {
@@ -84495,13 +81870,13 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Configure sensitivity for detecting growth and decline",
       cls: "sonic-graph-setting-description"
     });
-    new import_obsidian30.Setting(container).setName("Growth threshold").setDesc("Minimum size increase to trigger growth event (0-1, default: 0.3 = 30%)").addSlider(
+    new import_obsidian31.Setting(container).setName("Growth threshold").setDesc("Minimum size increase to trigger growth event (0-1, default: 0.3 = 30%)").addSlider(
       (slider) => slider.setLimits(0.1, 1, 0.05).setValue(settings.growthThreshold).setDynamicTooltip().onChange(async (value) => {
         settings.growthThreshold = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian30.Setting(container).setName("Decline threshold").setDesc("Minimum size decrease to trigger decline event (0-1, default: 0.3 = 30%)").addSlider(
+    new import_obsidian31.Setting(container).setName("Decline threshold").setDesc("Minimum size decrease to trigger decline event (0-1, default: 0.3 = 30%)").addSlider(
       (slider) => slider.setLimits(0.1, 1, 0.05).setValue(settings.declineThreshold).setDynamicTooltip().onChange(async (value) => {
         settings.declineThreshold = value;
         await this.plugin.saveSettings();
@@ -84512,7 +81887,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Performance settings",
       cls: "sonic-graph-setting-label"
     });
-    new import_obsidian30.Setting(container).setName("Event throttle (ms)").setDesc("Minimum time between evolution events to prevent audio overload").addSlider(
+    new import_obsidian31.Setting(container).setName("Event throttle (ms)").setDesc("Minimum time between evolution events to prevent audio overload").addSlider(
       (slider) => slider.setLimits(100, 2e3, 100).setValue(settings.eventThrottleMs).setDynamicTooltip().onChange(async (value) => {
         settings.eventThrottleMs = value;
         await this.plugin.saveSettings();
@@ -84553,24 +81928,26 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     enabledToggle.checked = ((_a = this.plugin.settings.musicalTheory) == null ? void 0 : _a.enabled) || false;
-    enabledToggle.addEventListener("change", async () => {
-      if (!this.plugin.settings.musicalTheory) {
-        this.plugin.settings.musicalTheory = {
-          enabled: enabledToggle.checked,
-          scale: "major",
-          rootNote: "C",
-          enforceHarmony: true,
-          allowChromaticPassing: false,
-          dissonanceThreshold: 0.3,
-          quantizationStrength: 0.8,
-          preferredChordProgression: "I-IV-V-I",
-          dynamicScaleModulation: false
-        };
-      } else {
-        this.plugin.settings.musicalTheory.enabled = enabledToggle.checked;
-      }
-      await this.plugin.saveSettings();
-      void this.refreshMusicalTheorySettings();
+    enabledToggle.addEventListener("change", () => {
+      void (async () => {
+        if (!this.plugin.settings.musicalTheory) {
+          this.plugin.settings.musicalTheory = {
+            enabled: enabledToggle.checked,
+            scale: "major",
+            rootNote: "C",
+            enforceHarmony: true,
+            allowChromaticPassing: false,
+            dissonanceThreshold: 0.3,
+            quantizationStrength: 0.8,
+            preferredChordProgression: "I-IV-V-I",
+            dynamicScaleModulation: false
+          };
+        } else {
+          this.plugin.settings.musicalTheory.enabled = enabledToggle.checked;
+        }
+        await this.plugin.saveSettings();
+        void this.refreshMusicalTheorySettings();
+      })();
     });
     if ((_b = this.plugin.settings.musicalTheory) == null ? void 0 : _b.enabled) {
       void this.createMusicalTheoryDetailSettings(container);
@@ -84602,9 +81979,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         option.selected = true;
       }
     });
-    rootNoteSelect.addEventListener("change", async () => {
-      settings.rootNote = rootNoteSelect.value;
-      await this.plugin.saveSettings();
+    rootNoteSelect.addEventListener("change", () => {
+      void (async () => {
+        settings.rootNote = rootNoteSelect.value;
+        await this.plugin.saveSettings();
+      })();
     });
     const scaleItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     scaleItem.createEl("label", {
@@ -84642,9 +82021,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         option.selected = true;
       }
     });
-    scaleSelect.addEventListener("change", async () => {
-      settings.scale = scaleSelect.value;
-      await this.plugin.saveSettings();
+    scaleSelect.addEventListener("change", () => {
+      void (async () => {
+        settings.scale = scaleSelect.value;
+        await this.plugin.saveSettings();
+      })();
     });
     const quantStrengthItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     quantStrengthItem.createEl("label", {
@@ -84673,9 +82054,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       const value = parseFloat(quantStrengthSlider.value);
       quantStrengthValue.textContent = value.toFixed(2);
     });
-    quantStrengthSlider.addEventListener("change", async () => {
-      settings.quantizationStrength = parseFloat(quantStrengthSlider.value);
-      await this.plugin.saveSettings();
+    quantStrengthSlider.addEventListener("change", () => {
+      void (async () => {
+        settings.quantizationStrength = parseFloat(quantStrengthSlider.value);
+        await this.plugin.saveSettings();
+      })();
     });
     const dissonanceItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     dissonanceItem.createEl("label", {
@@ -84704,9 +82087,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       const value = parseFloat(dissonanceSlider.value);
       dissonanceValue.textContent = value.toFixed(2);
     });
-    dissonanceSlider.addEventListener("change", async () => {
-      settings.dissonanceThreshold = parseFloat(dissonanceSlider.value);
-      await this.plugin.saveSettings();
+    dissonanceSlider.addEventListener("change", () => {
+      void (async () => {
+        settings.dissonanceThreshold = parseFloat(dissonanceSlider.value);
+        await this.plugin.saveSettings();
+      })();
     });
     const enforceHarmonyItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     enforceHarmonyItem.createEl("label", {
@@ -84722,9 +82107,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     enforceHarmonyToggle.checked = settings.enforceHarmony;
-    enforceHarmonyToggle.addEventListener("change", async () => {
-      settings.enforceHarmony = enforceHarmonyToggle.checked;
-      await this.plugin.saveSettings();
+    enforceHarmonyToggle.addEventListener("change", () => {
+      void (async () => {
+        settings.enforceHarmony = enforceHarmonyToggle.checked;
+        await this.plugin.saveSettings();
+      })();
     });
     const chromaticItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     chromaticItem.createEl("label", {
@@ -84740,9 +82127,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     chromaticToggle.checked = settings.allowChromaticPassing;
-    chromaticToggle.addEventListener("change", async () => {
-      settings.allowChromaticPassing = chromaticToggle.checked;
-      await this.plugin.saveSettings();
+    chromaticToggle.addEventListener("change", () => {
+      void (async () => {
+        settings.allowChromaticPassing = chromaticToggle.checked;
+        await this.plugin.saveSettings();
+      })();
     });
     const modulationItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     modulationItem.createEl("label", {
@@ -84758,9 +82147,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     modulationToggle.checked = settings.dynamicScaleModulation;
-    modulationToggle.addEventListener("change", async () => {
-      settings.dynamicScaleModulation = modulationToggle.checked;
-      await this.plugin.saveSettings();
+    modulationToggle.addEventListener("change", () => {
+      void (async () => {
+        settings.dynamicScaleModulation = modulationToggle.checked;
+        await this.plugin.saveSettings();
+      })();
     });
   }
   /**
@@ -84813,22 +82204,24 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     enabledToggle.checked = ((_a = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _a.enabled) || false;
-    enabledToggle.addEventListener("change", async () => {
-      if (!this.plugin.settings.dynamicOrchestration) {
-        this.plugin.settings.dynamicOrchestration = {
-          enabled: enabledToggle.checked,
-          customThresholds: false,
-          temporalInfluenceEnabled: true,
-          timeOfDayInfluence: 0.5,
-          seasonalInfluence: 0.3,
-          transitionDuration: 3,
-          autoAdjust: true
-        };
-      } else {
-        this.plugin.settings.dynamicOrchestration.enabled = enabledToggle.checked;
-      }
-      await this.plugin.saveSettings();
-      void this.refreshDynamicOrchestrationSettings();
+    enabledToggle.addEventListener("change", () => {
+      void (async () => {
+        if (!this.plugin.settings.dynamicOrchestration) {
+          this.plugin.settings.dynamicOrchestration = {
+            enabled: enabledToggle.checked,
+            customThresholds: false,
+            temporalInfluenceEnabled: true,
+            timeOfDayInfluence: 0.5,
+            seasonalInfluence: 0.3,
+            transitionDuration: 3,
+            autoAdjust: true
+          };
+        } else {
+          this.plugin.settings.dynamicOrchestration.enabled = enabledToggle.checked;
+        }
+        await this.plugin.saveSettings();
+        void this.refreshDynamicOrchestrationSettings();
+      })();
     });
     if ((_b = this.plugin.settings.dynamicOrchestration) == null ? void 0 : _b.enabled) {
       void this.createDynamicOrchestrationDetailSettings(container);
@@ -84853,9 +82246,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     temporalToggle.checked = settings.temporalInfluenceEnabled;
-    temporalToggle.addEventListener("change", async () => {
-      settings.temporalInfluenceEnabled = temporalToggle.checked;
-      await this.plugin.saveSettings();
+    temporalToggle.addEventListener("change", () => {
+      void (async () => {
+        settings.temporalInfluenceEnabled = temporalToggle.checked;
+        await this.plugin.saveSettings();
+      })();
     });
     const timeOfDayItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     timeOfDayItem.createEl("label", {
@@ -84876,13 +82271,15 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     });
     timeSlider.value = settings.timeOfDayInfluence.toString();
-    timeSlider.addEventListener("input", async () => {
-      settings.timeOfDayInfluence = parseFloat(timeSlider.value);
-      const descriptionEl = timeOfDayItem.querySelector(".sonic-graph-setting-description");
-      if (descriptionEl) {
-        descriptionEl.textContent = `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
-      }
-      await this.plugin.saveSettings();
+    timeSlider.addEventListener("input", () => {
+      void (async () => {
+        settings.timeOfDayInfluence = parseFloat(timeSlider.value);
+        const descriptionEl = timeOfDayItem.querySelector(".sonic-graph-setting-description");
+        if (descriptionEl) {
+          descriptionEl.textContent = `Strength of time-based adjustments: ${(settings.timeOfDayInfluence * 100).toFixed(0)}%`;
+        }
+        await this.plugin.saveSettings();
+      })();
     });
     const seasonalItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     seasonalItem.createEl("label", {
@@ -84903,13 +82300,15 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     });
     seasonSlider.value = settings.seasonalInfluence.toString();
-    seasonSlider.addEventListener("input", async () => {
-      settings.seasonalInfluence = parseFloat(seasonSlider.value);
-      const descriptionEl = seasonalItem.querySelector(".sonic-graph-setting-description");
-      if (descriptionEl) {
-        descriptionEl.textContent = `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
-      }
-      await this.plugin.saveSettings();
+    seasonSlider.addEventListener("input", () => {
+      void (async () => {
+        settings.seasonalInfluence = parseFloat(seasonSlider.value);
+        const descriptionEl = seasonalItem.querySelector(".sonic-graph-setting-description");
+        if (descriptionEl) {
+          descriptionEl.textContent = `Strength of seasonal adjustments: ${(settings.seasonalInfluence * 100).toFixed(0)}%`;
+        }
+        await this.plugin.saveSettings();
+      })();
     });
     const transitionItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     transitionItem.createEl("label", {
@@ -84930,13 +82329,15 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     });
     transitionSlider.value = settings.transitionDuration.toString();
-    transitionSlider.addEventListener("input", async () => {
-      settings.transitionDuration = parseFloat(transitionSlider.value);
-      const descriptionEl = transitionItem.querySelector(".sonic-graph-setting-description");
-      if (descriptionEl) {
-        descriptionEl.textContent = `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
-      }
-      await this.plugin.saveSettings();
+    transitionSlider.addEventListener("input", () => {
+      void (async () => {
+        settings.transitionDuration = parseFloat(transitionSlider.value);
+        const descriptionEl = transitionItem.querySelector(".sonic-graph-setting-description");
+        if (descriptionEl) {
+          descriptionEl.textContent = `Duration of tier transitions: ${settings.transitionDuration.toFixed(1)}s`;
+        }
+        await this.plugin.saveSettings();
+      })();
     });
     const autoAdjustItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     autoAdjustItem.createEl("label", {
@@ -84952,9 +82353,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     autoAdjustToggle.checked = settings.autoAdjust;
-    autoAdjustToggle.addEventListener("change", async () => {
-      settings.autoAdjust = autoAdjustToggle.checked;
-      await this.plugin.saveSettings();
+    autoAdjustToggle.addEventListener("change", () => {
+      void (async () => {
+        settings.autoAdjust = autoAdjustToggle.checked;
+        await this.plugin.saveSettings();
+      })();
     });
   }
   /**
@@ -85007,47 +82410,49 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     enabledToggle.checked = ((_a = this.plugin.settings.spatialAudio) == null ? void 0 : _a.enabled) || false;
-    enabledToggle.addEventListener("change", async () => {
-      if (!this.plugin.settings.spatialAudio) {
-        this.plugin.settings.spatialAudio = {
-          enabled: enabledToggle.checked,
-          mode: "hybrid" /* Hybrid */,
-          graphPositionSettings: {
-            curve: "sigmoid" /* Sigmoid */,
-            intensity: 0.7,
-            smoothingFactor: 0.5,
-            updateThrottleMs: 100
-          },
-          folderSettings: {
-            enabled: true,
-            customMappings: [],
-            autoDetectTopLevel: true,
-            spreadFactor: 0.3
-          },
-          clusterSettings: {
-            enabled: true,
-            useCentroid: true,
-            individualSpread: 0.2,
-            clusterSeparation: 0.5
-          },
-          hybridWeights: {
-            graphPosition: 0.5,
-            folderBased: 0.3,
-            clusterBased: 0.2
-          },
-          advanced: {
-            enableDepthMapping: false,
-            depthInfluence: 0.3,
-            boundaryPadding: 0.1,
-            velocityDamping: true,
-            dampingFactor: 0.7
-          }
-        };
-      } else {
-        this.plugin.settings.spatialAudio.enabled = enabledToggle.checked;
-      }
-      await this.plugin.saveSettings();
-      void this.refreshSpatialAudioSettings();
+    enabledToggle.addEventListener("change", () => {
+      void (async () => {
+        if (!this.plugin.settings.spatialAudio) {
+          this.plugin.settings.spatialAudio = {
+            enabled: enabledToggle.checked,
+            mode: "hybrid" /* Hybrid */,
+            graphPositionSettings: {
+              curve: "sigmoid" /* Sigmoid */,
+              intensity: 0.7,
+              smoothingFactor: 0.5,
+              updateThrottleMs: 100
+            },
+            folderSettings: {
+              enabled: true,
+              customMappings: [],
+              autoDetectTopLevel: true,
+              spreadFactor: 0.3
+            },
+            clusterSettings: {
+              enabled: true,
+              useCentroid: true,
+              individualSpread: 0.2,
+              clusterSeparation: 0.5
+            },
+            hybridWeights: {
+              graphPosition: 0.5,
+              folderBased: 0.3,
+              clusterBased: 0.2
+            },
+            advanced: {
+              enableDepthMapping: false,
+              depthInfluence: 0.3,
+              boundaryPadding: 0.1,
+              velocityDamping: true,
+              dampingFactor: 0.7
+            }
+          };
+        } else {
+          this.plugin.settings.spatialAudio.enabled = enabledToggle.checked;
+        }
+        await this.plugin.saveSettings();
+        void this.refreshSpatialAudioSettings();
+      })();
     });
     if ((_b = this.plugin.settings.spatialAudio) == null ? void 0 : _b.enabled) {
       void this.createSpatialAudioDetailSettings(container);
@@ -85071,11 +82476,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-dropdown"
     });
     const modes = [
-      { value: "graph-position", label: "Graph Position" },
-      { value: "folder-based", label: "Folder Based" },
-      { value: "cluster-based", label: "Cluster Based" },
-      { value: "hybrid", label: "Hybrid (Recommended)" },
-      { value: "disabled", label: "Disabled" }
+      { value: "graph-position" /* GraphPosition */, label: "Graph position" },
+      { value: "folder-based" /* FolderBased */, label: "Folder based" },
+      { value: "cluster-based" /* ClusterBased */, label: "Cluster based" },
+      { value: "hybrid" /* Hybrid */, label: "Hybrid (recommended)" },
+      { value: "disabled" /* Disabled */, label: "disabled" }
     ];
     modes.forEach((mode) => {
       const option = modeSelect.createEl("option", {
@@ -85086,9 +82491,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         option.selected = true;
       }
     });
-    modeSelect.addEventListener("change", async () => {
-      settings.mode = modeSelect.value;
-      await this.plugin.saveSettings();
+    modeSelect.addEventListener("change", () => {
+      void (async () => {
+        settings.mode = modeSelect.value;
+        await this.plugin.saveSettings();
+      })();
     });
     const intensityItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     intensityItem.createEl("label", {
@@ -85109,13 +82516,15 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       }
     });
     intensitySlider.value = settings.graphPositionSettings.intensity.toString();
-    intensitySlider.addEventListener("input", async () => {
-      settings.graphPositionSettings.intensity = parseFloat(intensitySlider.value);
-      const descriptionEl = intensityItem.querySelector(".sonic-graph-setting-description");
-      if (descriptionEl) {
-        descriptionEl.textContent = `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
-      }
-      await this.plugin.saveSettings();
+    intensitySlider.addEventListener("input", () => {
+      void (async () => {
+        settings.graphPositionSettings.intensity = parseFloat(intensitySlider.value);
+        const descriptionEl = intensityItem.querySelector(".sonic-graph-setting-description");
+        if (descriptionEl) {
+          descriptionEl.textContent = `How extreme panning can be: ${(settings.graphPositionSettings.intensity * 100).toFixed(0)}%`;
+        }
+        await this.plugin.saveSettings();
+      })();
     });
     const curveItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     curveItem.createEl("label", {
@@ -85130,10 +82539,10 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-dropdown"
     });
     const curves = [
-      { value: "linear", label: "Linear" },
-      { value: "exponential", label: "Exponential" },
-      { value: "sigmoid", label: "Sigmoid (Recommended)" },
-      { value: "logarithmic", label: "Logarithmic" }
+      { value: "linear" /* Linear */, label: "linear" },
+      { value: "exponential" /* Exponential */, label: "exponential" },
+      { value: "sigmoid" /* Sigmoid */, label: "Sigmoid (recommended)" },
+      { value: "logarithmic" /* Logarithmic */, label: "logarithmic" }
     ];
     curves.forEach((curve) => {
       const option = curveSelect.createEl("option", {
@@ -85144,9 +82553,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         option.selected = true;
       }
     });
-    curveSelect.addEventListener("change", async () => {
-      settings.graphPositionSettings.curve = curveSelect.value;
-      await this.plugin.saveSettings();
+    curveSelect.addEventListener("change", () => {
+      void (async () => {
+        settings.graphPositionSettings.curve = curveSelect.value;
+        await this.plugin.saveSettings();
+      })();
     });
     const dampingItem = container.createDiv({ cls: "sonic-graph-setting-item" });
     dampingItem.createEl("label", {
@@ -85162,9 +82573,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       cls: "sonic-graph-toggle"
     });
     dampingToggle.checked = settings.advanced.velocityDamping;
-    dampingToggle.addEventListener("change", async () => {
-      settings.advanced.velocityDamping = dampingToggle.checked;
-      await this.plugin.saveSettings();
+    dampingToggle.addEventListener("change", () => {
+      void (async () => {
+        settings.advanced.velocityDamping = dampingToggle.checked;
+        await this.plugin.saveSettings();
+      })();
     });
   }
   /**
@@ -85195,14 +82608,14 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   createCommunityTypeSettings(container, communityType, displayName, description, settings) {
     const communityContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-    new import_obsidian30.Setting(communityContainer).setName(displayName).setDesc(description).addToggle(
+    new import_obsidian31.Setting(communityContainer).setName(displayName).setDesc(description).addToggle(
       (toggle) => toggle.setValue(settings.communityTypeEnabled[communityType]).onChange(async (value) => {
         settings.communityTypeEnabled[communityType] = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.communityTypeEnabled[communityType]) {
-      new import_obsidian30.Setting(communityContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
+      new import_obsidian31.Setting(communityContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.communityTypeVolumes[communityType]).setDynamicTooltip().onChange(async (value) => {
           settings.communityTypeVolumes[communityType] = value;
           await this.plugin.saveSettings();
@@ -85215,14 +82628,14 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   createEvolutionEventSettings(container, eventType, displayName, description, settings) {
     const eventContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-    new import_obsidian30.Setting(eventContainer).setName(displayName).setDesc(description).addToggle(
+    new import_obsidian31.Setting(eventContainer).setName(displayName).setDesc(description).addToggle(
       (toggle) => toggle.setValue(settings.enabledEventTypes[eventType]).onChange(async (value) => {
         settings.enabledEventTypes[eventType] = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.enabledEventTypes[eventType]) {
-      new import_obsidian30.Setting(eventContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()} events`).addSlider(
+      new import_obsidian31.Setting(eventContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()} events`).addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.eventVolumes[eventType]).setDynamicTooltip().onChange(async (value) => {
           settings.eventVolumes[eventType] = value;
           await this.plugin.saveSettings();
@@ -85271,14 +82684,14 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   createClusterTypeSettings(container, clusterType, displayName, description, settings) {
     const clusterContainer = container.createDiv({ cls: "sonic-graph-cluster-type-container" });
-    new import_obsidian30.Setting(clusterContainer).setName(displayName).setDesc(description).addToggle(
+    new import_obsidian31.Setting(clusterContainer).setName(displayName).setDesc(description).addToggle(
       (toggle) => toggle.setValue(settings.clusterTypeEnabled[clusterType]).onChange(async (value) => {
         settings.clusterTypeEnabled[clusterType] = value;
         await this.plugin.saveSettings();
       })
     );
     if (settings.clusterTypeEnabled[clusterType]) {
-      new import_obsidian30.Setting(clusterContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
+      new import_obsidian31.Setting(clusterContainer).setName(`${displayName} volume`).setDesc(`Volume level for ${displayName.toLowerCase()}`).addSlider(
         (slider) => slider.setLimits(0, 1, 0.1).setValue(settings.clusterTypeVolumes[clusterType]).setDynamicTooltip().onChange(async (value) => {
           settings.clusterTypeVolumes[clusterType] = value;
           await this.plugin.saveSettings();
@@ -85380,7 +82793,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void markersSwitch.toggleClass("active", !isActive);
       void this.updateTimelineMarkersVisibility(!isActive);
     });
-    (0, import_obsidian30.setTooltip)(markersSwitch, "Shows or hides time markers on the timeline scrubber. Markers help you see the timeline scale and navigate to specific time periods during animation.", {
+    (0, import_obsidian31.setTooltip)(markersSwitch, "Shows or hides time markers on the timeline scrubber. Markers help you see the timeline scale and navigate to specific time periods during animation.", {
       placement: "left"
     });
     const styleItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -85402,7 +82815,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         optionEl.selected = true;
       }
     });
-    (0, import_obsidian30.setTooltip)(styleSelect, "Choose how nodes appear during timeline animation: Fade gradually appears, Scale grows from center, Slide moves in from edge, Pop appears with bounce effect. Different styles create different visual feels for your presentation.", {
+    (0, import_obsidian31.setTooltip)(styleSelect, "Choose how nodes appear during timeline animation: Fade gradually appears, Scale grows from center, Slide moves in from edge, Pop appears with bounce effect. Different styles create different visual feels for your presentation.", {
       placement: "top"
     });
     styleSelect.addEventListener("change", (e) => {
@@ -85423,7 +82836,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void loopSwitch.toggleClass("active", !isActive);
       void this.updateLoopAnimation(!isActive);
     });
-    (0, import_obsidian30.setTooltip)(loopSwitch, "Automatically restart the timeline animation when it reaches the end. Perfect for continuous presentations or meditative viewing of your knowledge graph evolution.", {
+    (0, import_obsidian31.setTooltip)(loopSwitch, "Automatically restart the timeline animation when it reaches the end. Perfect for continuous presentations or meditative viewing of your knowledge graph evolution.", {
       placement: "left"
     });
     const fileNamesItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -85434,7 +82847,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void fileNamesSwitch.addClass("active");
     }
     fileNamesSwitch.createDiv({ cls: "sonic-graph-toggle-handle" });
-    (0, import_obsidian30.setTooltip)(fileNamesSwitch, "Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.", {
+    (0, import_obsidian31.setTooltip)(fileNamesSwitch, "Shows or hides file names as text labels on each node. Useful for identifying specific files, but may create visual clutter on large graphs. Consider using with zoom for better readability.", {
       placement: "left"
     });
     fileNamesSwitch.addEventListener("click", () => {
@@ -85498,21 +82911,23 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Export logs",
       cls: "sonic-graph-export-logs-btn"
     });
-    exportButton.addEventListener("click", async () => {
-      const now3 = new Date();
-      const pad2 = (n) => n.toString().padStart(2, "0");
-      const filename = `osp-logs-${now3.getFullYear()}${pad2(now3.getMonth() + 1)}${pad2(now3.getDate())}-${pad2(now3.getHours())}${pad2(now3.getMinutes())}${pad2(now3.getSeconds())}.json`;
-      const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
-      const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a2 = document.createElement("a");
-      a2.href = url;
-      a2.download = filename;
-      document.body.appendChild(a2);
-      void a2.click();
-      document.body.removeChild(a2);
-      void URL.revokeObjectURL(url);
-      logger78.info("export", "Logs exported", { filename });
+    exportButton.addEventListener("click", () => {
+      void (() => {
+        const now3 = new Date();
+        const pad2 = (n) => n.toString().padStart(2, "0");
+        const filename = `osp-logs-${now3.getFullYear()}${pad2(now3.getMonth() + 1)}${pad2(now3.getDate())}-${pad2(now3.getHours())}${pad2(now3.getMinutes())}${pad2(now3.getSeconds())}.json`;
+        const logs = this.plugin.getLogs ? this.plugin.getLogs() : [];
+        const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a2 = document.createElement("a");
+        a2.href = url;
+        a2.download = filename;
+        document.body.appendChild(a2);
+        void a2.click();
+        document.body.removeChild(a2);
+        void URL.revokeObjectURL(url);
+        logger78.info("export", "Logs exported", { filename });
+      })();
     });
   }
   /**
@@ -85559,7 +82974,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       };
       this.updateLayoutSetting("layoutPreset", densityToPreset[value]);
     });
-    (0, import_obsidian30.setTooltip)(densitySlider, "Adjusts the overall spacing and compactness of the graph layout. Loose creates more space between nodes, while Very Tight creates a more compact visualization. Choose based on your graph size and visual preference.", {
+    (0, import_obsidian31.setTooltip)(densitySlider, "Adjusts the overall spacing and compactness of the graph layout. Loose creates more space between nodes, while Very Tight creates a more compact visualization. Choose based on your graph size and visual preference.", {
       placement: "top"
     });
     const clusteringItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -85586,7 +83001,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       clusteringValue.textContent = `${Math.round(value * 100)}%`;
       void this.updateLayoutSetting("clusteringStrength", value);
     });
-    (0, import_obsidian30.setTooltip)(clusteringSlider, "Controls the attractive force between connected files in the graph. Higher values pull linked files closer together, creating tighter clusters. Lower values allow more spread-out, organic layouts.", {
+    (0, import_obsidian31.setTooltip)(clusteringSlider, "Controls the attractive force between connected files in the graph. Higher values pull linked files closer together, creating tighter clusters. Lower values allow more spread-out, organic layouts.", {
       placement: "top"
     });
     const separationItem = section.createDiv({ cls: "sonic-graph-setting-item" });
@@ -85613,7 +83028,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       separationValue.textContent = `${Math.round(value * 100)}%`;
       void this.updateLayoutSetting("groupSeparation", value);
     });
-    (0, import_obsidian30.setTooltip)(separationSlider, "Controls the spacing between distinct groups of files in the graph. Higher values push different clusters further apart, creating clearer visual separation. Lower values allow groups to overlap more naturally.", {
+    (0, import_obsidian31.setTooltip)(separationSlider, "Controls the spacing between distinct groups of files in the graph. Higher values push different clusters further apart, creating clearer visual separation. Lower values allow groups to overlap more naturally.", {
       placement: "top"
     });
   }
@@ -85636,14 +83051,14 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       void tagsSwitch.toggleClass("active", !isActive);
       void this.updateFilterSetting("showTags", !isActive);
     });
-    (0, import_obsidian30.setTooltip)(tagsSwitch, "Include nodes representing tags in the graph visualization. Tags appear as nodes that connect to all files containing those tags, helping visualize topical relationships.", {
+    (0, import_obsidian31.setTooltip)(tagsSwitch, "Include nodes representing tags in the graph visualization. Tags appear as nodes that connect to all files containing those tags, helping visualize topical relationships.", {
       placement: "left"
     });
     const orphansItem = section.createDiv({ cls: "sonic-graph-setting-item" });
     orphansItem.createEl("label", { text: "Show orphans", cls: "sonic-graph-setting-label" });
     const orphansToggle = orphansItem.createDiv({ cls: "sonic-graph-setting-toggle" });
     const orphansSwitch = orphansToggle.createDiv({ cls: "sonic-graph-toggle-switch" });
-    (0, import_obsidian30.setTooltip)(orphansSwitch, "Include isolated nodes with no connections to other files. Orphan nodes can represent standalone notes, unused media files, or content that hasn't been linked yet.", {
+    (0, import_obsidian31.setTooltip)(orphansSwitch, "Include isolated nodes with no connections to other files. Orphan nodes can represent standalone notes, unused media files, or content that hasn't been linked yet.", {
       placement: "left"
     });
     if (this.getSonicGraphSettings().layout.filters.showOrphans) {
@@ -85661,7 +83076,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
    */
   updateLayoutSetting(key, value) {
     this.scheduleSettingsUpdate(`layout.${String(key)}`, value);
-    logger78.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${String(value)}`);
+    logger78.debug("layout-setting", `Scheduled layout setting update: ${String(key)} = ${typeof value === "object" ? JSON.stringify(value) : String(value)}`);
   }
   /**
    * Update filter setting
@@ -85737,7 +83152,7 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       borderRadius: "4px",
       fontSize: "12px"
     });
-    (0, import_obsidian30.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
+    (0, import_obsidian31.setTooltip)(searchInput, 'Create custom groups by entering folder paths, file patterns, or search queries. Groups visually cluster related nodes together using colored boundaries. Examples: "Projects/", "*.md", "#tag"', {
       placement: "top"
     });
     searchInput.addEventListener("focus", () => {
@@ -85774,9 +83189,13 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     const dotRect = colorDot.getBoundingClientRect();
     const modalRect = this.contentEl.getBoundingClientRect();
     void colorInput.addClass("sonigraph-color-picker");
-    colorInput.style.left = `${dotRect.left - modalRect.left}px`;
-    colorInput.style.top = `${dotRect.bottom - modalRect.top + 4}px`;
-    colorInput.style.pointerEvents = "auto";
+    colorInput.setCssProps({
+      left: `${dotRect.left - modalRect.left}px`,
+      top: `${dotRect.bottom - modalRect.top + 4}px`,
+      // 4px gap below the dot
+      pointerEvents: "auto"
+      // Enable pointer events for interaction while keeping it visually hidden
+    });
     const viewContainerEl = this.contentEl;
     void viewContainerEl.appendChild(colorInput);
     requestAnimationFrame(() => {
@@ -85848,8 +83267,10 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       const optionEl = document.createElement("div");
       void optionEl.addClass("sonigraph-autocomplete-option");
       optionEl.textContent = option;
-      optionEl.style.cursor = "pointer";
-      optionEl.style.borderRadius = "2px";
+      optionEl.setCssProps({
+        cursor: "pointer",
+        borderRadius: "2px"
+      });
       optionEl.addEventListener("click", () => {
         const prefix = option.split(":")[0];
         searchInput.value = prefix + ":";
@@ -86035,21 +83456,23 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
       text: "Retry",
       cls: "sonic-graph-error-retry"
     });
-    retryBtn.addEventListener("click", async () => {
-      void logger78.debug("ui", "Retry button clicked - attempting to reinitialize graph");
-      try {
-        retryBtn.textContent = "Retrying...";
-        retryBtn.disabled = true;
-        void errorContainer.remove();
-        const loadingIndicator = this.graphContainer.createDiv({ cls: "sonic-graph-loading" });
-        const loadingIcon = createLucideIcon("loader-2", 24);
-        void loadingIcon.addClass("sonic-graph-loading-icon");
-        void loadingIndicator.appendChild(loadingIcon);
-        loadingIndicator.createSpan({ text: "Retrying...", cls: "sonic-graph-loading-text" });
-        await this.initializeGraph();
-      } catch (retryError) {
-        logger78.error("ui", "Retry failed:", retryError.message);
-      }
+    retryBtn.addEventListener("click", () => {
+      void (async () => {
+        void logger78.debug("ui", "Retry button clicked - attempting to reinitialize graph");
+        try {
+          retryBtn.textContent = "Retrying...";
+          retryBtn.disabled = true;
+          void errorContainer.remove();
+          const loadingIndicator = this.graphContainer.createDiv({ cls: "sonic-graph-loading" });
+          const loadingIcon = createLucideIcon("loader-2", 24);
+          void loadingIcon.addClass("sonic-graph-loading-icon");
+          void loadingIndicator.appendChild(loadingIcon);
+          loadingIndicator.createSpan({ text: "Retrying...", cls: "sonic-graph-loading-text" });
+          await this.initializeGraph();
+        } catch (retryError) {
+          logger78.error("ui", "Retry failed:", retryError.message);
+        }
+      })();
     });
     const debugBtn = errorContainer.createEl("button", {
       text: "Copy debug info",
@@ -86062,9 +83485,9 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
         excludeFolders: this.graphDataExtractor["excludeFolders"] || [],
         excludeFiles: this.graphDataExtractor["excludeFiles"] || [],
         vaultFileCount: this.app.vault.getFiles().length,
-        platform: import_obsidian30.Platform
+        platform: import_obsidian31.Platform
       };
-      navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => new import_obsidian30.Notice("Debug info copied to clipboard")).catch(() => new import_obsidian30.Notice("Failed to copy debug info"));
+      navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2)).then(() => new import_obsidian31.Notice("Debug info copied to clipboard")).catch(() => new import_obsidian31.Notice("Failed to copy debug info"));
     });
   }
   /**
@@ -86249,11 +83672,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
     this.isAnimating = false;
     this.playButton.setButtonText("Play");
     const currentIndicator = this.timelineInfo.querySelector(".sonic-graph-timeline-current-indicator");
-    if (currentIndicator) {
-      currentIndicator.style.display = "none";
+    if (currentIndicator instanceof HTMLElement) {
+      currentIndicator.setCssProps({ display: "none" });
     }
     void logger78.info("ui", "Sonic Graph animation completed");
-    new import_obsidian30.Notice("Animation completed");
+    new import_obsidian31.Notice("Animation completed");
   }
   /**
    * Handle node appearance for audio synchronization
@@ -87709,11 +85132,11 @@ var SonicGraphView = class extends import_obsidian30.ItemView {
 };
 
 // src/ui/LocalSoundscapeView.ts
-var import_obsidian34 = require("obsidian");
+var import_obsidian35 = require("obsidian");
 init_logging();
 
 // src/graph/LocalSoundscapeExtractor.ts
-var import_obsidian31 = require("obsidian");
+var import_obsidian32 = require("obsidian");
 init_logging();
 var logger79 = getLogger("LocalSoundscapeExtractor");
 var LocalSoundscapeExtractor = class {
@@ -87794,7 +85217,7 @@ var LocalSoundscapeExtractor = class {
       const outgoingLinks = cache.links || [];
       for (const link of outgoingLinks) {
         const linkedFile = this.app.metadataCache.getFirstLinkpathDest(link.link, file.path);
-        if (!linkedFile || !(linkedFile instanceof import_obsidian31.TFile))
+        if (!linkedFile || !(linkedFile instanceof import_obsidian32.TFile))
           continue;
         if (pathFromCenter.includes(linkedFile.path))
           continue;
@@ -87847,7 +85270,7 @@ var LocalSoundscapeExtractor = class {
       if (backlinksForFile) {
         for (const backlinkPath of backlinksForFile.keys()) {
           const backlinkFile = this.app.vault.getAbstractFileByPath(backlinkPath);
-          if (!backlinkFile || !(backlinkFile instanceof import_obsidian31.TFile))
+          if (!backlinkFile || !(backlinkFile instanceof import_obsidian32.TFile))
             continue;
           if (pathFromCenter.includes(backlinkPath))
             continue;
@@ -87981,7 +85404,7 @@ var LocalSoundscapeExtractor = class {
       if (backlinks) {
         for (const backlinkPath of backlinks.keys()) {
           const backlinkFile = this.app.vault.getAbstractFileByPath(backlinkPath);
-          if (backlinkFile instanceof import_obsidian31.TFile) {
+          if (backlinkFile instanceof import_obsidian32.TFile) {
             const backlinkCache = this.app.metadataCache.getFileCache(backlinkFile);
             let linkText = file.basename;
             if (backlinkCache == null ? void 0 : backlinkCache.links) {
@@ -88202,7 +85625,7 @@ var LocalSoundscapeExtractor = class {
     nodes.forEach((node) => {
       var _a;
       const file = this.app.vault.getAbstractFileByPath(node.path);
-      if (!(file instanceof import_obsidian31.TFile))
+      if (!(file instanceof import_obsidian32.TFile))
         return;
       const cache = this.app.metadataCache.getFileCache(file);
       let primaryTag = "untagged";
@@ -88820,7 +86243,8 @@ var LocalSoundscapeRenderer = class {
     const translateX = (this.config.width - bounds.width * scale) / 2 - bounds.minX * scale;
     const translateY = (this.config.height - bounds.height * scale) / 2 - bounds.minY * scale;
     const transform2 = identity2.translate(translateX, translateY).scale(scale);
-    this.svg.transition().duration(750).ease(cubicInOut).call(this.zoom.transform, transform2);
+    const zoom = this.zoom;
+    this.svg.transition().duration(750).ease(cubicInOut).call((selection2) => zoom.transform(selection2, transform2));
     logger81.debug("fit-to-content", "Graph fitted to content", { scale, translateX, translateY });
   }
   /**
@@ -88828,7 +86252,8 @@ var LocalSoundscapeRenderer = class {
    */
   resetZoom() {
     const transform2 = identity2.translate(0, 0).scale(1);
-    this.svg.call(this.zoom.transform, transform2);
+    const zoom = this.zoom;
+    this.svg.call((selection2) => zoom.transform(selection2, transform2));
   }
   /**
    * Create tooltip element
@@ -88856,16 +86281,18 @@ var LocalSoundscapeRenderer = class {
     tooltipInfo.createDiv({ text: `Direction: ${directionLabel}` });
     tooltipInfo.createDiv({ text: `Links: ${node.linkCount}` });
     tooltipInfo.createDiv({ text: `Words: ${node.wordCount}` });
-    this.tooltip.style.left = `${event.clientX + 10}px`;
-    this.tooltip.style.top = `${event.clientY + 10}px`;
-    this.tooltip.style.display = "block";
+    this.tooltip.setCssProps({
+      left: `${event.clientX + 10}px`,
+      top: `${event.clientY + 10}px`,
+      display: "block"
+    });
   }
   /**
    * Hide tooltip
    */
   hideTooltip() {
     if (this.tooltip) {
-      this.tooltip.style.display = "none";
+      this.tooltip.setCssProps({ display: "none" });
     }
   }
   /**
@@ -88873,9 +86300,11 @@ var LocalSoundscapeRenderer = class {
    */
   createContextMenu() {
     this.contextMenu = document.body.createDiv({ cls: "local-soundscape-context-menu" });
-    this.contextMenu.style.position = "fixed";
-    this.contextMenu.style.display = "none";
-    this.contextMenu.style.zIndex = "10000";
+    this.contextMenu.setCssProps({
+      position: "fixed",
+      display: "none",
+      zIndex: "10000"
+    });
     document.addEventListener("click", () => {
       void this.hideContextMenu();
     });
@@ -88908,16 +86337,18 @@ var LocalSoundscapeRenderer = class {
         void this.hideContextMenu();
       });
     }
-    this.contextMenu.style.left = `${event.clientX}px`;
-    this.contextMenu.style.top = `${event.clientY}px`;
-    this.contextMenu.style.display = "block";
+    this.contextMenu.setCssProps({
+      left: `${event.clientX}px`,
+      top: `${event.clientY}px`,
+      display: "block"
+    });
   }
   /**
    * Hide context menu
    */
   hideContextMenu() {
     if (this.contextMenu) {
-      this.contextMenu.style.display = "none";
+      this.contextMenu.setCssProps({ display: "none" });
     }
   }
   /**
@@ -89055,7 +86486,7 @@ var ForceDirectedLayout = class {
 };
 
 // src/audio/mapping/NoteCentricMapper.ts
-var import_obsidian32 = require("obsidian");
+var import_obsidian33 = require("obsidian");
 init_ProseAnalyzer();
 init_logging();
 var logger83 = getLogger("NoteCentricMapper");
@@ -89149,7 +86580,7 @@ var NoteCentricMapper = class {
         basename: node.basename
       });
       const file = this.app.vault.getAbstractFileByPath(node.path);
-      if (!(file instanceof import_obsidian32.TFile)) {
+      if (!(file instanceof import_obsidian33.TFile)) {
         logger83.warn("file-not-found", `File not found: ${node.path}`);
         return null;
       }
@@ -90070,10 +87501,10 @@ var NoteCentricMapper = class {
 init_NoteCentricPlayer();
 
 // src/ui/LocalSoundscapeFilterModal.ts
-var import_obsidian33 = require("obsidian");
+var import_obsidian34 = require("obsidian");
 init_logging();
 var logger84 = getLogger("LocalSoundscapeFilterModal");
-var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
+var LocalSoundscapeFilterModal = class extends import_obsidian34.Modal {
   constructor(app, currentFilters, onApply) {
     super(app);
     this.filters = { ...currentFilters };
@@ -90110,13 +87541,13 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
   createTagFiltersSection(container) {
     const section = container.createDiv({ cls: "filter-section" });
     section.createEl("h3", { text: "Tag filters" });
-    new import_obsidian33.Setting(section).setName("Include tags").setDesc("Only show notes with these tags (leave empty for all)").addText((text) => {
+    new import_obsidian34.Setting(section).setName("Include tags").setDesc("Only show notes with these tags (leave empty for all)").addText((text) => {
       text.setPlaceholder("tag1, tag2, tag3").setValue(this.filters.includeTags.join(", ")).onChange((value) => {
         this.filters.includeTags = value.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
       });
       text.inputEl.setCssProps({ width: "100%" });
     });
-    new import_obsidian33.Setting(section).setName("Exclude tags").setDesc("Hide notes with these tags").addText((text) => {
+    new import_obsidian34.Setting(section).setName("Exclude tags").setDesc("Hide notes with these tags").addText((text) => {
       text.setPlaceholder("exclude1, exclude2").setValue(this.filters.excludeTags.join(", ")).onChange((value) => {
         this.filters.excludeTags = value.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
       });
@@ -90146,13 +87577,13 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
   createFolderFiltersSection(container) {
     const section = container.createDiv({ cls: "filter-section" });
     section.createEl("h3", { text: "Folder filters" });
-    new import_obsidian33.Setting(section).setName("Include folders").setDesc("Only show notes from these folders (leave empty for all)").addText((text) => {
+    new import_obsidian34.Setting(section).setName("Include folders").setDesc("Only show notes from these folders (leave empty for all)").addText((text) => {
       text.setPlaceholder("folder1, folder2/subfolder").setValue(this.filters.includeFolders.join(", ")).onChange((value) => {
         this.filters.includeFolders = value.split(",").map((f) => f.trim()).filter((f) => f.length > 0);
       });
       text.inputEl.setCssProps({ width: "100%" });
     });
-    new import_obsidian33.Setting(section).setName("Exclude folders").setDesc("Hide notes from these folders").addText((text) => {
+    new import_obsidian34.Setting(section).setName("Exclude folders").setDesc("Hide notes from these folders").addText((text) => {
       text.setPlaceholder("archive, templates").setValue(this.filters.excludeFolders.join(", ")).onChange((value) => {
         this.filters.excludeFolders = value.split(",").map((f) => f.trim()).filter((f) => f.length > 0);
       });
@@ -90183,7 +87614,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
     const section = container.createDiv({ cls: "filter-section" });
     section.createEl("h3", { text: "File type filters" });
     const fileTypes = ["md", "pdf", "image", "audio", "video"];
-    new import_obsidian33.Setting(section).setName("Include file types").setDesc("Only show these file types (leave empty for all)");
+    new import_obsidian34.Setting(section).setName("Include file types").setDesc("Only show these file types (leave empty for all)");
     const checkboxContainer = section.createDiv({ cls: "filter-checkbox-group" });
     fileTypes.forEach((type2) => {
       const label = checkboxContainer.createEl("label", { cls: "filter-checkbox-label" });
@@ -90202,7 +87633,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
   createLinkDirectionFiltersSection(container) {
     const section = container.createDiv({ cls: "filter-section" });
     section.createEl("h3", { text: "Link direction filters" });
-    new import_obsidian33.Setting(section).setName("Show link directions").setDesc("Which link types to display");
+    new import_obsidian34.Setting(section).setName("Show link directions").setDesc("Which link types to display");
     const checkboxContainer = section.createDiv({ cls: "filter-checkbox-group" });
     const directions = [
       { value: "incoming", label: "Incoming links" },
@@ -90254,7 +87685,7 @@ var LocalSoundscapeFilterModal = class extends import_obsidian33.Modal {
         void folders.push(folder.path);
       }
       folder.children.forEach((child) => {
-        if (child instanceof import_obsidian33.TFolder) {
+        if (child instanceof import_obsidian34.TFolder) {
           collectFolders(child);
         }
       });
@@ -90293,7 +87724,7 @@ init_lucide_icons();
 init_constants();
 var logger85 = getLogger("LocalSoundscapeView");
 var VIEW_TYPE_LOCAL_SOUNDSCAPE = "local-soundscape-view";
-var LocalSoundscapeView = class extends import_obsidian34.ItemView {
+var LocalSoundscapeView = class extends import_obsidian35.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.centerFile = null;
@@ -90652,7 +88083,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   createSettingsPanel(container) {
     const displaySection = container.createDiv({ cls: "settings-section" });
     displaySection.createEl("h4", { text: "Display", cls: "settings-heading" });
-    new import_obsidian34.Setting(displaySection).setName("Show node labels").addToggle((toggle) => toggle.setValue(true).onChange((value) => {
+    new import_obsidian35.Setting(displaySection).setName("Show node labels").addToggle((toggle) => toggle.setValue(true).onChange((value) => {
       if (this.renderer) {
         this.renderer.updateConfig({ showLabels: value });
       }
@@ -90683,7 +88114,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     });
     const effectsSection = container.createDiv({ cls: "settings-section" });
     effectsSection.createEl("h4", { text: "Visual effects", cls: "settings-heading" });
-    new import_obsidian34.Setting(effectsSection).setName("Pulse playing nodes").addToggle((toggle) => toggle.setValue(this.pulsePlayingNodes).onChange((value) => {
+    new import_obsidian35.Setting(effectsSection).setName("Pulse playing nodes").addToggle((toggle) => toggle.setValue(this.pulsePlayingNodes).onChange((value) => {
       this.pulsePlayingNodes = value;
       logger85.info("setting-pulse", "Pulse playing nodes setting changed", { enabled: value });
       if (!value && this.renderer) {
@@ -90802,9 +88233,9 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     modeSelector.createSpan({ text: "Visualization:", cls: "mode-label" });
     const modeSelect = modeSelector.createEl("select", { cls: "mode-select" });
     const modes = [
-      { value: "piano-roll", label: "Piano Roll" },
-      { value: "spectrum", label: "Spectrum" },
-      { value: "staff", label: "Staff" }
+      { value: "piano-roll", label: "Piano roll" },
+      { value: "spectrum", label: "spectrum" },
+      { value: "staff", label: "staff" }
     ];
     modes.forEach((mode) => {
       const option = modeSelect.createEl("option", {
@@ -91000,7 +88431,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     if (this.graphData) {
       await this.generateMappingsFromGraph();
     }
-    new import_obsidian34.Notice(`Scale quantization ${enabled ? "enabled" : "disabled"}`);
+    new import_obsidian35.Notice(`Scale quantization ${enabled ? "enabled" : "disabled"}`);
     logger85.info("toggle-quantization", `Scale quantization ${enabled ? "enabled" : "disabled"}`);
   }
   /**
@@ -91024,7 +88455,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       await this.generateMappingsFromGraph();
     }
     const newConfig = this.depthMapper.getConfig();
-    new import_obsidian34.Notice(`Scale changed to ${(_c = newConfig.musicalTheory) == null ? void 0 : _c.rootNote} ${(_d = newConfig.musicalTheory) == null ? void 0 : _d.scale}`);
+    new import_obsidian35.Notice(`Scale changed to ${(_c = newConfig.musicalTheory) == null ? void 0 : _c.rootNote} ${(_d = newConfig.musicalTheory) == null ? void 0 : _d.scale}`);
     logger85.info("update-scale", "Musical scale updated", {
       rootNote: (_e = newConfig.musicalTheory) == null ? void 0 : _e.rootNote,
       scaleType: (_f = newConfig.musicalTheory) == null ? void 0 : _f.scale
@@ -91068,7 +88499,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     if (this.graphData) {
       await this.generateMappingsFromGraph();
     }
-    new import_obsidian34.Notice(`Adaptive pitch ranges ${enabled ? "enabled" : "disabled"}`);
+    new import_obsidian35.Notice(`Adaptive pitch ranges ${enabled ? "enabled" : "disabled"}`);
     logger85.info("toggle-adaptive-pitch", `Adaptive pitch ranges ${enabled ? "enabled" : "disabled"}`);
   }
   /**
@@ -91089,7 +88520,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     if (this.graphData) {
       await this.generateMappingsFromGraph();
     }
-    new import_obsidian34.Notice(`Chord voicing ${enabled ? "enabled" : "disabled"}`);
+    new import_obsidian35.Notice(`Chord voicing ${enabled ? "enabled" : "disabled"}`);
     logger85.info("toggle-chord-voicing", `Chord voicing ${enabled ? "enabled" : "disabled"}`);
   }
   /**
@@ -91158,7 +88589,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       void logger85.info("init-visualization", "Visualization manager initialized and started");
     } catch (error) {
       void logger85.error("init-visualization", "Failed to initialize visualization", error);
-      new import_obsidian34.Notice("Failed to initialize visualization");
+      new import_obsidian35.Notice("Failed to initialize visualization");
     }
   }
   /**
@@ -91260,10 +88691,10 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       await this.extractAndRenderGraph();
     } catch (error) {
       logger85.error("set-center-error", "Failed to set center file", { error: String(error) });
-      new import_obsidian34.Notice("Failed to load graph. Please try again or reload Obsidian.");
+      new import_obsidian35.Notice("Failed to load graph. Please try again or reload Obsidian.");
       this.graphContainer.empty();
       const errorDiv = this.graphContainer.createDiv({ cls: "error-message" });
-      errorDiv.createEl("p", { text: "Failed to load graph. container not ready." });
+      errorDiv.createEl("p", { text: "Failed to load graph. Container not ready." });
       errorDiv.createEl("p", { text: "Please try connecting again." });
     }
   }
@@ -91363,7 +88794,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       this.stopPlayback();
     }
     this.currentDepth = depth;
-    new import_obsidian34.Notice(`Updating to depth ${depth}...`);
+    new import_obsidian35.Notice(`Updating to depth ${depth}...`);
     if (this.centerFile) {
       await this.extractAndRenderGraph();
       if (wasPlaying && this.graphData) {
@@ -91372,7 +88803,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
         });
         await this.startPlayback();
       }
-      new import_obsidian34.Notice(`Depth ${depth}: ${((_a = this.graphData) == null ? void 0 : _a.stats.totalNodes) || 0} nodes`);
+      new import_obsidian35.Notice(`Depth ${depth}: ${((_a = this.graphData) == null ? void 0 : _a.stats.totalNodes) || 0} nodes`);
     }
   }
   /**
@@ -91388,13 +88819,13 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
         await this.waitForContainerReady();
         await this.extractAndRenderGraph();
         void this.markAsUpToDate();
-        new import_obsidian34.Notice("Graph refreshed");
+        new import_obsidian35.Notice("Graph refreshed");
       } catch (error) {
         logger85.error("refresh-error", "Failed to refresh graph", { error: String(error) });
-        new import_obsidian34.Notice("Failed to refresh graph. Please try again.");
+        new import_obsidian35.Notice("Failed to refresh graph. Please try again.");
       }
     } else {
-      new import_obsidian34.Notice("No note selected");
+      new import_obsidian35.Notice("No note selected");
     }
   }
   /**
@@ -91404,7 +88835,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     logger85.info("clustering-changed", "Clustering method changed", { method: this.clusteringMethod });
     if (this.centerFile) {
       await this.extractAndRenderGraph();
-      new import_obsidian34.Notice(`Clustering: ${this.clusteringMethod}`);
+      new import_obsidian35.Notice(`Clustering: ${this.clusteringMethod}`);
     }
   }
   /**
@@ -91414,18 +88845,18 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     logger85.info("layout-changed", "Layout type changed", { layout: this.layoutType });
     if (this.centerFile) {
       await this.extractAndRenderGraph();
-      new import_obsidian34.Notice(`Layout: ${this.layoutType === "radial" ? "Radial" : "Force-Directed"}`);
+      new import_obsidian35.Notice(`Layout: ${this.layoutType === "radial" ? "Radial" : "Force-Directed"}`);
     }
   }
   /**
    * Export soundscape audio
    */
-  exportSoundscapeAudio() {
+  async exportSoundscapeAudio() {
     var _a;
     const hasGraphCentricData = this.currentMappings && this.currentMappings.length > 0;
     const hasNoteCentricData = this.currentNoteCentricMapping !== null;
     if (!hasGraphCentricData && !hasNoteCentricData) {
-      new import_obsidian34.Notice("No soundscape to export. Please play the soundscape first.");
+      new import_obsidian35.Notice("No soundscape to export. Please play the soundscape first.");
       return;
     }
     const mode = hasNoteCentricData ? "note-centric" : "graph-centric";
@@ -91436,7 +88867,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       hasNoteCentricData,
       hasGraphCentricData
     });
-    const { ExportModal: ExportModal2 } = (init_ExportModal(), __toCommonJS(ExportModal_exports));
+    const { ExportModal: ExportModal2 } = await Promise.resolve().then(() => (init_ExportModal(), ExportModal_exports));
     const modal = new ExportModal2(
       this.app,
       this.plugin,
@@ -91446,7 +88877,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       this.currentNoteCentricMapping
       // Pass note-centric mapping if available
     );
-    void modal.open();
+    modal.open();
   }
   /**
    * Re-roll musical variation
@@ -91533,10 +88964,10 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       if (wasPlaying) {
         await this.startPlayback();
       }
-      new import_obsidian34.Notice(`Variation ${this.currentVariationIndex + 1}`);
+      new import_obsidian35.Notice(`Variation ${this.currentVariationIndex + 1}`);
     } catch (error) {
       void logger85.error("remap-error", "Error remapping with seed", error);
-      new import_obsidian34.Notice("Failed to generate variation");
+      new import_obsidian35.Notice("Failed to generate variation");
     }
   }
   /**
@@ -91579,7 +89010,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
    */
   exportGraph() {
     if (!this.graphData || !this.centerFile) {
-      new import_obsidian34.Notice("No graph to export");
+      new import_obsidian35.Notice("No graph to export");
       return;
     }
     void logger85.info("export-start", "Exporting graph as image");
@@ -91626,7 +89057,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
           void URL.revokeObjectURL(url);
           void URL.revokeObjectURL(svgUrl);
           logger85.info("export-complete", "Graph exported successfully", { filename: a2.download });
-          new import_obsidian34.Notice("Graph exported successfully!");
+          new import_obsidian35.Notice("Graph exported successfully!");
         }, "image/png");
       };
       img.onerror = () => {
@@ -91635,7 +89066,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       img.src = svgUrl;
     } catch (error) {
       void logger85.error("export-error", "Failed to export graph", error);
-      new import_obsidian34.Notice("Failed to export graph. Please try again.");
+      new import_obsidian35.Notice("Failed to export graph. Please try again.");
     }
   }
   /**
@@ -91651,7 +89082,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
           void logger85.info("filters-changed", "Filters updated", newFilters);
           if (this.centerFile) {
             await this.extractAndRenderGraph();
-            new import_obsidian34.Notice("Filters applied");
+            new import_obsidian35.Notice("Filters applied");
           }
         })();
       }
@@ -91661,11 +89092,10 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   /**
    * Open Control Center
    */
-  openControlCenter() {
-    void Promise.resolve().then(() => (init_control_panel(), control_panel_exports)).then(({ MaterialControlPanelModal: MaterialControlPanelModal2 }) => {
-      const controlCenter = new MaterialControlPanelModal2(this.app, this.plugin);
-      void controlCenter.open();
-    });
+  async openControlCenter() {
+    const { MaterialControlPanelModal: MaterialControlPanelModal2 } = await Promise.resolve().then(() => (init_control_panel(), control_panel_exports));
+    const controlCenter = new MaterialControlPanelModal2(this.app, this.plugin);
+    controlCenter.open();
   }
   /**
    * Mark graph as stale (vault data has changed)
@@ -91720,7 +89150,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   async playActiveNote() {
     const activeFile = this.app.workspace.getActiveFile();
     if (!activeFile) {
-      new import_obsidian34.Notice("No active note to play");
+      new import_obsidian35.Notice("No active note to play");
       return;
     }
     logger85.info("manual-play-active", "Manually playing active note", {
@@ -91802,7 +89232,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   handleNodeOpen(node) {
     logger85.info("node-open", "Opening note", { path: node.path });
     const file = this.app.vault.getAbstractFileByPath(node.path);
-    if (file instanceof import_obsidian34.TFile) {
+    if (file instanceof import_obsidian35.TFile) {
       void this.app.workspace.getLeaf(false).openFile(file);
     }
   }
@@ -91812,7 +89242,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   async handleNodeRecenter(node) {
     logger85.info("node-recenter", "Re-centering soundscape", { path: node.path });
     const file = this.app.vault.getAbstractFileByPath(node.path);
-    if (file instanceof import_obsidian34.TFile) {
+    if (file instanceof import_obsidian35.TFile) {
       await this.setCenterFile(file);
     }
   }
@@ -91861,7 +89291,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       if (width === 0 || height === 0) {
         logger85.error("render-error", "Container has no dimensions, cannot render", { width, height });
         const errorDiv = this.graphContainer.createDiv({ cls: "error-message" });
-        errorDiv.createEl("p", { text: "Error: container not ready. please try connecting again." });
+        errorDiv.createEl("p", { text: "Error: container not ready. Please try connecting again." });
         return;
       }
       const rendererConfig = {
@@ -91909,7 +89339,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
         text: error.message,
         cls: "error-details"
       });
-      new import_obsidian34.Notice("Failed to extract graph data");
+      new import_obsidian35.Notice("Failed to extract graph data");
     }
   }
   /**
@@ -91958,7 +89388,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     });
     if (!this.graphData || !this.centerFile) {
       void logger85.warn("toggle-playback", "No graph data or center file");
-      new import_obsidian34.Notice("Please open a note in Local Soundscape first");
+      new import_obsidian35.Notice("Please open a note in Local Soundscape first");
       return;
     }
     if (this.isPlaying) {
@@ -91977,7 +89407,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
         hasGraphData: !!this.graphData,
         hasAudioEngine: !!this.plugin.audioEngine
       });
-      new import_obsidian34.Notice("Audio engine not available");
+      new import_obsidian35.Notice("Audio engine not available");
       return;
     }
     const playbackMode = ((_a = this.plugin.settings.localSoundscape) == null ? void 0 : _a.playbackMode) || "note-centric";
@@ -91996,7 +89426,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       }
     } catch (error) {
       void logger85.error("playback-error", "Failed to start playback", error);
-      new import_obsidian34.Notice(`Failed to start audio: ${error.message}`);
+      new import_obsidian35.Notice(`Failed to start audio: ${error.message}`);
       this.isPlaying = false;
       void this.updatePlaybackUI();
     }
@@ -92013,7 +89443,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     }
     this.currentNoteCentricMapping = await this.noteCentricMapper.map(this.graphData);
     if (!this.currentNoteCentricMapping) {
-      new import_obsidian34.Notice("Could not analyze center note for playback");
+      new import_obsidian35.Notice("Could not analyze center note for playback");
       void logger85.warn("note-centric-playback", "Failed to create note-centric mapping");
       return;
     }
@@ -92028,7 +89458,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     await this.noteCentricPlayer.play(this.currentNoteCentricMapping);
     await this.startContinuousLayers();
     void this.startNoteCentricUIUpdateLoop();
-    new import_obsidian34.Notice(`Playing note-centric soundscape (${this.currentNoteCentricMapping.centerPhrase.melody.length} notes)`);
+    new import_obsidian35.Notice(`Playing note-centric soundscape (${this.currentNoteCentricMapping.centerPhrase.melody.length} notes)`);
   }
   /**
    * Start UI update loop for note-centric playback
@@ -92069,7 +89499,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
   async startGraphCentricPlayback() {
     if (!this.depthMapper) {
       void logger85.warn("graph-centric-playback", "Depth mapper not initialized");
-      new import_obsidian34.Notice("Graph-centric playback not available");
+      new import_obsidian35.Notice("Graph-centric playback not available");
       return;
     }
     this.currentMappings = await this.depthMapper.mapSoundscapeToMusic(this.graphData);
@@ -92086,7 +89516,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       timingDistribution: Array.from(timingDistribution.entries()).slice(0, 10).map(([t, count]) => `${t}s:${count}`).join(", ")
     });
     if (this.currentMappings.length === 0) {
-      new import_obsidian34.Notice("No mappings created - check that instruments are enabled in Control Center");
+      new import_obsidian35.Notice("No mappings created - check that instruments are enabled in Control Center");
       void logger85.warn("playback-start", "No mappings created from graph data");
       return;
     }
@@ -92106,7 +89536,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
       firstNoteTiming: this.currentMappings[0].timing + "s",
       lastNoteTiming: this.currentMappings[this.currentMappings.length - 1].timing + "s"
     });
-    new import_obsidian34.Notice(`Playing ${this.currentVoiceCount} notes`);
+    new import_obsidian35.Notice(`Playing ${this.currentVoiceCount} notes`);
     void this.startRealtimePlayback();
     await this.startContinuousLayers();
   }
@@ -92231,8 +89661,8 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
    * Start real-time playback using single polling loop (memory-efficient pattern)
    * This replaces the previous approach of creating 187 setTimeout callbacks upfront
    */
-  startRealtimePlayback() {
-    const { getContext: getContext2 } = (init_esm(), __toCommonJS(esm_exports));
+  async startRealtimePlayback() {
+    const { getContext: getContext2 } = await Promise.resolve().then(() => (init_esm(), esm_exports));
     logger85.info("playback", "Starting real-time polling loop for Local Soundscape", {
       noteCount: this.currentMappings.length,
       maxDuration: this.currentMappings.length > 0 ? Math.max(...this.currentMappings.map((m2) => m2.timing + m2.duration)) : 0
@@ -92243,7 +89673,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     this.nextNoteIndex = 0;
     this.realtimeStartTime = getContext2().currentTime;
     if (getContext2().state === "suspended") {
-      getContext2().resume();
+      void getContext2().resume();
       void logger85.debug("context", "Resumed suspended audio context for Local Soundscape playback");
     }
     this.realtimeTimer = setInterval(() => {
@@ -92428,7 +89858,7 @@ var LocalSoundscapeView = class extends import_obsidian34.ItemView {
     }
     if (state.centerFilePath) {
       const file = this.app.vault.getAbstractFileByPath(state.centerFilePath);
-      if (file instanceof import_obsidian34.TFile) {
+      if (file instanceof import_obsidian35.TFile) {
         await this.setCenterFile(file);
       }
     }
@@ -100929,8 +98359,2655 @@ var GraphParser = class {
 init_logging();
 init_whale_integration();
 init_FreesoundSampleLoader();
+
+// curated-samples-transformed.json
+var curated_samples_transformed_default = [
+  {
+    id: 437386,
+    title: "Electronic Minute No 152 - The Drone",
+    previewUrl: "https://cdn.freesound.org/previews/437/437386_preview-hq.mp3",
+    duration: 346.906,
+    license: "CC0",
+    attribution: "gis_sweden",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "electronic",
+      "atmospheric"
+    ],
+    description: "Electronic drone track, part of Electronic Minute series",
+    usageNotes: "Excellent for sustained atmospheric background, no attribution required. Long duration ideal for extended continuous layers."
+  },
+  {
+    id: 479059,
+    title: "Modulated Drone (Key of G)",
+    previewUrl: "https://cdn.freesound.org/previews/479/479059_preview-hq.mp3",
+    duration: 62,
+    license: "CC BY 3.0",
+    attribution: "subtletransmissions",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "modulated",
+      "key-g",
+      "tonal"
+    ],
+    description: "Modulated drone in the key of G",
+    usageNotes: "Tonal drone with modulation, perfect for musical key-based continuous layers. Medium duration ideal for musical looping."
+  },
+  {
+    id: 400062,
+    title: "Lost Ark Drone",
+    previewUrl: "https://cdn.freesound.org/previews/400/400062_preview-hq.mp3",
+    duration: 44.587,
+    license: "CC BY 4.0",
+    attribution: "eardeer",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "atmospheric",
+      "ambient",
+      "ark"
+    ],
+    description: "Lost Ark themed atmospheric drone",
+    usageNotes: "Atmospheric drone with thematic elements, good for immersive continuous layers. Medium duration perfect for looping."
+  },
+  {
+    id: 277372,
+    title: "Drone 08",
+    previewUrl: "https://cdn.freesound.org/previews/277/277372_preview-hq.mp3",
+    duration: 45.098,
+    license: "CC0",
+    attribution: "myluckyfeet",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "atmospheric"
+    ],
+    description: "Atmospheric drone, part of drone series",
+    usageNotes: "Excellent for sustained atmospheric background, no attribution required. Similar duration to Lost Ark Drone, good for alternating loops."
+  },
+  {
+    id: 321761,
+    title: "Atonal Drone 03",
+    previewUrl: "https://cdn.freesound.org/previews/321/321761_preview-hq.mp3",
+    duration: 340,
+    license: "CC0",
+    attribution: "Skjor1",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "atonal",
+      "atmospheric",
+      "ambient"
+    ],
+    description: "Atonal drone, part of atonal drone series",
+    usageNotes: "Excellent long-form atonal drone, no attribution required. Perfect companion to Electronic Minute No 152 for extended atmospheric layers."
+  },
+  {
+    id: 440688,
+    title: "Tinnito - Drone - Eau Tuyau Low",
+    previewUrl: "https://cdn.freesound.org/previews/440/440688_preview-hq.mp3",
+    duration: 34.304,
+    license: "CC0",
+    attribution: "rombart",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "low",
+      "water",
+      "pipe",
+      "tonal"
+    ],
+    description: "Low water pipe drone with unique tonal character",
+    usageNotes: "Unique tonal drone with water/pipe characteristics, no attribution required. Shortest drone in collection, good for rapid cycling or layering."
+  },
+  {
+    id: 496216,
+    title: "Broken Hum",
+    previewUrl: "https://cdn.freesound.org/previews/496/496216_preview-hq.mp3",
+    duration: 176,
+    license: "CC BY 3.0",
+    attribution: "subtletransmissions",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "hum",
+      "broken",
+      "atmospheric"
+    ],
+    description: "Broken hum with atmospheric qualities",
+    usageNotes: 'Medium-length atmospheric drone with "broken" character, perfect for adding texture variation to continuous layers.'
+  },
+  {
+    id: 441987,
+    title: "Tascam 246 (Buzz) 1",
+    previewUrl: "https://cdn.freesound.org/previews/441/441987_preview-hq.mp3",
+    duration: 93.542,
+    license: "CC BY 3.0",
+    attribution: "subtletransmissions",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "buzz",
+      "tascam",
+      "equipment",
+      "lo-fi"
+    ],
+    description: "Atmospheric buzz from Tascam 246 equipment",
+    usageNotes: "Equipment-generated atmospheric buzz with vintage character. Perfect for adding analog texture to continuous layers."
+  },
+  {
+    id: 431903,
+    title: "Anglepoise Lamp",
+    previewUrl: "https://cdn.freesound.org/previews/431/431903_preview-hq.mp3",
+    duration: 98.353,
+    license: "CC BY 3.0",
+    attribution: "subtletransmissions",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "lamp",
+      "electrical",
+      "hum",
+      "ambient"
+    ],
+    description: "Atmospheric drone from anglepoise lamp electrical hum",
+    usageNotes: "Electrical lamp hum with ambient character. Unique everyday object drone perfect for organic/domestic atmospheric layers."
+  },
+  {
+    id: 371518,
+    title: "Drone at the 21th",
+    previewUrl: "https://cdn.freesound.org/previews/371/371518_preview-hq.mp3",
+    duration: 11.888,
+    license: "CC0",
+    attribution: "gis_sweden",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "atmospheric",
+      "electronic",
+      "short"
+    ],
+    description: "Short atmospheric drone, part of Electronic Minute series",
+    usageNotes: "Very short atmospheric drone, no attribution required. Perfect for rapid cycling, transitions, or layering with longer drones."
+  },
+  {
+    id: 360425,
+    title: "Evolving Drone Pad",
+    previewUrl: "https://cdn.freesound.org/previews/360/360425_preview-hq.mp3",
+    duration: 125.522,
+    license: "CC0",
+    attribution: "brogenhogan",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "pad",
+      "evolving",
+      "atmospheric",
+      "dynamic"
+    ],
+    description: "Evolving drone pad with dynamic character",
+    usageNotes: "Evolving atmospheric pad with natural progression, no attribution required. Perfect for continuous layers that need internal development and variation."
+  },
+  {
+    id: 346427,
+    title: "Friday Lunch Drone",
+    previewUrl: "https://cdn.freesound.org/previews/346/346427_preview-hq.mp3",
+    duration: 86.936,
+    license: "CC0",
+    attribution: "gis_sweden",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "atmospheric",
+      "casual",
+      "ambient"
+    ],
+    description: "Atmospheric drone with casual, everyday character",
+    usageNotes: "Casual atmospheric drone with relaxed character, no attribution required. Perfect for comfortable, non-intensive vault exploration sessions."
+  },
+  {
+    id: 345779,
+    title: "Drone, Rain, Fade Out",
+    previewUrl: "https://cdn.freesound.org/previews/345/345779_preview-hq.mp3",
+    duration: 27.695,
+    license: "CC0",
+    attribution: "gerainsan",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "rain",
+      "fade",
+      "atmospheric",
+      "natural"
+    ],
+    description: "Atmospheric drone with rain elements and natural fade out",
+    usageNotes: "Natural atmospheric drone with rain texture and fade-out ending, no attribution required. Perfect for transitions, nature-themed sessions, or gentle layer endings."
+  },
+  {
+    id: 349030,
+    title: "Derived Low Drone",
+    previewUrl: "https://cdn.freesound.org/previews/349/349030_preview-hq.mp3",
+    duration: 139.319,
+    license: "CC0",
+    attribution: "gis_sweden",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "low",
+      "derived",
+      "atmospheric",
+      "bass"
+    ],
+    description: "Low-frequency derived atmospheric drone",
+    usageNotes: "Deep low-frequency atmospheric drone, no attribution required. Perfect for adding bass foundation to continuous layers or creating deep, contemplative atmospheres."
+  },
+  {
+    id: 379515,
+    title: "Drone Loop",
+    previewUrl: "https://cdn.freesound.org/previews/379/379515_preview-hq.mp3",
+    duration: 38.399,
+    license: "CC0",
+    attribution: "stixthule",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "loop",
+      "atmospheric",
+      "seamless"
+    ],
+    description: "Atmospheric drone specifically designed for looping",
+    usageNotes: "Purpose-built loop drone, no attribution required. Designed for seamless continuous playback, perfect for sustained atmospheric layers."
+  },
+  {
+    id: 239039,
+    title: "Synth Drone 3",
+    previewUrl: "https://cdn.freesound.org/previews/239/239039_preview-hq.mp3",
+    duration: 614,
+    license: "CC BY 4.0",
+    attribution: "apotter1992",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "synth",
+      "synthesized",
+      "atmospheric",
+      "electronic"
+    ],
+    description: "Synthesized atmospheric drone, part of synth drone series",
+    usageNotes: "Clean synthesized drone with electronic character, attribution required. Extended duration perfect for very long vault exploration sessions or as primary background layer."
+  },
+  {
+    id: 457598,
+    title: "Electronic Minute No 226 - Minimal Drone 2 VCO",
+    previewUrl: "https://cdn.freesound.org/previews/457/457598_preview-hq.mp3",
+    duration: 209.389,
+    license: "CC0",
+    attribution: "gis_sweden",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "minimal",
+      "electronic",
+      "modular",
+      "vcv-rack",
+      "vco"
+    ],
+    description: "Minimal drone using 2 VCO (Voltage Controlled Oscillators) in VCV-Rack modular synth",
+    usageNotes: "Minimal modular synth drone with 2 oscillators, no attribution required. Perfect for clean, minimal electronic atmospheres with precise oscillator control."
+  },
+  {
+    id: 457453,
+    title: "Electronic Minute No 224 - 3rd After 13 Drone",
+    previewUrl: "https://cdn.freesound.org/previews/457/457453_preview-hq.mp3",
+    duration: 655.083,
+    license: "CC0",
+    attribution: "gis_sweden",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "chaos",
+      "ring-modulator",
+      "electronic",
+      "complex",
+      "experimental"
+    ],
+    description: '"A drone resting in chaos and ring modulator circuits" - complex electronic drone with ring modulation',
+    usageNotes: "Complex experimental drone with chaos and ring modulation, no attribution required. Perfect for deep, immersive vault exploration with evolving electronic textures. Longest drone in collection."
+  },
+  {
+    id: 456758,
+    title: "Electronic Minute No 218 - Algorithmic Drone Music Program",
+    previewUrl: "https://cdn.freesound.org/previews/456/456758_preview-hq.mp3",
+    duration: 627.594,
+    license: "CC0",
+    attribution: "gis_sweden",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "algorithmic",
+      "generative",
+      "electronic",
+      "computational",
+      "modular"
+    ],
+    description: '"Algorithmic drone music program. The computer is my analog modular synth." - AI/algorithmic generated drone',
+    usageNotes: "Algorithmically generated drone using computer as modular synth, no attribution required. Perfect for AI-themed vaults or computational music exploration. Second longest drone in collection."
+  },
+  {
+    id: 456036,
+    title: "60bpm - Air Drone",
+    previewUrl: "https://cdn.freesound.org/previews/456/456036_preview-hq.mp3",
+    duration: 112,
+    license: "CC BY-NC",
+    attribution: "Wilii89",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "air",
+      "atmospheric",
+      "60bpm",
+      "tempo-specific"
+    ],
+    description: "Atmospheric air drone at 60 BPM tempo",
+    usageNotes: "Tempo-specific air drone at 60 BPM, attribution required, non-commercial use only. Perfect for synchronized atmospheric layers with defined tempo."
+  },
+  {
+    id: 169013,
+    title: "Drone2.aif",
+    previewUrl: "https://cdn.freesound.org/previews/169/169013_preview-hq.mp3",
+    duration: 52,
+    license: "CC0",
+    attribution: "LogicMoon",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "atmospheric"
+    ],
+    description: "Atmospheric drone, part of drone series",
+    usageNotes: "Clean atmospheric drone with medium duration, no attribution required. Perfect for looping and layering with other atmospheric elements."
+  },
+  {
+    id: 177016,
+    title: "Artillery Drone Burnt Orange",
+    previewUrl: "https://cdn.freesound.org/previews/177/177016_preview-hq.mp3",
+    duration: 14,
+    license: "CC BY 4.0",
+    attribution: "Jovica",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "artillery",
+      "burnt-orange",
+      "short",
+      "atmospheric"
+    ],
+    description: "Short artillery-themed atmospheric drone with burnt orange character",
+    usageNotes: "Very short atmospheric drone with unique artillery character, attribution required. Perfect for rapid cycling, transitions, or as accent layer with longer drones."
+  },
+  {
+    id: 222610,
+    title: "Cinematic Drone 1",
+    previewUrl: "https://cdn.freesound.org/previews/222/222610_preview-hq.mp3",
+    duration: 63.405,
+    license: "CC0",
+    attribution: "jordivburgel",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "cinematic",
+      "atmospheric",
+      "film",
+      "media"
+    ],
+    description: "Cinematic atmospheric drone designed for film/media use",
+    usageNotes: "Medium-length cinematic drone with professional film quality, no attribution required. Perfect for dramatic atmospheric layers and cinematic vault exploration experiences."
+  },
+  {
+    id: 191167,
+    title: "Piano Drone",
+    previewUrl: "https://cdn.freesound.org/previews/191/191167_preview-hq.mp3",
+    duration: 14.86,
+    license: "CC0",
+    attribution: "laserlife",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "piano",
+      "acoustic",
+      "atmospheric",
+      "instrumental"
+    ],
+    description: "Piano-based atmospheric drone with acoustic character",
+    usageNotes: "Short piano-based drone with organic acoustic character, no attribution required. Perfect for adding warmth and acoustic texture to continuous layers, ideal for musical or creative-themed vaults."
+  },
+  {
+    id: 180495,
+    title: "MonotonousDrone5_1",
+    previewUrl: "https://cdn.freesound.org/previews/180/180495_preview-hq.mp3",
+    duration: 61.23,
+    license: "CC0",
+    attribution: "Sclolex",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "monotonous",
+      "atmospheric",
+      "sustained"
+    ],
+    description: "Monotonous atmospheric drone, part of drone series",
+    usageNotes: "Medium-length monotonous drone with consistent character, no attribution required. Perfect for sustained background atmosphere with minimal variation, ideal for focused work sessions or meditative vault exploration."
+  },
+  {
+    id: 182047,
+    title: "FX Background Drone Spaceship",
+    previewUrl: "https://cdn.freesound.org/previews/182/182047_preview-hq.mp3",
+    duration: 15.879,
+    license: "CC0",
+    attribution: "Karma-Ron",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "fx",
+      "background",
+      "spaceship",
+      "sci-fi",
+      "atmospheric"
+    ],
+    description: "FX background drone with spaceship theme, created by request",
+    usageNotes: "Short spaceship-themed FX drone, no attribution required. Perfect for sci-fi atmospheric layers and space-themed continuous backgrounds."
+  },
+  {
+    id: 207376,
+    title: "Big Space Drone 8",
+    previewUrl: "https://cdn.freesound.org/previews/207/207376_preview-hq.mp3",
+    duration: 202.292,
+    license: "CC BY-NC",
+    attribution: "Speedenza",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "space",
+      "atmospheric",
+      "big",
+      "extended",
+      "sci-fi"
+    ],
+    description: "Extended space-themed atmospheric drone, part of space drone series",
+    usageNotes: "Extended space drone with substantial duration, attribution required, non-commercial use only. Perfect for long-form sci-fi atmospheric layers and extended space-themed vault exploration sessions."
+  },
+  {
+    id: 203923,
+    title: "Airy Layered Drone",
+    previewUrl: "https://cdn.freesound.org/previews/203/203923_preview-hq.mp3",
+    duration: 208.421,
+    license: "CC BY-NC",
+    attribution: "Speedenza",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "airy",
+      "layered",
+      "atmospheric",
+      "extended"
+    ],
+    description: "Airy atmospheric drone with layered textures",
+    usageNotes: "Extended airy drone with layered composition, attribution required, non-commercial use only. Perfect for light, atmospheric continuous layers with textural complexity."
+  },
+  {
+    id: 220894,
+    title: "Ibrkr01 Drone",
+    previewUrl: "https://cdn.freesound.org/previews/220/220894_preview-hq.mp3",
+    duration: 65.976,
+    license: "CC0",
+    attribution: "Diboz",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "drone",
+      "atmospheric",
+      "ibrkr"
+    ],
+    description: "Atmospheric drone from ibrkr series",
+    usageNotes: "Medium-length atmospheric drone, no attribution required. Perfect for sustained continuous layers with good loop duration."
+  },
+  {
+    id: 197395,
+    title: "Heavy Industrial Elevator",
+    previewUrl: "https://cdn.freesound.org/previews/197/197395_preview-hq.mp3",
+    duration: 42.349,
+    license: "CC BY 3.0",
+    attribution: "peter5992",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "drone",
+      "mechanical",
+      "industrial",
+      "elevator",
+      "vintage",
+      "oakland",
+      "cotton-mill",
+      "historical",
+      "machinery"
+    ],
+    description: "Sound of the 100 year old industrial elevator in the iconic Cotton Mill Studios in Oakland, California. Heavy duty industrial type with old school call buttons and secured by two gates. Recorded with Zoom H4 at 96kHz/24bit",
+    usageNotes: "Authentic industrial mechanical drone from historic building, attribution required. Perfect for industrial atmospheres, mechanical environments, or vintage machinery soundscapes."
+  },
+  {
+    id: 413377,
+    title: "Gray Whale - MBARI Deep-Sea Observatory",
+    previewUrl: "https://cdn.freesound.org/previews/413/413377_preview-hq.mp3",
+    duration: 0,
+    license: "CC BY 4.0",
+    attribution: "MBARI_MARS",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "whale",
+      "gray",
+      "mbari",
+      "deep-sea",
+      "observatory",
+      "california",
+      "2015"
+    ],
+    description: "Gray whale (Eschrichtius robustus) vocalizations from California deep-sea cabled observatory, recorded August 18, 2015",
+    usageNotes: "Professional research institution recording from deep-sea observatory, attribution required. Perfect for California coastal oceanic themes with migration context."
+  },
+  {
+    id: 479068,
+    title: "Dark Texture 1 (Square Wave)",
+    previewUrl: "https://cdn.freesound.org/previews/479/479068_preview-hq.mp3",
+    duration: 120,
+    license: "CC BY 3.0",
+    attribution: "subtletransmissions",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "atmospheric",
+      "dark",
+      "square-wave",
+      "texture"
+    ],
+    description: "Dark atmospheric texture using square wave synthesis",
+    usageNotes: "Perfect for sci-fi continuous layers with dark, electronic character. Medium duration ideal for atmospheric loops in space-themed environments."
+  },
+  {
+    id: 484060,
+    title: "Lazer 1",
+    previewUrl: "https://cdn.freesound.org/previews/484/484060_preview-hq.mp3",
+    duration: 10,
+    license: "CC BY 3.0",
+    attribution: "subtletransmissions",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "laser",
+      "effect",
+      "technological"
+    ],
+    description: "Sci-fi laser effect sound",
+    usageNotes: "Perfect for discrete node events, transitions, or special effects in sci-fi themed continuous layers. Short duration ideal for event triggers."
+  },
+  {
+    id: 757449,
+    title: "Sci-Fi Computing Transmission 01",
+    previewUrl: "https://cdn.freesound.org/previews/757/757449_preview-hq.mp3",
+    duration: 60,
+    license: "CC0",
+    attribution: "cabled_mess",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "computing",
+      "transmission",
+      "retro",
+      "analogue",
+      "communication",
+      "eurorack",
+      "modular",
+      "technological"
+    ],
+    description: "Retro Sci-Fi analogue computing or communication sound effects created on a Doepfer Eurorack system",
+    usageNotes: "Perfect atmospheric computing/transmission sound for sci-fi continuous layers, no attribution required. Modular synth-based texture ideal for technological atmospheres and data transmission themes."
+  },
+  {
+    id: 756472,
+    title: "Synthetic Watery Bubbles 01",
+    previewUrl: "https://cdn.freesound.org/previews/756/756472_preview-hq.mp3",
+    duration: 60,
+    license: "CC0",
+    attribution: "cabled_mess",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "synthetic",
+      "water",
+      "bubbles",
+      "modular",
+      "analogue",
+      "liquid",
+      "technological",
+      "texture"
+    ],
+    description: "Bubble water sounds created on an analogue modular synthesizer",
+    usageNotes: "Synthetic liquid texture perfect for sci-fi underwater or alien liquid environments, no attribution required. Modular synth-based bubbling ideal for technological aquatic atmospheres."
+  },
+  {
+    id: 123708,
+    title: "Bizarre Radio Noise",
+    previewUrl: "https://cdn.freesound.org/previews/123/123708_preview-hq.mp3",
+    duration: 311.134,
+    license: "CC0",
+    attribution: "alienistcog",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "radio",
+      "interference",
+      "electromagnetic",
+      "noise",
+      "strange",
+      "atmospheric",
+      "technological",
+      "mysterious",
+      "extended"
+    ],
+    description: "Strange radio interference picked up between radio channels at 3AM one morning. Strange EM phenomenon rather than broadcast",
+    usageNotes: "Extended 5+ minute atmospheric radio interference, no attribution required. Perfect for alien communications, technological mysteries, or dystopian sci-fi atmospheres. Natural EM phenomenon adds authentic strangeness."
+  },
+  {
+    id: 725828,
+    title: "Basic Spaceship Engine (Bass)",
+    previewUrl: "https://cdn.freesound.org/previews/725/725828_preview-hq.mp3",
+    duration: 25.557,
+    license: "CC0",
+    attribution: "clif_creates",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "spaceship",
+      "engine",
+      "bass",
+      "hum",
+      "technological",
+      "feedback",
+      "layer"
+    ],
+    description: "A very basic spaceship hum. Created from a random feedback wav that happened one day when soundflower crashed. This is pitched down and EQd to work as a bass-heavy Sci-fi background",
+    usageNotes: "Bass-heavy spaceship engine hum, no attribution required. Perfect as a layer to beef up any sci-fi atmosphere. Short duration ideal for looping. Created from accidental feedback, adding organic quality to synthetic sound."
+  },
+  {
+    id: 516327,
+    title: "ILH Space Noise - Nostromo",
+    previewUrl: "https://cdn.freesound.org/previews/516/516327_preview-hq.mp3",
+    duration: 16.302,
+    license: "CC BY 4.0",
+    attribution: "voxlab",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "spaceship",
+      "alien",
+      "nostromo",
+      "technological",
+      "harmor",
+      "pitch-shift",
+      "versatile"
+    ],
+    description: "Spaceship Noise-SFX made with IL Harmor. Reminiscent of the Nostromo spaceship from Alien 1. Sounds human-like when pitched up; 4 octaves up becomes VOX Sound/Synth Choir",
+    usageNotes: "Iconic spaceship atmosphere inspired by Alien franchise, attribution required. Short loop with pitch-shifting versatility - can transform from spaceship drone to choir sound. Perfect for creating ominous sci-fi atmospheres."
+  },
+  {
+    id: 59,
+    title: "Nostromo Room Tone",
+    previewUrl: "https://cdn.freesound.org/previews/59/59_preview-hq.mp3",
+    duration: 14.362,
+    license: "CC BY 4.0",
+    attribution: "fectoper",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "spaceship",
+      "alien",
+      "nostromo",
+      "room-tone",
+      "roland-jd800",
+      "technological",
+      "ambient"
+    ],
+    description: 'Inspired by the ambient background heard "in silence" on the Nostromo spaceship from Alien. Created using Roland JD-800 synthesizer to recreate similar "room tone"',
+    usageNotes: "Classic spaceship room tone atmosphere, attribution required. Short loop perfect for creating subtle background presence. Roland JD-800 synthesis provides vintage digital character. Complements other Nostromo-inspired samples."
+  },
+  {
+    id: 214663,
+    title: "Deep Space Ship Effect",
+    previewUrl: "https://cdn.freesound.org/previews/214/214663_preview-hq.mp3",
+    duration: 10.473,
+    license: "CC BY 4.0",
+    attribution: "hykenfreak",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "spaceship",
+      "deep-space",
+      "white-noise",
+      "drone",
+      "subtle",
+      "ambient",
+      "loop",
+      "technological"
+    ],
+    description: "Sound created using white noise generator then pitched down and EQ low pass with lots of deep reverb. Normalized for subtle ambient use, not loud playback. For spaceship background noise, distant rocket/jet takeoffs, and suspense drones",
+    usageNotes: "Designed for subtle background presence, attribution required. Very short loop explicitly created for DAW looping and crossfading. Use proper speakers/headphones for full deep frequency effect. Perfect for continuous spaceship ambience."
+  },
+  {
+    id: 275646,
+    title: "Static Error 1",
+    previewUrl: "https://cdn.freesound.org/previews/275/275646_preview-hq.mp3",
+    duration: 5.504,
+    license: "CC0",
+    attribution: "dotY21",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "static",
+      "error",
+      "glitch",
+      "technological",
+      "malfunction",
+      "digital",
+      "interference"
+    ],
+    description: "A static error sound. Glitch sounds",
+    usageNotes: "Very short glitch loop, no attribution required. Best used for technological malfunction atmospheres or layered with other samples for digital interference effects. Can create unsettling technological environments when looped."
+  },
+  {
+    id: 369826,
+    title: "Cyborg/Machine Breath 2",
+    previewUrl: "https://cdn.freesound.org/previews/369/369826_preview-hq.mp3",
+    duration: 13.3,
+    license: "CC0",
+    attribution: "dotY21",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "cyborg",
+      "machine",
+      "breath",
+      "technological",
+      "biomechanical",
+      "rhythmic",
+      "loop"
+    ],
+    description: "Another cyborg breath noise",
+    usageNotes: "Short rhythmic cyborg breathing loop, no attribution required. Perfect for creating biomechanical atmospheres or machine-life environments. Can add organic rhythm to technological soundscapes when looped."
+  },
+  {
+    id: 371183,
+    title: "Corrupted Static Noise Loopable",
+    previewUrl: "https://cdn.freesound.org/previews/371/371183_preview-hq.mp3",
+    duration: 6.494,
+    license: "CC0",
+    attribution: "dotY21",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "static",
+      "corrupted",
+      "noise",
+      "glitch",
+      "loopable",
+      "technological",
+      "interference",
+      "experimental"
+    ],
+    description: "A static noise. Glitch sounds",
+    usageNotes: "Very short loopable static texture, no attribution required. Explicitly designed for seamless looping. Perfect for creating corrupted data streams or technological interference layers."
+  },
+  {
+    id: 747181,
+    title: "High Intense Beam Morphing",
+    previewUrl: "https://cdn.freesound.org/previews/747/747181_preview-hq.mp3",
+    duration: 13.234,
+    license: "CC0",
+    attribution: "clif_creates",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "beam",
+      "laser",
+      "morphing",
+      "resonant",
+      "harmonious",
+      "technological",
+      "energy",
+      "possibly-c"
+    ],
+    description: "A harmonious/resonant beaming laser-type of sound. Pretty sure it's in C, but haven't checked to be sure",
+    usageNotes: "Short resonant beam loop, no attribution required. Tonal quality (possibly in C) makes it musically compatible. Perfect for energy weapon atmospheres or technological scanning environments. From creator of Basic Spaceship Engine sample."
+  },
+  {
+    id: 593692,
+    title: "Fantasy Sci-Fi City Forest Atmosphere",
+    previewUrl: "https://cdn.freesound.org/previews/593/593692_preview-hq.mp3",
+    duration: 234.901,
+    license: "CC0",
+    attribution: "szegvari",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "fantasy",
+      "city",
+      "forest",
+      "atmospheric",
+      "soundscape",
+      "ambient"
+    ],
+    description: "Fantasy sci-fi city forest atmospheric soundscape",
+    usageNotes: "Extended atmospheric soundscape blending fantasy, sci-fi, and natural forest elements, no attribution required. Perfect for complex sci-fi continuous layers with organic and technological fusion themes."
+  },
+  {
+    id: 743075,
+    title: "Sci-Fi Soundscape - Wind - 200",
+    previewUrl: "https://cdn.freesound.org/previews/743/743075_preview-hq.mp3",
+    duration: 69.267,
+    license: "CC BY-NC",
+    attribution: "GregorQuendel",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "soundscape",
+      "wind",
+      "synthetic",
+      "artificial",
+      "atmospheric",
+      "designed"
+    ],
+    description: 'A collection of sci-fi soundscapes that were not selected for the release of the sound effects library "Designed Atmospheres". Synthetic/artificial wind soundscape',
+    usageNotes: "Professional synthetic wind atmosphere from unused sound library content, attribution required, non-commercial use only. Perfect for alien planet atmospheres or technological wind simulations."
+  },
+  {
+    id: 743472,
+    title: "Deep Space Sound",
+    previewUrl: "https://cdn.freesound.org/previews/743/743472_preview-hq.mp3",
+    duration: 7.559,
+    license: "CC0",
+    attribution: "cliploop",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "oceanic",
+      "sci-fi",
+      "space",
+      "deep",
+      "spheric",
+      "synthetic",
+      "atmospheric",
+      "short",
+      "loop"
+    ],
+    description: "Deep spheric sound, synthetic/artificial space atmosphere",
+    usageNotes: "Very short deep space atmosphere, no attribution required. Best used as a looped texture for continuous space ambience. Deep spheric quality ideal for void or deep space environments."
+  },
+  {
+    id: 86072,
+    title: "Transfer into the Other Dimension",
+    previewUrl: "https://cdn.freesound.org/previews/860/86072_preview-hq.mp3",
+    duration: 7.006,
+    license: "CC BY-NC",
+    attribution: "harpoyume",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "sci-fi",
+      "dimensional",
+      "transfer",
+      "otherworldly",
+      "synthetic",
+      "atmospheric",
+      "short",
+      "portal"
+    ],
+    description: "Transferring sound into the other dimension. Synthetic/artificial dimensional transfer effect",
+    usageNotes: "Very short dimensional transfer atmosphere, attribution required, non-commercial use only. Ideal for portal/transition effects or looped for continuous interdimensional ambience. Perfect for representing phase shifts or reality transitions."
+  },
+  {
+    id: 697832,
+    title: "Frog Chorus Ambience",
+    previewUrl: "https://cdn.freesound.org/previews/697/697832_preview-hq.mp3",
+    duration: 8.897,
+    license: "CC BY-NC",
+    attribution: "soundshmyak",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "nature",
+      "frog",
+      "chorus",
+      "animals",
+      "natural",
+      "soundscape"
+    ],
+    description: "Natural frog chorus ambience with animal sounds",
+    usageNotes: "Short natural ambience with frog chorus, attribution required, non-commercial use only. Perfect for natural ambient layers and organic atmospheric backgrounds."
+  },
+  {
+    id: 776043,
+    title: "Melancholic Nature Soundscape",
+    previewUrl: "https://cdn.freesound.org/previews/776/776043_preview-hq.mp3",
+    duration: 98.46,
+    license: "CC BY 4.0",
+    attribution: "Universfield",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "melancholic",
+      "nature",
+      "documentary",
+      "misty",
+      "forest",
+      "mountains",
+      "rain",
+      "solitude",
+      "reflection"
+    ],
+    description: "Ambient and melancholic atmosphere perfect for nature documentaries and scenes with misty forests, fields, mountains, or rainy seasons, evoking solitude and reflection",
+    usageNotes: "Extended melancholic nature soundscape with documentary quality, attribution required. Perfect for contemplative ambient layers and reflective vault exploration sessions."
+  },
+  {
+    id: 811163,
+    title: "Morning Cicada and Bird Chorus \u2013 17-Year Brood Field Recording",
+    previewUrl: "https://cdn.freesound.org/previews/811/811163_preview-hq.mp3",
+    duration: 1538.279,
+    license: "CC0",
+    attribution: "clawback",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "nature",
+      "cicada",
+      "birds",
+      "chorus",
+      "field-recording",
+      "17-year-brood",
+      "2025",
+      "dawn",
+      "rural",
+      "rare-biological-event"
+    ],
+    description: "Vivid and immersive early morning field recording captured during the 2025 emergence of the 17-year cicada brood. Dense cicada drone forms a shimmering sonic backdrop, punctuated by calls from robins, cardinals, wrens, mourning doves, and blue jays. A neighbor's rooster adds rural charm to the natural chorus of millions of cicadas chittering, clicking, and droning.",
+    usageNotes: "Exceptional 25+ minute nature recording capturing rare 17-year cicada emergence, no attribution required. Perfect for extended ambient layers with authentic biological soundscape, ideal for nature-themed vaults or immersive exploration sessions. Longest ambient sample in collection."
+  },
+  {
+    id: 813283,
+    title: "Forest Atmosphere 005 (Poland)",
+    previewUrl: "https://cdn.freesound.org/previews/813/813283_preview-hq.mp3",
+    duration: 222.209,
+    license: "CC0",
+    attribution: "AudioPapkin",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "nature",
+      "forest",
+      "poland",
+      "birdsong",
+      "field-recording",
+      "european",
+      "pristine",
+      "natural-soundscape"
+    ],
+    description: "Ambient soundscape of a Polish forest with various birdsong and natural background sounds typical for European forest environments. Pure field recording with no human noise or mechanical sounds, capturing authentic forest atmosphere.",
+    usageNotes: "Clean Polish forest recording with authentic European birdsong, no attribution required. Perfect for natural ambient layers and European forest-themed atmospheric backgrounds. Extended duration ideal for immersive nature sessions."
+  },
+  {
+    id: 772101,
+    title: "Berlin Birds - Nightingale & Great Tit with Urban Ambience",
+    previewUrl: "https://cdn.freesound.org/previews/772/772101_preview-hq.mp3",
+    duration: 93.758,
+    license: "CC BY 4.0",
+    attribution: "MichiJung",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "urban",
+      "berlin",
+      "nightingale",
+      "great-tit",
+      "birds",
+      "traffic",
+      "construction",
+      "urban-biodiversity",
+      "summer-2024",
+      "sony-pcm-d100"
+    ],
+    description: "Unedited summer 2024 Berlin field recording capturing the interplay of natural and urban soundscapes. Nightingale and great tit bird calls contrast with construction site activity and city traffic, creating a layered urban-natural atmosphere. Recorded with Sony PCM-D100 with minimal editing.",
+    usageNotes: "Unique urban-natural soundscape blending bird calls with city sounds, attribution required. Perfect for urban biodiversity themes, documentary-style ambient layers, and explorations of nature-city intersections. Professional field recording quality."
+  },
+  {
+    id: 765399,
+    title: "Midnight Ambiance in KwaZulu-Natal",
+    previewUrl: "https://cdn.freesound.org/previews/765/765399_preview-hq.mp3",
+    duration: 176.217,
+    license: "CC BY-NC",
+    attribution: "DonnyDB",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "africa",
+      "kwazulu-natal",
+      "south-africa",
+      "midnight",
+      "night",
+      "wilderness",
+      "animal-calls",
+      "wind",
+      "vegetation",
+      "zoom-h6"
+    ],
+    description: "Serene nighttime environment of KwaZulu-Natal, South Africa, capturing the African wilderness after dark. Features distant animal calls, soft winds, and occasional rustling vegetation recorded with professional Zoom H6 equipment.",
+    usageNotes: "Authentic African wilderness nighttime atmosphere, attribution required, non-commercial use only. Perfect for immersive nature soundscapes, relaxation themes, and African wildlife ambient layers. Professional field recording quality."
+  },
+  {
+    id: 789045,
+    title: "Suburban Rain & Light Thunder",
+    previewUrl: "https://cdn.freesound.org/previews/789/789045_preview-hq.mp3",
+    duration: 360,
+    license: "CC BY 4.0",
+    attribution: "TheFieldRecordist",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "rain",
+      "thunder",
+      "suburban",
+      "thunderstorm",
+      "weather",
+      "birds",
+      "cars",
+      "atmospheric",
+      "zoom-f6",
+      "2025"
+    ],
+    description: "Rich atmospheric recording capturing the essence of a sudden, fleeting thunderstorm in a suburban environment. Features calming rain patter, distant thunder rumbles, with layered suburban life sounds including birds chirping, dog barking, and occasional cars passing on wet roads.",
+    usageNotes: "Extended 6-minute atmospheric thunderstorm with suburban life layers, attribution required. Perfect for weather-themed ambient layers, relaxation soundscapes, and immersive storm atmosphere. Professional Zoom F6 field recording quality."
+  },
+  {
+    id: 237729,
+    title: "Rain and Thunder 4",
+    previewUrl: "https://cdn.freesound.org/previews/237/237729_preview-hq.mp3",
+    duration: 32.875,
+    license: "CC0",
+    attribution: "FlatHill",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "rain",
+      "thunder",
+      "weather",
+      "storm",
+      "natural",
+      "atmospheric"
+    ],
+    description: "Rain and thunder natural weather recording",
+    usageNotes: "Medium-duration rain and thunder atmosphere, no attribution required. Perfect for weather-themed ambient layers and storm soundscapes."
+  },
+  {
+    id: 242956,
+    title: "Rain Fall Through Trees",
+    previewUrl: "https://cdn.freesound.org/previews/242/242956_preview-hq.mp3",
+    duration: 78.686,
+    license: "CC0",
+    attribution: "acollier123",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "rain",
+      "trees",
+      "nature",
+      "forest",
+      "shed",
+      "splashing",
+      "zoom-h2",
+      "uk",
+      "2014",
+      "weather",
+      "atmospheric"
+    ],
+    description: "Rain recorded under a tree using Zoom H2. Splashing on a nearby shed can be heard. Some mastering and editing done using Cool Edit Pro. 19th July 2014, UK",
+    usageNotes: "Natural rain through trees with environmental texture, no attribution required. Perfect for forest rain atmospheres and nature-based weather soundscapes. Includes authentic splashing sounds for added realism."
+  },
+  {
+    id: 17553,
+    title: "Wind Howling Nighttime",
+    previewUrl: "https://cdn.freesound.org/previews/175/17553_preview-hq.mp3",
+    duration: 58.666,
+    license: "CC BY 3.0",
+    attribution: "Dynamicell",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "wind",
+      "howling",
+      "nighttime",
+      "weather",
+      "atmospheric",
+      "sm57",
+      "mk319",
+      "logic-pro"
+    ],
+    description: "Recordings of the wind as it passes window. Recorded with SM 57 + MK319 Condenser Mic. Mixed and mastered in Logic 7 Pro",
+    usageNotes: "Atmospheric wind recording with professional mixing, attribution required. Perfect for nighttime weather atmospheres and windswept ambient layers."
+  },
+  {
+    id: 244942,
+    title: "Wind Through Trees 3b",
+    previewUrl: "https://cdn.freesound.org/previews/244/244942_preview-hq.mp3",
+    duration: 58.154,
+    license: "CC BY 4.0",
+    attribution: "spoonbender",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "wind",
+      "trees",
+      "forest",
+      "creaking",
+      "northumberland",
+      "uk",
+      "zoom-h2n",
+      "nature",
+      "atmospheric",
+      "thrunton-woods"
+    ],
+    description: "Recorded on a windy day in Thrunton woods, Northumberland, UK. Zoom H2n, recorded near a tree that was falling over and rubbing against other trees. Light processing in RX3 to clean boom sound from muscle tension",
+    usageNotes: "Unique forest wind recording with natural tree creaking sounds, attribution required. Perfect for mysterious forest atmospheres and windswept woodland soundscapes."
+  },
+  {
+    id: 158780,
+    title: "Wolves Howling",
+    previewUrl: "https://cdn.freesound.org/previews/158/158780_preview-hq.mp3",
+    duration: 33.299,
+    license: "CC0",
+    attribution: "Paresh",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "wolves",
+      "howling",
+      "wildlife",
+      "nature",
+      "sanctuary",
+      "washington",
+      "wolf-haven",
+      "animal-sounds"
+    ],
+    description: "Wolves howling - recorded at Wolf Haven International, a wolf sanctuary in Washington State",
+    usageNotes: "Authentic wolf sanctuary recording, no attribution required. Perfect for wilderness atmospheres, nature documentaries, and primal ambient soundscapes."
+  },
+  {
+    id: 458113,
+    title: "Countryside Dawn",
+    previewUrl: "https://cdn.freesound.org/previews/458/458113_preview-hq.mp3",
+    duration: 58,
+    license: "CC0",
+    attribution: "brunoboselli",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "countryside",
+      "dawn",
+      "cicadas",
+      "crickets",
+      "birds",
+      "farm",
+      "uruguay",
+      "piriapolis",
+      "nature",
+      "rural",
+      "morning"
+    ],
+    description: "Recording of a countryside natural ambience at dawn. Pretty heavy cicadas and crickets activity, birds, nearby farm animals and a mild wind background",
+    usageNotes: "Rich layered countryside atmosphere from Uruguay, no attribution required. Perfect for rural dawn atmospheres with authentic South American biodiversity. Multiple natural sound layers create immersive environment."
+  },
+  {
+    id: 138288,
+    title: "Desert at Night",
+    previewUrl: "https://cdn.freesound.org/previews/138/138288_preview-hq.mp3",
+    duration: 232.08,
+    license: "CC BY 4.0",
+    attribution: "kangaroovindaloo",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "desert",
+      "night",
+      "australia",
+      "tanami",
+      "northern-territory",
+      "nature",
+      "nocturnal",
+      "outback",
+      "wildlife"
+    ],
+    description: "The Australian Desert at night. Recorded in Tanami, Northern Territory, Australia",
+    usageNotes: "Extended Australian desert nightscape, attribution required. Nearly 4-minute authentic outback atmosphere perfect for creating remote, isolated environments. Captures unique Australian desert nocturnal soundscape."
+  },
+  {
+    id: 584903,
+    title: "Magpie",
+    previewUrl: "https://cdn.freesound.org/previews/584/584903_preview-hq.mp3",
+    duration: 11.711,
+    license: "CC0",
+    attribution: "kangaroovindaloo",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "nature",
+      "magpie",
+      "bird",
+      "forest",
+      "fryers-forest",
+      "australia",
+      "wildlife",
+      "field-recording",
+      "mid-side",
+      "professional"
+    ],
+    description: "The sound of a magpie in Fryers Forest. Recorded with a mid-side configuration using a Sennheiser MKH 416 paired with a MKH 30 into my Zoom F4.",
+    usageNotes: "Short professional field recording of Australian magpie, no attribution required. High-quality recording using professional equipment captures authentic bird vocalization. Perfect for natural ambient layers or as accent in Australian nature soundscapes."
+  },
+  {
+    id: 585077,
+    title: "Thunder Clap",
+    previewUrl: "https://cdn.freesound.org/previews/585/585077_preview-hq.mp3",
+    duration: 25.5,
+    license: "CC0",
+    attribution: "kangaroovindaloo",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "nature",
+      "thunder",
+      "weather",
+      "storm",
+      "atmospheric",
+      "natural-elements",
+      "meteorological",
+      "powerful"
+    ],
+    description: "Thunder.",
+    usageNotes: "Natural thunder clap recording, no attribution required. Short but impactful weather sound effect perfect for storm atmospheres and dramatic natural ambience. Can be used as punctuation in weather-based soundscapes."
+  },
+  {
+    id: 588652,
+    title: "Texture of Water",
+    previewUrl: "https://cdn.freesound.org/previews/588/588652_preview-hq.mp3",
+    duration: 426.81,
+    license: "CC BY 4.0",
+    attribution: "kangaroovindaloo",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "nature",
+      "water",
+      "stream",
+      "flowing",
+      "birds",
+      "pomonal",
+      "victoria",
+      "australia",
+      "soundscape",
+      "natural",
+      "aquatic"
+    ],
+    description: "A close perspective of a flowing stream with some birds in the background. Recorded in Pomonal, Victoria, Australia.",
+    usageNotes: "Extended 7+ minute water texture recording with bird ambience, attribution required. Perfect for peaceful water-based atmospheres and natural meditation soundscapes. Close-mic technique captures intimate stream details while maintaining environmental context."
+  },
+  {
+    id: 535582,
+    title: "Waves Ambience, Brittany",
+    previewUrl: "https://cdn.freesound.org/previews/535/535582_preview-hq.mp3",
+    duration: 603.115,
+    license: "CC BY 4.0",
+    attribution: "Moulaythami",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "waves",
+      "ocean",
+      "brittany",
+      "france",
+      "coast",
+      "dual-mic",
+      "professional",
+      "sub-bass",
+      "natural",
+      "beyerdynamic",
+      "superlux"
+    ],
+    description: "Professional waves crashing soundscape from Brittany coast, recorded with dual-microphone setup: Beyerdynamic MCE 85 BA facing the waves and Superlux S241 buried in sand. The innovative recording technique creates heavy, natural sub-bass frequencies mixed with clear wave sounds.",
+    usageNotes: "Extended 10+ minute professional ocean recording with innovative dual-mic technique, attribution required. Perfect for oceanic ambient layers, meditation soundscapes, and coastal atmosphere. Heavy natural sub-bass provides rich low-frequency foundation."
+  },
+  {
+    id: 523454,
+    title: "Crickets at Night in Mezos",
+    previewUrl: "https://cdn.freesound.org/previews/523/523454_preview-hq.mp3",
+    duration: 135.5,
+    license: "CC BY-NC",
+    attribution: "Guillaume.Capsowl.Voisin",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "crickets",
+      "night",
+      "mezos",
+      "france",
+      "landes",
+      "nature",
+      "evening",
+      "rural",
+      "insects",
+      "soundscape"
+    ],
+    description: "Crickets soundscape at night in French Landes nature, capturing the natural evening chorus of crickets in the rural Mezos region of southwestern France.",
+    usageNotes: "Authentic French countryside cricket soundscape, attribution required, non-commercial use only. Perfect for nighttime ambient layers, rural atmosphere, and peaceful evening soundscapes. Natural insect chorus ideal for contemplative vault exploration."
+  },
+  {
+    id: 240339,
+    title: "Forest Soundscape (Thuringian Forest)",
+    previewUrl: "https://cdn.freesound.org/previews/240/240339_preview-hq.mp3",
+    duration: 158.628,
+    license: "CC BY 4.0",
+    attribution: "Porphyr",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "forest",
+      "thuringia",
+      "germany",
+      "summer",
+      "birdsong",
+      "insects",
+      "temperate-forest",
+      "suhl",
+      "2014",
+      "european"
+    ],
+    description: "Summer forest soundscape recorded at 'Lange Bahn' near Suhl, Thuringia, Germany on June 9, 2014. Captured on a characteristic summer day at 32\xB0C with minimal wind, featuring predominantly bird songs and insect fly-bys typical of German temperate forest environments.",
+    usageNotes: "Authentic German temperate forest summer atmosphere, attribution required. Perfect for European forest ambient layers, summer nature soundscapes, and temperate woodland exploration themes. Clean recording with natural bird and insect diversity."
+  },
+  {
+    id: 785125,
+    title: "Forest Soundscape Contaminated by Urban Noise",
+    previewUrl: "https://cdn.freesound.org/previews/785/785125_preview-hq.mp3",
+    duration: 150,
+    license: "CC BY-NC",
+    attribution: "ricardoemfield",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "forest",
+      "brazil",
+      "itapoa",
+      "santa-catarina",
+      "urban-contamination",
+      "motorcycle",
+      "dog",
+      "nighttime",
+      "2025",
+      "zoom-h1n",
+      "south-america"
+    ],
+    description: "Forest soundscape from Itapo\xE1, southern Brazil, documenting the intersection of natural and urban environments with motorcycle and dog sounds contaminating the natural forest atmosphere. Recorded at 22:00 (10 PM) on January 10, 2025, using Zoom H1N in Santa Catarina state.",
+    usageNotes: "Authentic Brazilian urban-forest intersection soundscape, attribution required, non-commercial use only. Perfect for documenting environmental impact themes, urban sprawl effects on nature, and realistic modern forest environments. Nighttime recording with contemporary urban-nature conflict."
+  },
+  {
+    id: 737197,
+    title: "Rural Soundscape Snippet - Bouri\xE8ge",
+    previewUrl: "https://cdn.freesound.org/previews/737/737197_preview-hq.mp3",
+    duration: 9.575,
+    license: "CC0",
+    attribution: "Sadiquecat",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "rural",
+      "bouriege",
+      "aude",
+      "france",
+      "eurasian-collared-dove",
+      "grasshopper-warbler",
+      "great-tit",
+      "tractor",
+      "evening",
+      "zoom-h2n",
+      "ambisonic",
+      "merlin-bird-id"
+    ],
+    description: "Short rural soundscape from Bouri\xE8ge, Aude, France, recorded on May 24, 2024, around 19:20. Features scientifically identified bird species: Eurasian Collared Dove (owl-like background), Common Grasshopper Warbler (loud cricket sound), and Great Tit (squeaking bicycle pump sound), plus authentic tractor sounds. Recorded with Zoom H2n in ambisonic mode.",
+    usageNotes: "Scientifically documented short rural French soundscape, no attribution required. Perfect for brief rural transitions, authentic French countryside snippets, and ornithologically accurate bird identification themes. Professional ambisonic field recording with species verification."
+  },
+  {
+    id: 652794,
+    title: "Nature is Losing the War",
+    previewUrl: "https://cdn.freesound.org/previews/652/652794_preview-hq.mp3",
+    duration: 211.981,
+    license: "CC BY 4.0",
+    attribution: "dibko",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "environmental-commentary",
+      "birds",
+      "cars",
+      "manufacturing",
+      "factories",
+      "civilization-impact",
+      "zoom-h5",
+      "msh-6",
+      "nature-vs-industry"
+    ],
+    description: "Environmental commentary recording documenting the overwhelming of natural bird sounds by human industrial noise including cars, people, manufacturing, and factories. Captured with Zoom H5 + MSH-6, this recording illustrates the spreading impact of civilization on natural soundscapes and the growing rarity of quiet natural spaces.",
+    usageNotes: "Powerful environmental documentary soundscape, attribution required. Perfect for themes exploring environmental impact, urbanization effects on nature, and the tension between natural and industrial worlds. Professional recording highlighting contemporary environmental challenges."
+  },
+  {
+    id: 58,
+    title: "Abstract Ambient JD-800",
+    previewUrl: "https://cdn.freesound.org/previews/58/58_preview-hq.mp3",
+    duration: 59.815,
+    license: "CC BY 4.0",
+    attribution: "fectoper",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "abstract",
+      "synthesizer",
+      "roland-jd800",
+      "patch",
+      "atmospheric",
+      "synthetic"
+    ],
+    description: "A kind of abstract ambient patch programmed with a Roland JD-800 synth",
+    usageNotes: "Abstract ambient texture from classic digital synthesizer, attribution required. Nearly one-minute duration ideal for atmospheric loops. Roland JD-800's distinctive digital character adds unique texture to ambient layers."
+  },
+  {
+    id: 133015,
+    title: "Misty Limbo",
+    previewUrl: "https://cdn.freesound.org/previews/133/133015_preview-hq.mp3",
+    duration: 82.103,
+    license: "CC BY 4.0",
+    attribution: "CosmicD",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "ambient",
+      "limbo",
+      "misty",
+      "ethereal",
+      "resonators",
+      "synthetic",
+      "otherworldly",
+      "atmospheric"
+    ],
+    description: '"We are in limbo" - Resonators From Hell series. Misty, ethereal synthetic atmosphere',
+    usageNotes: 'Extended ethereal atmosphere evoking liminal spaces, attribution required. Perfect for creating mysterious, suspended atmospheres. Part of "Resonators From Hell" series adds dark undertones to misty ambience.'
+  },
+  {
+    id: 370164,
+    title: "Otherworldly Ambience",
+    previewUrl: "https://cdn.freesound.org/previews/370/370164_preview-hq.mp3",
+    duration: 39.269,
+    license: "CC0",
+    attribution: "dotY21",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "ambient",
+      "otherworldly",
+      "loop",
+      "atmospheric",
+      "mysterious",
+      "synthetic"
+    ],
+    description: "A looping ambience track with otherworldly character",
+    usageNotes: "Medium-duration loop designed for continuous playback, no attribution required. Perfect for creating alien or supernatural atmospheres. From same creator as Static Error sample."
+  },
+  {
+    id: 433935,
+    title: "Orchestral Tremolo Strings Bed",
+    previewUrl: "https://cdn.freesound.org/previews/433/433935_preview-hq.mp3",
+    duration: 440,
+    license: "CC BY-NC",
+    attribution: "james_longley",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "tremolo",
+      "bed",
+      "atmospheric",
+      "reverberant",
+      "vienna-symphonic",
+      "background",
+      "cinematic"
+    ],
+    description: "Tremolo orchestral strings in a large reverberant space, created with Vienna Symphonic in Apple Logic. Designed as an atmospheric orchestral bed.",
+    usageNotes: "Extended 7+ minute duration perfect for long ambient sessions, tremolo technique adds subtle movement without being distracting, large reverb creates spacious atmosphere, non-commercial use only."
+  },
+  {
+    id: 433936,
+    title: "Orchestral Tremolo Strings Bed 1",
+    previewUrl: "https://cdn.freesound.org/previews/433/433936_preview-hq.mp3",
+    duration: 440,
+    license: "CC BY-NC",
+    attribution: "james_longley",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "tremolo",
+      "bed",
+      "atmospheric",
+      "reverberant",
+      "vienna-symphonic",
+      "neutral",
+      "versatile"
+    ],
+    description: "Tremolo orchestral strings in a large reverberant space, created with Vienna Symphonic in Apple Logic. Neutral mood suitable for variety of situations.",
+    usageNotes: "Matching duration to BED2 provides variation options, neutral mood makes it highly versatile, professional orchestral samples with spacious reverb, non-commercial use only."
+  },
+  {
+    id: 433810,
+    title: "Orchestral Layers Improvisation",
+    previewUrl: "https://cdn.freesound.org/previews/433/433810_preview-hq.mp3",
+    duration: 254.769,
+    license: "CC BY-NC",
+    attribution: "james_longley",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "layers",
+      "improvisational",
+      "temp-music",
+      "film-scoring",
+      "vienna-symphonic",
+      "atmospheric"
+    ],
+    description: "Layers of orchestral samples from Vienna Symphonic in an improvisational track intended for temp film scoring use. Atmospheric orchestral texture.",
+    usageNotes: "Medium duration complements the 7+ minute beds, improvisational nature creates organic atmosphere, designed for non-intrusive film temp use, non-commercial only."
+  },
+  {
+    id: 433809,
+    title: "Orchestral Ambient Floating Chord",
+    previewUrl: "https://cdn.freesound.org/previews/433/433809_preview-hq.mp3",
+    duration: 156,
+    license: "CC BY-NC",
+    attribution: "james_longley",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "ambient",
+      "floating",
+      "chord",
+      "sustained",
+      "atmospheric",
+      "logic"
+    ],
+    description: "Orchestral sound created in Logic, centered around a single floating chord. Ambient orchestral texture with sustained harmonic focus.",
+    usageNotes: "Shorter duration option for variety, single chord focus provides harmonic stability, floating quality perfect for background use, non-commercial only."
+  },
+  {
+    id: 540841,
+    title: "String Ensemble Soundscape",
+    previewUrl: "https://cdn.freesound.org/previews/540/540841_preview-hq.mp3",
+    duration: 88,
+    license: "CC BY-NC",
+    attribution: "LogicMoon",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "ensemble",
+      "soundscape",
+      "improvisation",
+      "atmospheric",
+      "ambient"
+    ],
+    description: "String ensemble and soundscape improvisation. Atmospheric string texture created through improvisational performance.",
+    usageNotes: "Adds creator diversity beyond james_longley samples, shorter duration fills gap in collection, improvisational nature creates organic texture, non-commercial only."
+  },
+  {
+    id: 373153,
+    title: "Solo Contrabass Sustain F#1",
+    previewUrl: "https://cdn.freesound.org/previews/373/373153_preview-hq.mp3",
+    duration: 11.283,
+    license: "CC0",
+    attribution: "sgossner",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "contrabass",
+      "bass",
+      "sustain",
+      "vibrato",
+      "F#1",
+      "VSCO",
+      "professional"
+    ],
+    description: "Solo contrabass vibrato sustain on F#1 from VSCO 2 CE. Professional recording with spaced pair and close mic setup in Boston classroom.",
+    usageNotes: "Adds deep bass register to string collection, vibrato adds organic movement, short duration requires looping, CC0 license allows free use, professional sample library quality."
+  },
+  {
+    id: 372835,
+    title: "Cello Section Sustain E2",
+    previewUrl: "https://cdn.freesound.org/previews/372/372835_preview-hq.mp3",
+    duration: 11.641,
+    license: "CC0",
+    attribution: "sgossner",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "cello",
+      "section",
+      "sustain",
+      "vibrato",
+      "E2",
+      "VSCO",
+      "professional"
+    ],
+    description: "Cello section vibrato sustain on E2 from VSCO 2 CE. Professional recording of three cellists with spaced pair and ribbon mic in Boston classroom.",
+    usageNotes: "Mid-low register complements contrabass F#1, section sound fuller than solo, vibrato adds warmth, pairs well with other VSCO samples, CC0 license."
+  },
+  {
+    id: 374590,
+    title: "Violin Section Sustain B3",
+    previewUrl: "https://cdn.freesound.org/previews/374/374590_preview-hq.mp3",
+    duration: 13.454,
+    license: "CC0",
+    attribution: "sgossner",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "violin",
+      "section",
+      "sustain",
+      "vibrato",
+      "B3",
+      "VSCO",
+      "professional"
+    ],
+    description: "Violin section vibrato sustain on B3 from VSCO 2 CE. Professional recording of five violinists with spaced pair and ribbon mic in Boston classroom.",
+    usageNotes: "Higher register balances low strings, creates harmonic triad with bass F#1 and cello E2, five-player section for rich sound, CC0 license."
+  },
+  {
+    id: 374463,
+    title: "Viola Section Sustain F#3",
+    previewUrl: "https://cdn.freesound.org/previews/374/374463_preview-hq.mp3",
+    duration: 13.746,
+    license: "CC0",
+    attribution: "sgossner",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "viola",
+      "section",
+      "sustain",
+      "vibrato",
+      "F#3",
+      "VSCO",
+      "professional"
+    ],
+    description: "Viola section vibrato sustain on F#3 from VSCO 2 CE. Professional recording of four violists with spaced pair and close mic in Boston classroom.",
+    usageNotes: "Completes string quartet with violin/cello/bass, F#3 octave relationship with bass F#1, fills mid-range perfectly, CC0 license."
+  },
+  {
+    id: 373775,
+    title: "Solo Violin Sustain F#4",
+    previewUrl: "https://cdn.freesound.org/previews/373/373775_preview-hq.mp3",
+    duration: 13.412,
+    license: "CC0",
+    attribution: "sgossner",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "orchestral",
+      "strings",
+      "violin",
+      "solo",
+      "sustain",
+      "vibrato",
+      "F#4",
+      "VSCO",
+      "professional"
+    ],
+    description: "Solo violin vibrato sustain on F#4 from VSCO 2 CE. Professional recording in living room setting with spaced pair mics.",
+    usageNotes: "Adds highest F# completing three-octave spread (F#1-F#3-F#4), solo timbre contrasts with sections, intimate living room recording, CC0 license."
+  },
+  {
+    id: 748227,
+    title: "Soft Brass and Pad Atmosphere",
+    previewUrl: "https://cdn.freesound.org/previews/748/748227_preview-hq.mp3",
+    duration: 116.569,
+    license: "CC0",
+    attribution: "3ag1e",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "orchestral",
+      "brass",
+      "pad",
+      "soft",
+      "atmosphere",
+      "C-minor",
+      "140bpm",
+      "dark",
+      "strings",
+      "loopable"
+    ],
+    description: "Soft brass textures with dark low strings in C minor at 140 BPM. Atmospheric brass pad designed to be loopable with subtle string support.",
+    usageNotes: "Nearly 2-minute duration excellent for continuous ambience, soft brass avoids typical fanfare dramatics, C minor tonality with tempo sync at 140 BPM, CC0 license allows unrestricted use."
+  },
+  {
+    id: 361843,
+    title: "String Pad (Buzzy Electronic Texture)",
+    previewUrl: "https://cdn.freesound.org/previews/361/361843_preview-hq.mp3",
+    duration: 17.813,
+    license: "CC BY 4.0",
+    attribution: "johnnypanic",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "synthesized",
+      "strings",
+      "bass",
+      "buzzy",
+      "layered",
+      "c-note",
+      "texture"
+    ],
+    description: "Electronic pad created by layering strings, effects and samples, centered on C notes. Features a clean string pad texture with a quiet buzzy sound low in the mix, creating a hybrid electronic-orchestral atmosphere.",
+    usageNotes: "Short duration ideal for looping, harmonic center on C makes it compatible with various keys, buzzy undertone adds electronic character while maintaining string-like warmth."
+  },
+  {
+    id: 78462,
+    title: "Dance String Loop",
+    previewUrl: "https://cdn.freesound.org/previews/784/78462_preview-hq.mp3",
+    duration: 7.619,
+    license: "CC BY 3.0",
+    attribution: "mkoenig",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "dance",
+      "string",
+      "loop",
+      "126bpm",
+      "soft",
+      "dainty",
+      "synthesized"
+    ],
+    description: "Soft and dainty dance string/pad loop at 126 BPM. Electronic string texture designed for dance music production, featuring a gentle, delicate character suitable for ambient layering.",
+    usageNotes: "Very short loop perfect for continuous cycling, tempo-synced at 126 BPM for rhythmic integration, delicate texture complements heavier pads."
+  },
+  {
+    id: 250946,
+    title: "String Pad Chill",
+    previewUrl: "https://cdn.freesound.org/previews/250/250946_preview-hq.mp3",
+    duration: 16,
+    license: "CC BY 3.0",
+    attribution: "Thalamus_Lab",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "guitar",
+      "atmospheric",
+      "pitch-shift",
+      "reverb",
+      "synth",
+      "percussive-echo",
+      "experimental",
+      "chill"
+    ],
+    description: "Atmospheric guitar pads with pitch shifting and heavy reverb, layered with synth pad and percussive echo effects. Part of the Xperimental Sound Lab collection, blending processed acoustic and electronic elements.",
+    usageNotes: "Hybrid acoustic-electronic texture ideal for ambient atmospheres, heavy processing creates spacious feel, percussive elements add rhythmic interest."
+  },
+  {
+    id: 275178,
+    title: "Voice Pad 140 BPM",
+    previewUrl: "https://cdn.freesound.org/previews/275/275178_preview-hq.mp3",
+    duration: 41.142,
+    license: "CC0",
+    attribution: "Elmo_cookies",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "voice",
+      "voicepad",
+      "140bpm",
+      "synthesized",
+      "rompler",
+      "stringz2",
+      "tempo-synced"
+    ],
+    description: "Synthesized voice pad created using StringZ2 ROMpler, arranged to fit 140 BPM tempo. Vocal-style electronic pad texture suitable for ambient and electronic music production.",
+    usageNotes: "Longer duration pad with vocal characteristics, tempo-synced at 140 BPM for electronic music integration, no attribution required (CC0)."
+  },
+  {
+    id: 245756,
+    title: "Analog Strings Synth Loop",
+    previewUrl: "https://cdn.freesound.org/previews/245/245756_preview-hq.mp3",
+    duration: 18.508,
+    license: "CC BY-NC",
+    attribution: "orangefreesounds",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "analog",
+      "synthesizer",
+      "waldorf",
+      "strings",
+      "loop",
+      "hardware-synth",
+      "warm"
+    ],
+    description: "Analog strings synthesizer loop created with Waldorf analog synthesizer. Classic hardware synth sound with warm analog character and string-like timbre.",
+    usageNotes: "Classic analog warmth from hardware synthesizer, loop format ideal for continuous playback, non-commercial use only due to NC license."
+  },
+  {
+    id: 528768,
+    title: "Ethereal Pad",
+    previewUrl: "https://cdn.freesound.org/previews/528/528768_preview-hq.mp3",
+    duration: 62.895,
+    license: "CC BY-NC",
+    attribution: "XHALE303",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "ethereal",
+      "jd-800",
+      "roland",
+      "ethera",
+      "vocals",
+      "137bpm",
+      "atmospheric",
+      "digital-synth"
+    ],
+    description: "Ethereal pad combining Roland JD-800 synthesizer with Ethera vocal samples at 137 BPM. Classic digital synthesis blended with processed vocals for atmospheric texture.",
+    usageNotes: "Extended duration perfect for ambient layers, tempo-synced at 137 BPM, combines classic digital synthesis with modern vocal processing, non-commercial use only."
+  },
+  {
+    id: 170696,
+    title: "Thin Strings C2",
+    previewUrl: "https://cdn.freesound.org/previews/170/170696_preview-hq.mp3",
+    duration: 16.41,
+    license: "CC BY 4.0",
+    attribution: "AlienXXX",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "synthesized",
+      "strings",
+      "thin",
+      "maelstrom",
+      "reason",
+      "C2",
+      "high-pass",
+      "layering"
+    ],
+    description: "Thin string pad synthesized in Reason's Maelstrom with high-pass filtering, designed specifically to sit well in a mix without dominating. Root note C2.",
+    usageNotes: "Purposefully designed for background layering, high-pass filtered for non-intrusive presence, low C2 provides bass foundation without muddiness."
+  },
+  {
+    id: 432837,
+    title: "Ambient Strings",
+    previewUrl: "https://cdn.freesound.org/previews/432/432837_preview-hq.mp3",
+    duration: 44.009,
+    license: "CC0",
+    attribution: "thisusernameis",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "ambient",
+      "strings",
+      "synthesized",
+      "mystical",
+      "mystery",
+      "background",
+      "atmospheric"
+    ],
+    description: "Background synth string ambience designed for mystical mysteries. Atmospheric synthesized strings perfect for creating mysterious ambient backgrounds.",
+    usageNotes: "Explicitly designed as background ambience, extended duration ideal for seamless looping, CC0 license requires no attribution, mystical atmosphere adds intrigue."
+  },
+  {
+    id: 261032,
+    title: "Synth String Orchestral Atmosphere",
+    previewUrl: "https://cdn.freesound.org/previews/261/261032_preview-hq.mp3",
+    duration: 100.536,
+    license: "CC BY-NC",
+    attribution: "ERH",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "synthesized",
+      "strings",
+      "orchestral",
+      "atmospheric",
+      "cinematic",
+      "film",
+      "game",
+      "ambient"
+    ],
+    description: "Synth string orchestral sound designed for atmospheric use in films and games. Extended synthesized string pad with cinematic character.",
+    usageNotes: "Extended duration over 1.5 minutes perfect for continuous ambience, cinematic quality suitable for dramatic atmospheres, non-commercial use only."
+  },
+  {
+    id: 657016,
+    title: "Intro Synth Strings",
+    previewUrl: "https://cdn.freesound.org/previews/657/657016_preview-hq.mp3",
+    duration: 15.432,
+    license: "CC0",
+    attribution: "JMARTI_oficial",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "synth",
+      "strings",
+      "flanger",
+      "reverb",
+      "processed",
+      "intro",
+      "atmospheric",
+      "stereo"
+    ],
+    description: "Synth strings with various notes, processed through stereo imaging, dual EQ, flanger, and reverb for atmospheric texture.",
+    usageNotes: "Flanger effect adds movement to the pad, multiple processing creates spacious atmosphere, CC0 license allows unrestricted use."
+  },
+  {
+    id: 204613,
+    title: "String Synth Pad",
+    previewUrl: "https://cdn.freesound.org/previews/204/204613_preview-hq.mp3",
+    duration: 18,
+    license: "CC BY 4.0",
+    attribution: "Mick Gibbs",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "synth",
+      "strings",
+      "bell-curve",
+      "mixcraft",
+      "synthesized",
+      "ambient"
+    ],
+    description: "Synth pad created in Mix Craft and edited in Cool Edit Pro. Features string-like synthesis with bell curve envelope shaping.",
+    usageNotes: "Bell curve envelope provides smooth attack and release, straightforward pad suitable for layering, 18-second duration ideal for looping."
+  },
+  {
+    id: 639568,
+    title: "Beautiful Bed in D Minor",
+    previewUrl: "https://cdn.freesound.org/previews/639/639568_preview-hq.mp3",
+    duration: 88.225,
+    license: "CC BY 4.0",
+    attribution: "Vospi",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "bed",
+      "D-minor",
+      "atmospheric",
+      "mystical",
+      "cinematic",
+      "detuned",
+      "synth",
+      "strings"
+    ],
+    description: "Pad bed atmosphere in D minor, created with synths, strings, delay, distortion, and resampling. Features detuned quality perfect for mystical and cinematic backgrounds.",
+    usageNotes: "Extended duration ideal for scene dressing, detuned character adds depth without prominence, explicitly designed as background atmosphere."
+  },
+  {
+    id: 366013,
+    title: "Simple D Minor Pad/Drone",
+    previewUrl: "https://cdn.freesound.org/previews/366/366013_preview-hq.mp3",
+    duration: 106.989,
+    license: "CC0",
+    attribution: "cabled_mess",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "drone",
+      "D-minor",
+      "waldorf-blofeld",
+      "korg-monotribe",
+      "tape-emulation",
+      "loop",
+      "layered",
+      "minimalistic"
+    ],
+    description: "Simple D minor pad created by layering two minimalistic Waldorf Blofeld patches with faint Korg Monotribe. Features U-He Satin tape emulation for warmth.",
+    usageNotes: "Designed as loop for continuous playback, tape emulation adds analog warmth, minimalistic approach ensures non-intrusive texture, CC0 license allows free use."
+  },
+  {
+    id: 60,
+    title: "Phaedra (Tangerine Dream Inspired)",
+    previewUrl: "https://cdn.freesound.org/previews/60/60_preview-hq.mp3",
+    duration: 18.495,
+    license: "CC BY 4.0",
+    attribution: "fectoper",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "pad",
+      "tangerine-dream",
+      "phaedra",
+      "berlin-school",
+      "1970s",
+      "vintage",
+      "sequencer",
+      "atmospheric"
+    ],
+    description: "A sound that is reminiscent from Tangerine Dream's Phaedra sonorities (1974). Classic Berlin School electronic music style",
+    usageNotes: "Classic 1970s Berlin School electronic atmosphere, attribution required. Short loop capturing vintage analog sequencer aesthetics. Perfect for retro-futuristic or cosmic electronic atmospheres."
+  },
+  {
+    id: 632741,
+    title: "Countdown",
+    previewUrl: "https://cdn.freesound.org/previews/632/632741_preview-hq.mp3",
+    duration: 66.133,
+    license: "CC0",
+    attribution: "xkeril",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "texture",
+      "pulsing",
+      "signal",
+      "strings",
+      "countdown",
+      "hawkshaw-inspired",
+      "retro",
+      "rhythmic"
+    ],
+    description: "Pulsing signal over strings, heavily inspired by Alan Hawkshaw's countdown theme. Electronic texture combining rhythmic pulsing elements with string backing for retro-futuristic atmosphere.",
+    usageNotes: "Extended duration with rhythmic pulse provides movement and tension, CC0 license allows unrestricted use, perfect for sci-fi or retro-tech atmospheres."
+  },
+  {
+    id: 22644,
+    title: "Bow Regain",
+    previewUrl: "https://cdn.freesound.org/previews/226/22644_preview-hq.mp3",
+    duration: 6.628,
+    license: "CC BY 4.0",
+    attribution: "sherlock",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "texture",
+      "frequencies",
+      "synth",
+      "brief",
+      "experimental",
+      "abstract"
+    ],
+    description: 'Electronic texture with "touching frequencies" - cryptic but intriguing sonic element from the synths/electronic category.',
+    usageNotes: "Very brief texture suitable for rapid cycling or accent moments, mysterious sonic character adds intrigue, requires attribution."
+  },
+  {
+    id: 658e3,
+    title: "Synthesizer Effects Texture",
+    previewUrl: "https://cdn.freesound.org/previews/658/658000_preview-hq.mp3",
+    duration: 12.861,
+    license: "CC0",
+    attribution: "gmortizwavs",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "texture",
+      "synthesizer",
+      "vocoder",
+      "effects",
+      "processed",
+      "slide",
+      "atmospheric",
+      "stereo"
+    ],
+    description: "Synthesizer texture featuring E5-G5-B5-E6 note sequence with slide, processed through compression, EQ, filter, vocodex, reverb, and delay for atmospheric effect.",
+    usageNotes: "Complex effects chain creates unique texture, note sequence with slide adds movement, CC0 license requires no attribution, vocoder adds distinctive character."
+  },
+  {
+    id: 655544,
+    title: "Dark Pluck Texture",
+    previewUrl: "https://cdn.freesound.org/previews/655/655544_preview-hq.mp3",
+    duration: 8.575,
+    license: "CC0",
+    attribution: "gmortizwavs",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "texture",
+      "dark",
+      "pluck",
+      "bass",
+      "C1",
+      "distorted",
+      "reverb",
+      "processed",
+      "low-frequency"
+    ],
+    description: "Dark plucked texture on C1 (low bass frequency), heavily processed with stereo imaging, master smoothing, dual low-frequency EQ, quadruple reverb, and distortion.",
+    usageNotes: "Deep bass texture with heavy atmospheric processing, multiple reverbs create spatial depth, CC0 license allows free use, brief duration ideal for dark accents."
+  },
+  {
+    id: 29593,
+    title: "Morphed Choir Atmosphere",
+    previewUrl: "https://cdn.freesound.org/previews/295/29593_preview-hq.mp3",
+    duration: 10.736,
+    license: "CC BY 4.0",
+    attribution: "ERH",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "texture",
+      "morphed",
+      "choir",
+      "voices",
+      "strings",
+      "ethereal",
+      "atmospheric",
+      "plaintive",
+      "background"
+    ],
+    description: "Angelic voices, strings, and synthesized sounds morphed together creating a strange plaintive texture. Designed as ethereal atmosphere/background for music and film.",
+    usageNotes: "Hybrid texture combining organic and synthetic elements, explicitly designed for background use, unique morphed character adds otherworldly atmosphere."
+  },
+  {
+    id: 141675,
+    title: "Cinematic Layer Texture",
+    previewUrl: "https://cdn.freesound.org/previews/141/141675_preview-hq.mp3",
+    duration: 10,
+    license: "CC BY 4.0",
+    attribution: "johnnypanic",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "texture",
+      "cinematic",
+      "strings",
+      "layered",
+      "reverb",
+      "delay",
+      "atmospheric",
+      "processed"
+    ],
+    description: "Layered strings texture with reverb and delay processing. Despite description mentioning bells and birds, actual sound is atmospheric string layers.",
+    usageNotes: "Brief atmospheric texture with processed string layers, suitable for short ambient accents, deamplified for subtle presence."
+  },
+  {
+    id: 614220,
+    title: "Strings Pad with LFO Modulation",
+    previewUrl: "https://cdn.freesound.org/previews/614/614220_preview-hq.mp3",
+    duration: 28.27,
+    license: "CC0",
+    attribution: "martinbeltov",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "electronic",
+      "texture",
+      "strings",
+      "pad",
+      "LFO",
+      "modulation",
+      "filters",
+      "crazy",
+      "movement",
+      "synthesized"
+    ],
+    description: "String pad with intense LFO modulations on filters, creating dynamic movement and texture through synthesis modulation.",
+    usageNotes: "Heavy LFO modulation creates rhythmic movement and interest, filter sweeps add dynamic texture, CC0 license requires no attribution."
+  },
+  {
+    id: 249612,
+    title: "Glowing Pad",
+    previewUrl: "https://cdn.freesound.org/previews/249/249612_preview-hq.mp3",
+    duration: 11.181,
+    license: "CC0",
+    attribution: "staticpony1",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "minimal",
+      "electronic",
+      "texture",
+      "glowing",
+      "pad",
+      "experimental",
+      "ambience",
+      "u-he",
+      "vst",
+      "synth",
+      "atmospheric"
+    ],
+    description: "Experimental glowing pad texture created with U-he VST synthesizer, designed as atmospheric ambience.",
+    usageNotes: "Brief luminous texture ideal for accent moments, experimental nature adds unique character, CC0 license allows free use."
+  },
+  {
+    id: 184194,
+    title: "Resonant Bass Flute and Viola",
+    previewUrl: "https://cdn.freesound.org/previews/184/184194_preview-hq.mp3",
+    duration: 55.205,
+    license: "CC0",
+    attribution: "milo",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "minimal",
+      "sparse",
+      "bass-flute",
+      "viola-da-gamba",
+      "airy",
+      "drone",
+      "pad",
+      "acoustic",
+      "resonant",
+      "atmospheric"
+    ],
+    description: "Airy drone pad created with bass flute and viola da gamba. Resonant acoustic instruments producing minimal, sparse atmospheric texture.",
+    usageNotes: "Extended acoustic drone with natural resonance, sparse instrumentation creates contemplative space, CC0 license allows unrestricted use."
+  },
+  {
+    id: 536287,
+    title: "Water-phoney Sparse",
+    previewUrl: "https://cdn.freesound.org/previews/536/536287_preview-hq.mp3",
+    duration: 87.379,
+    license: "CC BY-NC",
+    attribution: "Timbre",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "minimal",
+      "sparse",
+      "waterphone",
+      "synthesized",
+      "ethereal",
+      "haunting",
+      "atmospheric",
+      "synthetic"
+    ],
+    description: "Synthesized sound somewhat like WaterPhone, creating sparse ethereal textures. Synthetic interpretation of the haunting waterphone instrument.",
+    usageNotes: "Waterphone-like textures create otherworldly atmosphere, explicitly sparse design fits minimal aesthetic, synthetic nature adds modern edge, non-commercial use only."
+  },
+  {
+    id: 343797,
+    title: "Drippy Faucet",
+    previewUrl: "https://cdn.freesound.org/previews/343/343797_preview-hq.mp3",
+    duration: 8.173,
+    license: "CC0",
+    attribution: "zmadyun",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "minimal",
+      "sparse",
+      "water",
+      "drip",
+      "faucet",
+      "rhythmic",
+      "meditative",
+      "percussive",
+      "repetitive"
+    ],
+    description: "Leaky faucet dripping slowly",
+    usageNotes: "Short loop of water drips creates rhythmic minimal texture, no attribution required. Perfect for meditative sparse soundscapes or rhythmic minimal layers. Loop for extended use."
+  },
+  {
+    id: 400601,
+    title: "Lowkey String Loop",
+    previewUrl: "https://cdn.freesound.org/previews/400/400601_preview-hq.mp3",
+    duration: 16,
+    license: "CC0",
+    attribution: "visual",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "minimal",
+      "contemplative",
+      "strings",
+      "loop",
+      "delay",
+      "120bpm",
+      "lowkey",
+      "understated",
+      "ambient"
+    ],
+    description: "Slow, understated string loop with delay effect at 120 BPM. Minimal and contemplative texture perfect for reflective atmospheres.",
+    usageNotes: "Short loop ideal for continuous playback, delay effect adds spatial depth, tempo-synced at 120 BPM, CC0 license requires no attribution."
+  },
+  {
+    id: 646300,
+    title: "Balalaika Swell",
+    previewUrl: "https://cdn.freesound.org/previews/646/646300_preview-hq.mp3",
+    duration: 20.062,
+    license: "CC BY 4.0",
+    attribution: "zacnie",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "minimal",
+      "contemplative",
+      "balalaika",
+      "swell",
+      "dreamy",
+      "orchestral",
+      "ambient",
+      "ethnic",
+      "strings"
+    ],
+    description: "Dreamy orchestral swell featuring balalaikas, designed for minimalist ambient use. Gentle dynamics with ethnic string character.",
+    usageNotes: "Unique ethnic string texture adds distinctive character, gradual swell perfect for contemplative moments, described as ideal for minimalist ambient."
+  },
+  {
+    id: 120931,
+    title: "Accordion Pad C Minor",
+    previewUrl: "https://cdn.freesound.org/previews/120/120931_preview-hq.mp3",
+    duration: 21.412,
+    license: "CC BY 4.0",
+    attribution: "juskiddink",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "minimal",
+      "contemplative",
+      "accordion",
+      "pad",
+      "C-minor",
+      "filter-modulation",
+      "organic",
+      "nostalgic",
+      "hybrid"
+    ],
+    description: "Accordion C minor chord with filter modulation effects. Sustained pad texture with organic accordion character enhanced by electronic processing.",
+    usageNotes: "Accordion brings warm organic texture, filter modulation adds subtle movement, C minor tonality for melancholic atmosphere, unique instrumental choice."
+  },
+  {
+    id: 805342,
+    title: "Heartbeat of Venus",
+    previewUrl: "https://cdn.freesound.org/previews/805/805342_preview-hq.mp3",
+    duration: 168.75,
+    license: "CC BY 4.0",
+    attribution: "Dave_Girtsman",
+    fadeIn: 2,
+    fadeOut: 3,
+    enabled: false,
+    tags: [
+      "minimal",
+      "contemplative",
+      "ethereal",
+      "hypnotic",
+      "dreamlike",
+      "weightless",
+      "melancholic",
+      "atmospheric",
+      "reverb"
+    ],
+    description: "Drifts between dream and memory in slow, hypnotic waves. Ethereal textures and reverb-soaked atmospheres create weightlessness with subtle melancholic undertones. Minimal but emotionally resonant.",
+    usageNotes: "Extended duration perfect for introspective moments, hypnotic waves provide gentle movement, minimal approach ensures non-intrusive presence, emotionally evocative without being prominent."
+  }
+];
+
+// src/main.ts
 var logger99 = getLogger("main");
-var SonigraphPlugin = class extends import_obsidian35.Plugin {
+var SonigraphPlugin = class extends import_obsidian36.Plugin {
   constructor() {
     super(...arguments);
     this.audioEngine = null;
@@ -100951,35 +101028,35 @@ var SonigraphPlugin = class extends import_obsidian35.Plugin {
       VIEW_TYPE_LOCAL_SOUNDSCAPE,
       (leaf) => new LocalSoundscapeView(leaf, this)
     );
-    this.addRibbonIcon("chart-network", "Sonigraph: Open Sonic Graph", () => {
+    this.addRibbonIcon("chart-network", "Sonigraph: Open sonic graph", () => {
       void this.activateSonicGraphView();
     });
     this.addCommand({
       id: "open-sonic-graph-view",
-      name: "Open Sonic Graph",
+      name: "Open sonic graph",
       callback: () => {
         void this.activateSonicGraphView();
       }
     });
     this.addCommand({
       id: "open-local-soundscape",
-      name: "Open Local Soundscape",
+      name: "Open local soundscape",
       callback: () => {
         void this.activateLocalSoundscapeView();
       }
     });
     this.addCommand({
       id: "open-control-panel",
-      name: "Open Control Panel",
+      name: "Open control panel",
       callback: () => {
         void this.openControlPanel();
       }
     });
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
-        if (file instanceof import_obsidian35.TFile) {
+        if (file instanceof import_obsidian36.TFile) {
           menu.addItem((item) => {
-            item.setTitle("Open in Local Soundscape").setIcon("radio-tower").setSection("action").onClick(async () => {
+            item.setTitle("Open in local soundscape").setIcon("radio-tower").setSection("action").onClick(async () => {
               await this.activateLocalSoundscapeViewForFile(file);
             });
           });
@@ -101689,8 +101766,7 @@ var SonigraphPlugin = class extends import_obsidian35.Plugin {
    * Get curated Freesound samples for initial library
    */
   getCuratedSamples() {
-    const curatedSamples = require_curated_samples_transformed();
-    return curatedSamples;
+    return curated_samples_transformed_default;
   }
   async saveSettings() {
     await this.saveData(this.settings);
