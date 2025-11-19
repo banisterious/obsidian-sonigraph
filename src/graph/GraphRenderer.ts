@@ -367,7 +367,7 @@ export class GraphRenderer {
 
     this.simulation
       .nodes(visibleNodes);
-    
+
     (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)
       ?.links(visibleLinks);
 
@@ -975,12 +975,12 @@ export class GraphRenderer {
         }))
       .force('center', d3.forceCenter<GraphNode>(this.config.width / 2, this.config.height / 2)
         .strength(this.forceConfig.centerStrength));
-    
+
     if (this.simulation.force('link')) {
       (this.simulation.force('link') as d3.ForceLink<GraphNode, GraphLink>)
         ?.strength(this.forceConfig.linkStrength);
     }
-    
+
     this.simulation.alpha(0.3).restart();
     
     logger.debug('renderer', 'Force configuration updated', { forceConfig: this.forceConfig });

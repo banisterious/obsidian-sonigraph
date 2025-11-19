@@ -771,7 +771,7 @@ class TagEditorModal extends Modal {
 
 		if (this.currentTags.length === 0) {
 			this.tagListEl.createEl('p', {
-				text: 'No tags yet. add some above.',
+				text: 'No tags yet. Add some above.',
 				cls: 'sonigraph-tag-editor-empty'
 			});
 			return;

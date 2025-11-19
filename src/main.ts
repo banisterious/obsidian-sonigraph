@@ -50,7 +50,7 @@ export default class SonigraphPlugin extends Plugin {
 		);
 
 		// Add ribbon icon - opens Sonic Graph view
-		this.addRibbonIcon('chart-network', 'Sonigraph: Open sonic graph', () => {
+		this.addRibbonIcon('chart-network', 'Sonigraph: Open Sonic Graph', () => {
 			void this.activateSonicGraphView();
 		});
 
