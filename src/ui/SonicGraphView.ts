@@ -1606,10 +1606,9 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             // Show all nodes
             if (this.graphRenderer) {
                 // Get all node IDs to show them all
-                void this.graphDataExtractor.extractGraphData().then(graphData => {
-                    const allNodeIds = new Set(graphData.nodes.map(node => node.id));
-                    this.graphRenderer?.updateVisibleNodes(allNodeIds);
-                });
+                const graphData = this.graphDataExtractor.extractGraphData();
+                const allNodeIds = new Set(graphData.nodes.map(node => node.id));
+                this.graphRenderer?.updateVisibleNodes(allNodeIds);
             }
         }
     }
