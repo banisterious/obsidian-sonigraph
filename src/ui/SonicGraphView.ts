@@ -1441,7 +1441,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             
             // Initialize temporal animator if not already done
             if (!this.temporalAnimator) {
-                await this.initializeTemporalAnimator();
+                this.initializeTemporalAnimator();
             }
             
             if (!this.temporalAnimator) {
@@ -1525,7 +1525,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         if (!this.temporalAnimator) {
             void logger.debug('ui', 'Initializing temporal animator for export');
             try {
-                await this.initializeTemporalAnimator();
+                this.initializeTemporalAnimator();
             } catch (error) {
                 void logger.error('Failed to initialize temporal animator for export', error);
                 new Notice('Failed to initialize timeline for export. Please try switching to Timeline View first.');

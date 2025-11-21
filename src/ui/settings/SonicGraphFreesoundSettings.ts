@@ -93,39 +93,43 @@ export class SonicGraphFreesoundSettings {
 			.addButton(button => button
 				.setButtonText('Test')
 				.setTooltip('Test API key connection')
-				.onClick(() => void (async () => {
-					const apiKey = this.plugin.settings.freesoundApiKey;
-					if (!apiKey || apiKey.trim().length === 0) {
-						void button.setButtonText('No key');
-						void setTimeout(() => button.setButtonText('Test'), 2000);
-						return;
-					}
-
-					void button.setButtonText('Testing...');
-					void button.setDisabled(true);
-
-					try {
-						// Use FreesoundAuthManager to test connection (same as original working implementation)
-						const { FreesoundAuthManager } = await import('../../audio/freesound/FreesoundAuthManager');
-						const authManager = new FreesoundAuthManager({ apiKey: apiKey.trim() });
-						const result = await authManager.testConnection();
-
-						if (result.success) {
-							void button.setButtonText('✓ Valid');
-							const username = result.username ? ` (${result.username})` : '';
-							logger.info('freesound-settings', `API key valid${username}`);
-						} else {
-							void button.setButtonText('✗ Invalid');
-							logger.warn('freesound-settings', `API test failed: ${result.message}`);
+				.onClick(() => {
+					(async () => {
+						const apiKey = this.plugin.settings.freesoundApiKey;
+						if (!apiKey || apiKey.trim().length === 0) {
+							void button.setButtonText('No key');
+							void setTimeout(() => button.setButtonText('Test'), 2000);
+							return;
 						}
-					} catch (error) {
-						void button.setButtonText('✗ Failed');
-						logger.error('freesound-settings', `API test error: ${error.message}`);
-					} finally {
-						void button.setDisabled(false);
-						void setTimeout(() => button.setButtonText('Test'), 3000);
-					}
-				})())
+
+						void button.setButtonText('Testing...');
+						void button.setDisabled(true);
+
+						try {
+							// Use FreesoundAuthManager to test connection (same as original working implementation)
+							const { FreesoundAuthManager } = await import('../../audio/freesound/FreesoundAuthManager');
+							const authManager = new FreesoundAuthManager({ apiKey: apiKey.trim() });
+							const result = await authManager.testConnection();
+
+							if (result.success) {
+								void button.setButtonText('✓ Valid');
+								const username = result.username ? ` (${result.username})` : '';
+								logger.info('freesound-settings', `API key valid${username}`);
+							} else {
+								void button.setButtonText('✗ Invalid');
+								logger.warn('freesound-settings', `API test failed: ${result.message}`);
+							}
+						} catch (error) {
+							void button.setButtonText('✗ Failed');
+							logger.error('freesound-settings', `API test error: ${error.message}`);
+						} finally {
+							void button.setDisabled(false);
+							void setTimeout(() => button.setButtonText('Test'), 3000);
+						}
+					})().catch(error => {
+						logger.error('freesound-settings', `Unhandled error in API test: ${error}`);
+					});
+				})
 			);
 
 		// Enable Freesound samples toggle
@@ -212,11 +216,11 @@ export class SonicGraphFreesoundSettings {
 			.setName('Cache strategy')
 			.setDesc('Algorithm for managing cached samples')
 			.addDropdown(dropdown => dropdown
-				.addOption('lru', 'lru - least recently used')
-				.addOption('lfu', 'lfu - least frequently used')
-				.addOption('fifo', 'fifo - first in first out')
-				.addOption('adaptive', 'adaptive - smart balancing')
-				.addOption('predictive', 'predictive - pattern based')
+				.addOption('lru', 'Lru - least recently used')
+				.addOption('lfu', 'Lfu - least frequently used')
+				.addOption('fifo', 'Fifo - first in first out')
+				.addOption('adaptive', 'Adaptive - smart balancing')
+				.addOption('predictive', 'Predictive - pattern based')
 				.setValue(this.plugin.settings.freesoundCacheStrategy || 'adaptive')
 				.onChange(async (value: 'lru' | 'lfu' | 'fifo' | 'adaptive' | 'predictive') => {
 					this.plugin.settings.freesoundCacheStrategy = value;

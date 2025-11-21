@@ -116,7 +116,7 @@ export class MusicalGenreEngine {
       await start();
       
       // Create synthesis chain for current genre
-      await this.createSynthesisChain();
+      this.createSynthesisChain();
       
       // Setup effects chain
       void this.createEffectsChain();
@@ -355,7 +355,7 @@ export class MusicalGenreEngine {
   
   // === PRIVATE METHODS ===
   
-  private async createSynthesisChain(): Promise<void> {
+  private createSynthesisChain(): void {
     const genreConfig = this.getGenreConfiguration();
     
     // Create primary synth

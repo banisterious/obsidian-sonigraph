@@ -203,14 +203,14 @@ export class SonicGraphAdvancedSettings {
 			.setName('Musical scale')
 			.setDesc('Constrain generated notes to a specific scale')
 			.addDropdown(dropdown => dropdown
-				.addOption('major', 'major - bright, happy')
-				.addOption('minor', 'minor - dark, melancholic')
-				.addOption('dorian', 'dorian - modal, jazzy')
-				.addOption('phrygian', 'phrygian - spanish, exotic')
-				.addOption('lydian', 'lydian - dreamy, ethereal')
-				.addOption('mixolydian', 'mixolydian - folk, bluesy')
-				.addOption('pentatonic', 'pentatonic - asian, simple')
-				.addOption('chromatic', 'chromatic - all notes')
+				.addOption('major', 'Major - bright, happy')
+				.addOption('minor', 'Minor - dark, melancholic')
+				.addOption('dorian', 'Dorian - modal, jazzy')
+				.addOption('phrygian', 'Phrygian - spanish, exotic')
+				.addOption('lydian', 'Lydian - dreamy, ethereal')
+				.addOption('mixolydian', 'Mixolydian - folk, bluesy')
+				.addOption('pentatonic', 'Pentatonic - asian, simple')
+				.addOption('chromatic', 'Chromatic - all notes')
 				.setValue(this.plugin.settings.audioEnhancement?.musicalTheory?.scale || 'major')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.audioEnhancement?.musicalTheory) return;
@@ -431,9 +431,9 @@ export class SonicGraphAdvancedSettings {
 				.setName('Orchestration mode')
 				.setDesc('How hubs interact with other nodes')
 				.addDropdown(dropdown => dropdown
-					.addOption('hub-led', 'hub-led - hubs dominate')
-					.addOption('balanced', 'balanced - moderate emphasis')
-					.addOption('democratic', 'democratic - subtle emphasis')
+					.addOption('hub-led', 'Hub-led - hubs dominate')
+					.addOption('balanced', 'Balanced - moderate emphasis')
+					.addOption('democratic', 'Democratic - subtle emphasis')
 					.setValue(this.plugin.settings.hubOrchestration?.orchestrationMode || 'balanced')
 					.onChange(async (value) => {
 						if (this.plugin.settings.hubOrchestration) {
@@ -809,10 +809,10 @@ export class SonicGraphAdvancedSettings {
 				.setName('Panning mode')
 				.setDesc('How node positions map to stereo panning')
 				.addDropdown(dropdown => dropdown
-					.addOption('geometric', 'geometric - based on X position')
-					.addOption('cluster-based', 'cluster-based - by cluster')
-					.addOption('folder-based', 'folder-based - by folder')
-					.addOption('hybrid', 'hybrid - combined approach')
+					.addOption('geometric', 'Geometric - based on X position')
+					.addOption('cluster-based', 'Cluster-based - by cluster')
+					.addOption('folder-based', 'Folder-based - by folder')
+					.addOption('hybrid', 'Hybrid - combined approach')
 					.setValue(this.plugin.settings.spatialAudio?.mode || 'hybrid')
 					.onChange(async (value: string) => {
 						if (this.plugin.settings.spatialAudio) {

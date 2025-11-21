@@ -507,14 +507,14 @@ export class SonicGraphLayersSettings {
 			.setName('Continuous layer scale')
 			.setDesc('Scale for ambient, rhythmic, and harmonic layers (independent of node sonification)')
 			.addDropdown(dropdown => dropdown
-				.addOption('major', 'major - bright, happy')
-				.addOption('minor', 'minor - dark, melancholic')
-				.addOption('dorian', 'dorian - modal, jazzy')
-				.addOption('phrygian', 'phrygian - spanish, exotic')
-				.addOption('lydian', 'lydian - dreamy, ethereal')
-				.addOption('mixolydian', 'mixolydian - folk, bluesy')
-				.addOption('pentatonic', 'pentatonic - asian, simple')
-				.addOption('chromatic', 'chromatic - all notes')
+				.addOption('major', 'Major - bright, happy')
+				.addOption('minor', 'Minor - dark, melancholic')
+				.addOption('dorian', 'Dorian - modal, jazzy')
+				.addOption('phrygian', 'Phrygian - spanish, exotic')
+				.addOption('lydian', 'Lydian - dreamy, ethereal')
+				.addOption('mixolydian', 'Mixolydian - folk, bluesy')
+				.addOption('pentatonic', 'Pentatonic - asian, simple')
+				.addOption('chromatic', 'Chromatic - all notes')
 				.setValue(this.plugin.settings.audioEnhancement?.continuousLayers?.scale || 'major')
 				.onChange(async (value) => {
 					if (!this.plugin.settings.audioEnhancement?.continuousLayers) return;

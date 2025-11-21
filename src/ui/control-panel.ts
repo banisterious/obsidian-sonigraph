@@ -2773,7 +2773,7 @@ export class MaterialControlPanelModal extends Modal {
 				const filesStat = statsContainer.querySelector('.osp-stat-compact:first-child') as HTMLElement | null;
 				const linksStat = statsContainer.querySelector('.osp-stat-compact:last-child') as HTMLElement | null;
 				if (filesStat && linksStat) {
-					await this.updateSonicGraphStats(filesStat, linksStat);
+					this.updateSonicGraphStats(filesStat, linksStat);
 				}
 			}
 
@@ -2791,7 +2791,7 @@ export class MaterialControlPanelModal extends Modal {
 					loadingDiv.textContent = 'Updating graph...';
 
 					// Reinitialize with new exclusions
-					await this.initializeGraphPreview(graphPreviewContainer, loadingDiv);
+					this.initializeGraphPreview(graphPreviewContainer, loadingDiv);
 				}
 			}
 		} catch (error) {
