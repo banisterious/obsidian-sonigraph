@@ -12,13 +12,16 @@ import { ItemView, WorkspaceLeaf, TFile, Notice, Setting } from 'obsidian';
 import { getLogger } from '../logging';
 import {
 	LocalSoundscapeExtractor,
-	LocalSoundscapeData
+	LocalSoundscapeData,
+	LocalSoundscapeNode
 } from '../graph/LocalSoundscapeExtractor';
 import { LocalSoundscapeRenderer, RendererConfig } from '../graph/LocalSoundscapeRenderer';
 import { ForceDirectedLayout } from '../graph/ForceDirectedLayout';
 import { DepthBasedMapper, DepthMapping } from '../audio/mapping/DepthBasedMapper';
 import { NoteCentricMapper, NoteCentricMapping } from '../audio/mapping/NoteCentricMapper';
 import { NoteCentricPlayer } from '../audio/playback/NoteCentricPlayer';
+import { ContinuousLayerManager } from '../audio/layers/ContinuousLayerManager';
+import { NoteTriggeredData } from '../audio/playback-events';
 import { LocalSoundscapeFilterModal, LocalSoundscapeFilters } from './LocalSoundscapeFilterModal';
 import { NoteVisualizationManager, VisualizationMode } from '../visualization/NoteVisualizationManager';
 import { createLucideIcon } from './lucide-icons';
@@ -52,7 +55,7 @@ export class LocalSoundscapeView extends ItemView {
 	private noteCentricPlayer: NoteCentricPlayer | null = null;
 	private currentNoteCentricMapping: NoteCentricMapping | null = null;
 	private currentMappings: DepthMapping[] = [];
-	private continuousLayerManager: unknown = null; // ContinuousLayerManager (lazily loaded)
+	private continuousLayerManager: ContinuousLayerManager | null = null;
 
 	// Audio state
 	private isPlaying: boolean = false;
@@ -89,7 +92,7 @@ export class LocalSoundscapeView extends ItemView {
 	private layoutType: 'radial' | 'force' = 'force';
 
 	// UI containers
-	private containerEl: HTMLElement;
+	// Note: containerEl is inherited from ItemView as a public property
 	private headerContainer: HTMLElement;
 	private graphContainer: HTMLElement;
 	private sidebarContainer: HTMLElement;
@@ -158,7 +161,7 @@ export class LocalSoundscapeView extends ItemView {
 		return 'radio-tower';
 	}
 
-	onOpen(): void {
+	async onOpen(): Promise<void> {
 		void logger.info('view-open', 'Opening Local Soundscape view');
 
 		const container = this.containerEl;
@@ -612,7 +615,7 @@ export class LocalSoundscapeView extends ItemView {
 		});
 		linkButton.addEventListener('click', () => {
 			// Open Control Center modal via ribbon icon command
-			this.plugin.openControlCenter();
+			void this.openControlCenter();
 		});
 
 		void logger.debug('settings-panel-created', 'Settings panel populated');
@@ -975,7 +978,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Regenerate mappings if we have graph data
 		if (this.graphData) {
-			await this.generateMappingsFromGraph();
+			await this.remapAndPlay();
 		}
 
 		new Notice(`Scale quantization ${enabled ? 'enabled' : 'disabled'}`);
@@ -1005,7 +1008,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Regenerate mappings if we have graph data
 		if (this.graphData) {
-			await this.generateMappingsFromGraph();
+			await this.remapAndPlay();
 		}
 
 		const newConfig = this.depthMapper.getConfig();
@@ -1035,7 +1038,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Regenerate mappings if we have graph data
 		if (this.graphData) {
-			await this.generateMappingsFromGraph();
+			await this.remapAndPlay();
 		}
 
 		logger.debug('update-quantization-strength', `Quantization strength updated to ${strength}`);
@@ -1060,7 +1063,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Regenerate mappings if we have graph data
 		if (this.graphData) {
-			await this.generateMappingsFromGraph();
+			await this.remapAndPlay();
 		}
 
 		new Notice(`Adaptive pitch ranges ${enabled ? 'enabled' : 'disabled'}`);
@@ -1086,7 +1089,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Regenerate mappings if we have graph data
 		if (this.graphData) {
-			await this.generateMappingsFromGraph();
+			await this.remapAndPlay();
 		}
 
 		new Notice(`Chord voicing ${enabled ? 'enabled' : 'disabled'}`);
@@ -1112,7 +1115,7 @@ export class LocalSoundscapeView extends ItemView {
 
 		// Regenerate mappings if we have graph data
 		if (this.graphData) {
-			await this.generateMappingsFromGraph();
+			await this.remapAndPlay();
 		}
 
 		logger.debug('update-voicing-density', `Voicing density updated to ${density}`);
@@ -1148,7 +1151,7 @@ export class LocalSoundscapeView extends ItemView {
 				const masterVolume = this.plugin.audioEngine.getMasterVolume();
 
 				if (audioContext && masterVolume) {
-					this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+					this.visualizationManager.connectSpectrumToAudio(audioContext.rawContext as AudioContext, masterVolume.input as unknown as AudioNode);
 					void logger.info('init-visualization', 'Connected spectrum analyzer to audio');
 				}
 			}
@@ -1209,7 +1212,7 @@ export class LocalSoundscapeView extends ItemView {
 				const masterVolume = this.plugin.audioEngine.getMasterVolume();
 
 				if (audioContext && masterVolume) {
-					this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+					this.visualizationManager.connectSpectrumToAudio(audioContext.rawContext as AudioContext, masterVolume.input as unknown as AudioNode);
 					void logger.info('update-visualization', 'Connected spectrum analyzer for spectrum mode');
 				}
 			}
@@ -1235,7 +1238,9 @@ export class LocalSoundscapeView extends ItemView {
 		}
 
 		// Listen to note events from audio engine
-		this.plugin.audioEngine.on('note-triggered', (noteData: unknown) => {
+		this.plugin.audioEngine.on('note-triggered', (noteData?: NoteTriggeredData) => {
+			if (!noteData) return;
+
 			logger.debug('viz-note-received', 'Received note-triggered event', {
 				pitch: noteData.pitch,
 				layer: noteData.layer,
@@ -1249,7 +1254,7 @@ export class LocalSoundscapeView extends ItemView {
 					pitch: noteData.pitch,
 					velocity: noteData.velocity || 0.5,
 					duration: noteData.duration || 1.0,
-					layer: noteData.layer || 'harmonic',
+					layer: noteData.layer,
 					timestamp: noteData.timestamp,
 					nodeId: noteData.nodeId,
 					isPlaying: true
@@ -2858,7 +2863,7 @@ export class LocalSoundscapeView extends ItemView {
 	/**
 	 * Get current view state for persistence
 	 */
-	getState(): LocalSoundscapeViewState {
+	getState(): Record<string, unknown> {
 		return {
 			centerFilePath: this.centerFile?.path || null,
 			currentDepth: this.currentDepth,

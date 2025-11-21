@@ -10,16 +10,52 @@ import { MusicalMapper } from './graph/musical-mapper';
 import { getLogger, LoggerFactory } from './logging';
 import { initializeWhaleIntegration, getWhaleIntegration } from './external/whale-integration';
 import { FreesoundSampleLoader } from './audio/layers/FreesoundSampleLoader';
-import curatedSamples from '../curated-samples-transformed.json';
+import * as curatedSamplesModule from '../curated-samples-transformed.json';
+const curatedSamples = curatedSamplesModule as unknown as Array<{
+	id: number;
+	title: string;
+	previewUrl: string;
+	duration: number;
+	license: string;
+	attribution: string;
+	fadeIn: number;
+	fadeOut: number;
+	enabled?: boolean;
+}>;
 
 const logger = getLogger('main');
+
+/**
+ * Extended graph data with musical mappings and sequence
+ */
+interface ProcessedGraphData {
+	graphData: import('./graph/types').GraphData;
+	stats: import('./graph/types').GraphStats;
+	mappings: import('./graph/types').MusicalMapping[];
+	sequence: import('./graph/types').MusicalMapping[];
+}
+
+/**
+ * Freesound sample type matching the settings interface
+ */
+type FreesoundSample = {
+	id: number;
+	title: string;
+	previewUrl: string;
+	duration: number;
+	license: string;
+	attribution: string;
+	fadeIn: number;
+	fadeOut: number;
+	enabled?: boolean;
+};
 
 export default class SonigraphPlugin extends Plugin {
 	settings: SonigraphSettings;
 	public audioEngine: AudioEngine | null = null;
 	private graphParser: GraphParser | null = null;
 	public musicalMapper: MusicalMapper | null = null;
-	private currentGraphData: import('./graph/types').GraphData | null = null;
+	private currentGraphData: ProcessedGraphData | null = null;
 
 	async onload() {
 		void logger.info('lifecycle', 'Sonigraph plugin loading...');
@@ -502,8 +538,8 @@ export default class SonigraphPlugin extends Plugin {
 				hasGraphData: !!this.currentGraphData,
 				lastProcessed: this.currentGraphData ? new Date().toISOString() : null
 			},
-			audio: audioStatus,
-			graph: graphStatus
+			audio: audioStatus as Record<string, unknown>,
+			graph: graphStatus as Record<string, unknown>
 		};
 	}
 
@@ -574,14 +610,14 @@ export default class SonigraphPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		const data = await this.loadData();
-		
+		const data = await this.loadData() as Record<string, unknown> | null;
+
 		// Issue #006 Fix: Deep merge to preserve user-enabled instrument states
 		this.settings = this.deepMergeSettings(DEFAULT_SETTINGS, data);
-		
+
 		// Migrate old settings structure if needed
 		void this.migrateSettings();
-		
+
 		logger.debug('settings', 'Settings loaded', { settings: this.settings });
 	}
 
@@ -589,22 +625,23 @@ export default class SonigraphPlugin extends Plugin {
 	 * Deep merge settings to preserve user configurations while adding new defaults
 	 * Issue #006: Prevents corruption of user-enabled instrument states
 	 */
-	private deepMergeSettings(defaults: SonigraphSettings, saved: Record<string, unknown>): SonigraphSettings {
+	private deepMergeSettings(defaults: SonigraphSettings, saved: Record<string, unknown> | null): SonigraphSettings {
 		// Start with a copy of defaults
 		const merged = JSON.parse(JSON.stringify(defaults)) as SonigraphSettings;
-		
+
 		if (!saved) return merged;
-		
+
 		// Merge top-level properties
 		Object.keys(saved).forEach(key => {
 			if (key === 'instruments' && saved.instruments) {
 				// Special handling for instruments to preserve enabled states
-				Object.keys(saved.instruments).forEach(instrumentKey => {
+				const savedInstruments = saved.instruments as Record<string, Record<string, unknown>>;
+				Object.keys(savedInstruments).forEach(instrumentKey => {
 					if (merged.instruments[instrumentKey as keyof typeof merged.instruments]) {
 						// Preserve user's enabled state and other user settings
-						const userInstrument = saved.instruments[instrumentKey];
+						const userInstrument = savedInstruments[instrumentKey];
 						const defaultInstrument = merged.instruments[instrumentKey as keyof typeof merged.instruments];
-						
+
 						// Merge instrument settings, giving priority to saved enabled state
 						merged.instruments[instrumentKey as keyof typeof merged.instruments] = {
 							...defaultInstrument,
@@ -612,10 +649,10 @@ export default class SonigraphPlugin extends Plugin {
 							// Ensure effects structure is preserved
 							effects: {
 								...defaultInstrument.effects,
-								...(userInstrument.effects || {})
+								...(userInstrument.effects as Record<string, unknown> || {})
 							}
-						};
-						
+						} as typeof defaultInstrument;
+
 						logger.debug('settings-merge', `Merged instrument ${instrumentKey}`, {
 							defaultEnabled: defaultInstrument.enabled,
 							userEnabled: userInstrument.enabled,
@@ -625,10 +662,10 @@ export default class SonigraphPlugin extends Plugin {
 				});
 			} else if (key !== 'instruments') {
 				// For non-instrument settings, use saved value
-				(merged as Record<string, unknown>)[key] = saved[key];
+				(merged as unknown as Record<string, unknown>)[key] = saved[key];
 			}
 		});
-		
+
 		return merged;
 	}
 
@@ -640,65 +677,68 @@ export default class SonigraphPlugin extends Plugin {
 		let migrationNeeded = false;
 
 		// Check if we have old global effects structure
-		const settingsRecord = this.settings as Record<string, unknown>;
+		const settingsRecord = this.settings as unknown as Record<string, unknown>;
 		const effects = settingsRecord.effects as Record<string, unknown> | undefined;
-		if ('effects' in this.settings && !effects?.piano) {
+		if ('effects' in this.settings && effects && !('piano' in effects)) {
 			void logger.info('settings', 'Migrating old effects structure to per-instrument structure');
 			migrationNeeded = true;
 
-			const oldEffects = (settingsRecord.effects as Record<string, unknown>) || {};
+			const oldEffects = effects;
+			const oldReverb = oldEffects.reverb as { enabled?: boolean; wetness?: number } | undefined;
+			const oldChorus = oldEffects.chorus as { enabled?: boolean } | undefined;
+			const oldFilter = oldEffects.filter as { enabled?: boolean; frequency?: number; Q?: number; type?: string } | undefined;
 
 			// Remove old global effects
 			delete settingsRecord.effects;
-			
+
 			// Ensure instruments have effect settings
 			if (!this.settings.instruments.piano.effects) {
 				this.settings.instruments.piano.effects = {
-					reverb: { 
-						enabled: oldEffects?.reverb?.enabled || true, 
-						params: { decay: 1.8, preDelay: 0.02, wet: oldEffects?.reverb?.wetness || 0.25 }
+					reverb: {
+						enabled: oldReverb?.enabled ?? true,
+						params: { decay: 1.8, preDelay: 0.02, wet: oldReverb?.wetness ?? 0.25 }
 					},
-					chorus: { 
-						enabled: false, 
+					chorus: {
+						enabled: false,
 						params: { frequency: 0.8, depth: 0.5, delayTime: 4.0, feedback: 0.05 }
 					},
-					filter: { 
-						enabled: false, 
+					filter: {
+						enabled: false,
 						params: { frequency: 3500, Q: 0.8, type: 'lowpass' }
 					}
 				};
 			}
-			
+
 			if (!this.settings.instruments.organ.effects) {
 				this.settings.instruments.organ.effects = {
-					reverb: { 
-						enabled: oldEffects?.reverb?.enabled || true, 
-						params: { decay: 2.2, preDelay: 0.03, wet: oldEffects?.reverb?.wetness || 0.35 }
+					reverb: {
+						enabled: oldReverb?.enabled ?? true,
+						params: { decay: 2.2, preDelay: 0.03, wet: oldReverb?.wetness ?? 0.35 }
 					},
-					chorus: { 
-						enabled: oldEffects?.chorus?.enabled || true, 
+					chorus: {
+						enabled: oldChorus?.enabled ?? true,
 						params: { frequency: 0.8, depth: 0.5, delayTime: 4.0, feedback: 0.05 }
 					},
-					filter: { 
-						enabled: false, 
+					filter: {
+						enabled: false,
 						params: { frequency: 4000, Q: 0.6, type: 'lowpass' }
 					}
 				};
 			}
-			
+
 			if (!this.settings.instruments.strings.effects) {
 				this.settings.instruments.strings.effects = {
-					reverb: { 
-						enabled: oldEffects?.reverb?.enabled || true, 
-						params: { decay: 2.8, preDelay: 0.04, wet: oldEffects?.reverb?.wetness || 0.45 }
+					reverb: {
+						enabled: oldReverb?.enabled ?? true,
+						params: { decay: 2.8, preDelay: 0.04, wet: oldReverb?.wetness ?? 0.45 }
 					},
-					chorus: { 
-						enabled: false, 
+					chorus: {
+						enabled: false,
 						params: { frequency: 0.6, depth: 0.3, delayTime: 3.0, feedback: 0.03 }
 					},
-					filter: { 
-						enabled: oldEffects?.filter?.enabled || true, 
-						params: { frequency: oldEffects?.filter?.frequency || 3500, Q: oldEffects?.filter?.Q || 0.8, type: oldEffects?.filter?.type || 'lowpass' }
+					filter: {
+						enabled: oldFilter?.enabled ?? true,
+						params: { frequency: oldFilter?.frequency ?? 3500, Q: oldFilter?.Q ?? 0.8, type: (oldFilter?.type as 'lowpass' | 'highpass' | 'bandpass') ?? 'lowpass' }
 					}
 				};
 			}
@@ -901,14 +941,14 @@ export default class SonigraphPlugin extends Plugin {
 	 * Part of Option 3 refactor to remove genre organization
 	 */
 	private flattenGenreBasedSamples(): void {
-		const oldFormat = this.settings.freesoundSamples as Record<string, unknown[]>;
-		const flatArray: unknown[] = [];
+		const oldFormat = this.settings.freesoundSamples as unknown as Record<string, FreesoundSample[]>;
+		const flatArray: FreesoundSample[] = [];
 
 		// Iterate through each genre and collect all samples
 		Object.keys(oldFormat).forEach(genre => {
 			const samples = oldFormat[genre];
 			if (Array.isArray(samples)) {
-				void flatArray.push(...samples);
+				flatArray.push(...samples);
 			}
 		});
 
@@ -951,12 +991,15 @@ export default class SonigraphPlugin extends Plugin {
 		logger.info('migration', `Starting placeholder migration for ${allGenres.length} genres`);
 		logger.info('migration', 'Genres: ' + allGenres.map(g => `${g.genre}(${g.sampleCount})`).join(', '));
 
-		// Initialize freesoundSamples if it doesn't exist
+		// Initialize freesoundSamples if it doesn't exist (as object for old format)
 		if (!this.settings.freesoundSamples) {
-			this.settings.freesoundSamples = {};
+			this.settings.freesoundSamples = [] as FreesoundSample[];
 		}
 
 		let totalAdded = 0;
+
+		// Access as old genre-based format during migration
+		const samplesAsGenreMap = this.settings.freesoundSamples as unknown as Record<string, FreesoundSample[]>;
 
 		// Add all placeholder samples as disabled (merge with existing user samples)
 		allGenres.forEach(({ genre, sampleCount }) => {
@@ -966,24 +1009,24 @@ export default class SonigraphPlugin extends Plugin {
 
 			if (genreSamples && genreSamples.length > 0) {
 				// Get existing user samples for this genre
-				const existingUserSamples = this.settings.freesoundSamples[genre] || [];
+				const existingUserSamples = samplesAsGenreMap[genre] || [];
 
 				// Set enabled: false for all placeholder samples
-				const disabledPlaceholders = genreSamples.map(sample => ({
+				const disabledPlaceholders = genreSamples.map((sample: FreesoundSample) => ({
 					...sample,
 					enabled: false
 				}));
 
 				// Merge: keep user samples first, then add placeholder samples
 				// Only add placeholders that don't already exist (by ID)
-				const existingIds = new Set(existingUserSamples.map(s => s.id));
-				const newPlaceholders = disabledPlaceholders.filter(s => !existingIds.has(s.id));
+				const existingIds = new Set(existingUserSamples.map((s: FreesoundSample) => s.id));
+				const newPlaceholders = disabledPlaceholders.filter((s: FreesoundSample) => !existingIds.has(s.id));
 
-				this.settings.freesoundSamples[genre] = [...existingUserSamples, ...newPlaceholders];
+				samplesAsGenreMap[genre] = [...existingUserSamples, ...newPlaceholders];
 
 				totalAdded += newPlaceholders.length;
 
-				logger.info('migration', `${genre}: added ${newPlaceholders.length} new, ${existingUserSamples.length} existing, ${this.settings.freesoundSamples[genre].length} total`);
+				logger.info('migration', `${genre}: added ${newPlaceholders.length} new, ${existingUserSamples.length} existing, ${samplesAsGenreMap[genre].length} total`);
 			}
 		});
 
@@ -993,7 +1036,7 @@ export default class SonigraphPlugin extends Plugin {
 	/**
 	 * Get curated Freesound samples for initial library
 	 */
-	private getCuratedSamples(): unknown[] {
+	private getCuratedSamples(): FreesoundSample[] {
 		// Import the transformed curated samples
 		return curatedSamples;
 	}
