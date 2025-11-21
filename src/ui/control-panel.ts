@@ -3,7 +3,7 @@ import SonigraphPlugin from '../main';
 import { getLogger, LoggerFactory, LogLevel } from '../logging';
 import { createObsidianToggle } from './components';
 import { INSTRUMENT_INFO, InstrumentSettings } from '../utils/constants';
-import { TAB_CONFIGS, createLucideIcon, setLucideIcon, getFamilyIcon, getInstrumentIcon, LucideIconName } from './lucide-icons';
+import { TAB_CONFIGS, createLucideIcon, setLucideIcon, getFamilyIcon, getInstrumentIcon, LucideIconName, TabConfig } from './lucide-icons';
 import { MaterialCard, EffectSection, ActionChip, MaterialSlider, MaterialButton, createGrid } from './material-components';
 import { PlayButtonManager, PlayButtonState } from './play-button-manager';
 import { PlaybackEventData, PlaybackProgressData, PlaybackErrorData } from '../audio/playback-events';
@@ -32,10 +32,22 @@ type InstrumentKey = keyof SonigraphPlugin['settings']['instruments'];
  */
 interface EffectConfig {
 	enabled: boolean;
-	params: Record<string, number>;
+	params: Record<string, number | string>;
 }
 
 type EffectsMap = Record<string, EffectConfig>;
+
+/**
+ * Effect parameter definition
+ */
+interface EffectParameter {
+	name: string;
+	value: number;
+	min: number;
+	max: number;
+	step: number;
+	unit: string;
+}
 
 /**
  * Extended plugin interface for optional integrations
@@ -60,6 +72,19 @@ type PolyphonicDensity = 'sparse' | 'moderate' | 'maximum';
 type VoiceLeadingStyle = 'smooth' | 'chromatic' | 'parallel';
 type NoteCentricPreset = 'conservative' | 'balanced' | 'adventurous' | 'custom';
 
+/**
+ * Default note-centric musicality settings
+ */
+const DEFAULT_NOTE_CENTRIC_MUSICALITY = {
+	preset: 'balanced' as const,
+	timingHumanization: 125,
+	harmonicAdventurousness: 75,
+	dynamicRange: 'extreme' as const,
+	polyphonicDensity: 'maximum' as const,
+	melodicIndependence: 80,
+	voiceLeadingStyle: 'chromatic' as const
+};
+
 function getInstrumentSettings(plugin: SonigraphPlugin, instrumentKey: string): InstrumentSettings | undefined {
 	const instruments = plugin.settings.instruments;
 	if (instrumentKey in instruments) {
@@ -79,7 +104,8 @@ function setInstrumentSetting<K extends keyof InstrumentSettings>(
 		const instrument = instruments[instrumentKey as InstrumentKey];
 		if (instrument && typeof instrument === 'object') {
 			// Dynamic property assignment on known instrument settings object
-			(instrument as Record<string, unknown>)[settingKey as string] = value;
+			// Cast to unknown first to satisfy TypeScript's type overlap requirements
+			(instrument as unknown as Record<string, unknown>)[settingKey as string] = value;
 			return true;
 		}
 	}
@@ -717,7 +743,7 @@ export class MaterialControlPanelModal extends Modal {
 		voicesStat.createSpan({ cls: 'osp-stat-label', text: 'Voices' });
 		
 		const contextStat = statsRow.createDiv({ cls: 'osp-stat-compact' });
-		const contextValue = status.audio.audioContext || 'Suspended';
+		const contextValue = String(status.audio.audioContext || 'Suspended');
 		const contextColor = contextValue === 'running' ? 'var(--text-success)' : 'var(--text-warning)';
 		const contextValueSpan = contextStat.createSpan({ cls: 'osp-stat-value', text: contextValue });
 		contextValueSpan.setCssProps({ color: contextColor });
@@ -1051,7 +1077,7 @@ export class MaterialControlPanelModal extends Modal {
 	 */
 	private renderSampleItem(
 		container: HTMLElement,
-		sample: unknown,
+		sample: FreesoundSample,
 		number: number,
 		isUserSample: boolean
 	): void {
@@ -1151,7 +1177,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Preview a Freesound sample
 	 */
-	private async previewSample(sample: unknown, button: HTMLButtonElement): Promise<void> {
+	private async previewSample(sample: FreesoundSample, button: HTMLButtonElement): Promise<void> {
 		// If already playing this sample, stop it
 		if (button.textContent === 'Stop') {
 			void this.stopPreview();
@@ -1597,6 +1623,8 @@ export class MaterialControlPanelModal extends Modal {
 							mode: 'smart',
 							timingWindow: 200,
 							minimumNotes: 2,
+							temporalGrouping: 'strict',
+							maxChordNotes: 6,
 							layerSettings: {
 								melodic: false,
 								harmonic: true,
@@ -1860,7 +1888,7 @@ export class MaterialControlPanelModal extends Modal {
 			);
 
 		// Voicing strategy
-		const voicingGrid = createGrid('1-col');
+		const voicingGrid = createGrid();
 		void container.appendChild(voicingGrid);
 
 		const voicingGroup = voicingGrid.createDiv({ cls: 'osp-control-group' });
@@ -2182,22 +2210,22 @@ export class MaterialControlPanelModal extends Modal {
 		// Create horizontal effect sections with saved state
 		const effects = this.plugin.settings.effects || {};
 		
-		this.createHorizontalEffectSection(masterContent, 'Orchestral reverb hall', 'reverb', 
+		this.createHorizontalEffectSection(masterContent, 'Orchestral reverb hall', 'reverb',
 			effects.orchestralreverbhall?.enabled ?? true, [
-			{ name: 'Hall size', value: effects.orchestralreverbhall?.hallsize ?? 0.8, min: 0, max: 1, step: 0.1, unit: '' },
-			{ name: 'Decay time', value: effects.orchestralreverbhall?.decaytime ?? 3.5, min: 0.5, max: 10, step: 0.1, unit: 's' }
+			{ name: 'Hall size', value: Number(effects.orchestralreverbhall?.hallsize ?? 0.8), min: 0, max: 1, step: 0.1, unit: '' },
+			{ name: 'Decay time', value: Number(effects.orchestralreverbhall?.decaytime ?? 3.5), min: 0.5, max: 10, step: 0.1, unit: 's' }
 		]);
-		
-		this.createHorizontalEffectSection(masterContent, '3-band EQ', 'equalizer', 
+
+		this.createHorizontalEffectSection(masterContent, '3-band EQ', 'equalizer',
 			effects['3bandeq']?.enabled ?? true, [
-			{ name: 'Bass boost', value: effects['3bandeq']?.bassboost ?? 0, min: -12, max: 12, step: 1, unit: 'dB' },
-			{ name: 'Treble boost', value: effects['3bandeq']?.trebleboost ?? 0, min: -12, max: 12, step: 1, unit: 'dB' }
+			{ name: 'Bass boost', value: Number(effects['3bandeq']?.bassboost ?? 0), min: -12, max: 12, step: 1, unit: 'dB' },
+			{ name: 'Treble boost', value: Number(effects['3bandeq']?.trebleboost ?? 0), min: -12, max: 12, step: 1, unit: 'dB' }
 		]);
-		
-		this.createHorizontalEffectSection(masterContent, 'Dynamic compressor', 'compressor', 
+
+		this.createHorizontalEffectSection(masterContent, 'Dynamic compressor', 'compressor',
 			effects.dynamiccompressor?.enabled ?? false, [
-			{ name: 'Threshold', value: effects.dynamiccompressor?.threshold ?? -20, min: -40, max: 0, step: 1, unit: 'dB' },
-			{ name: 'Ratio', value: effects.dynamiccompressor?.ratio ?? 4, min: 1, max: 20, step: 1, unit: ':1' }
+			{ name: 'Threshold', value: Number(effects.dynamiccompressor?.threshold ?? -20), min: -40, max: 0, step: 1, unit: 'dB' },
+			{ name: 'Ratio', value: Number(effects.dynamiccompressor?.ratio ?? 4), min: 1, max: 20, step: 1, unit: ':1' }
 		]);
 		
 		// Performance Settings Card
@@ -2233,7 +2261,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create horizontal effect section for Master Effects
 	 */
-	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: unknown[]): void {
+	private createHorizontalEffectSection(container: HTMLElement, effectName: string, iconName: string, enabled: boolean, parameters: EffectParameter[]): void {
 		const section = container.createDiv({ cls: 'osp-effect-section-horizontal' });
 		
 		// Header with effect name and toggle
@@ -2400,7 +2428,7 @@ export class MaterialControlPanelModal extends Modal {
 		const resetButtonContainer = content.createDiv({ cls: 'osp-sonic-graph-reset-container' });
 		const resetButton = new MaterialButton({
 			text: 'Reset to defaults',
-			icon: 'rotate-ccw',
+			iconName: 'rotate-ccw',
 			variant: 'outlined',
 			onClick: () => void this.resetSonicGraphSettings()
 		});
@@ -2713,16 +2741,16 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// First section should be folders, second should be files
 		if (exclusionSections.length >= 1) {
-			const foldersContainer = exclusionSections[0].querySelector('.osp-exclusion-container');
+			const foldersContainer = exclusionSections[0].querySelector('.osp-exclusion-container') as HTMLElement | null;
 			if (foldersContainer) {
 				void logger.debug('ui', 'Refreshing folders container');
 				void foldersContainer.empty();
 				void this.createExclusionList(foldersContainer, 'folders');
 			}
 		}
-		
+
 		if (exclusionSections.length >= 2) {
-			const filesContainer = exclusionSections[1].querySelector('.osp-exclusion-container');
+			const filesContainer = exclusionSections[1].querySelector('.osp-exclusion-container') as HTMLElement | null;
 			if (filesContainer) {
 				void logger.debug('ui', 'Refreshing files container');
 				void filesContainer.empty();
@@ -2742,8 +2770,8 @@ export class MaterialControlPanelModal extends Modal {
 			// Update stats
 			const statsContainer = this.contentContainer.querySelector('.osp-stats-row');
 			if (statsContainer) {
-				const filesStat = statsContainer.querySelector('.osp-stat-compact:first-child');
-				const linksStat = statsContainer.querySelector('.osp-stat-compact:last-child');
+				const filesStat = statsContainer.querySelector('.osp-stat-compact:first-child') as HTMLElement | null;
+				const linksStat = statsContainer.querySelector('.osp-stat-compact:last-child') as HTMLElement | null;
 				if (filesStat && linksStat) {
 					await this.updateSonicGraphStats(filesStat, linksStat);
 				}
@@ -2751,17 +2779,17 @@ export class MaterialControlPanelModal extends Modal {
 
 			// Refresh graph preview if it exists
 			if (this.graphRenderer) {
-				const graphPreviewContainer = this.contentContainer.querySelector('.osp-graph-preview-container');
+				const graphPreviewContainer = this.contentContainer.querySelector('.osp-graph-preview-container') as HTMLElement | null;
 				if (graphPreviewContainer) {
 					// Clear current graph
 					this.graphRenderer.destroy();
 					this.graphRenderer = null;
-					
+
 					// Show loading indicator
 					void graphPreviewContainer.empty();
 					const loadingDiv = graphPreviewContainer.createDiv({ cls: 'osp-graph-loading' });
 					loadingDiv.textContent = 'Updating graph...';
-					
+
 					// Reinitialize with new exclusions
 					await this.initializeGraphPreview(graphPreviewContainer, loadingDiv);
 				}
@@ -2802,7 +2830,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family overview card with stats and bulk actions
 	 */
-	private createFamilyOverviewCard(familyId: string, tabConfig: unknown): void {
+	private createFamilyOverviewCard(familyId: string, tabConfig: TabConfig): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} family overview`,
 			iconName: getFamilyIcon(familyId),
@@ -3111,7 +3139,7 @@ export class MaterialControlPanelModal extends Modal {
 	/**
 	 * Create family effects card
 	 */
-	private createFamilyEffectsCard(familyId: string, tabConfig: unknown): void {
+	private createFamilyEffectsCard(familyId: string, tabConfig: TabConfig): void {
 		const card = new MaterialCard({
 			title: `${tabConfig.name} effects`,
 			iconName: 'sliders-horizontal',
@@ -3620,7 +3648,7 @@ export class MaterialControlPanelModal extends Modal {
 		if (!this.progressElement || !this.progressBar || !this.progressText) return;
 
 		// Update progress bar
-		const progressFill = this.progressBar.querySelector('.osp-progress-fill');
+		const progressFill = this.progressBar.querySelector('.osp-progress-fill') as HTMLElement | null;
 		if (progressFill) {
 			progressFill.style.width = `${Math.min(progressData.percentComplete, 100)}%`;
 		}
@@ -3871,7 +3899,7 @@ export class MaterialControlPanelModal extends Modal {
 		void this.plugin.saveSettings();
 	}
 
-	private getDefaultEffectParams(effectType: string): unknown {
+	private getDefaultEffectParams(effectType: string): Record<string, number | string> {
 		switch (effectType) {
 			case 'reverb':
 				return { decay: 2.0, preDelay: 0.1, wet: 0.3 };
@@ -3913,13 +3941,14 @@ export class MaterialControlPanelModal extends Modal {
 		
 		// Use proper instrument name from INSTRUMENT_INFO instead of capitalizeWords
 		const instrumentInfo = INSTRUMENT_INFO[instrumentName as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
+		const instrumentName_ = (instrumentInfo && typeof instrumentInfo === 'object' && 'name' in instrumentInfo) ? (instrumentInfo as { name: string }).name : instrumentName;
 		const titleSpan = title.createSpan();
 		void this.createInstrumentTitleWithStatus(instrumentName, instrumentInfo, titleSpan);
-		
+
 		// Enable toggle
 		const toggleContainer = header.createDiv({ cls: 'ospcc-switch' });
-		toggleContainer.setAttribute('data-tooltip', `Toggle ${instrumentInfo.name} on/off`);
-		toggleContainer.setAttribute('title', `Toggle ${instrumentInfo.name} on/off`);
+		toggleContainer.setAttribute('data-tooltip', `Toggle ${instrumentName_} on/off`);
+		toggleContainer.setAttribute('title', `Toggle ${instrumentName_} on/off`);
 		
 		const toggleInput = toggleContainer.createEl('input', {
 			type: 'checkbox',
@@ -3937,8 +3966,8 @@ export class MaterialControlPanelModal extends Modal {
 			toggleInput.disabled = true;
 			toggleContainer.classList.add('ospcc-switch--unavailable');
 			toggleContainer.setCssProps({ cursor: 'not-allowed' });
-			toggleContainer.setAttribute('data-tooltip', `${instrumentInfo.name} samples not yet downloaded`);
-			toggleContainer.setAttribute('title', `${instrumentInfo.name} samples not yet downloaded`);
+			toggleContainer.setAttribute('data-tooltip', `${instrumentName_} samples not yet downloaded`);
+			toggleContainer.setAttribute('title', `${instrumentName_} samples not yet downloaded`);
 		}
 		
 		toggleInput.addEventListener('change', () => {
@@ -4048,7 +4077,7 @@ export class MaterialControlPanelModal extends Modal {
 				if (useRecording && this.instrumentRequiresHighQuality(instrumentName)) {
 					const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
 					if (!isDownloaded) {
-						new Notice(`${instrumentInfo.name} recording not yet downloaded. Please wait for download to complete.`);
+						new Notice(`${instrumentName_} recording not yet downloaded. Please wait for download to complete.`);
 						// Revert selection
 						qualitySelect.value = 'synthesis';
 						return;
@@ -4061,14 +4090,14 @@ export class MaterialControlPanelModal extends Modal {
 
 				// Show feedback
 				const modeText = useRecording ? 'recording' : 'synthesis';
-				new Notice(`${instrumentInfo.name} switched to ${modeText} mode`);
+				new Notice(`${instrumentName_} switched to ${modeText} mode`);
 			})());
 			
 			// Disable recording option if not available
 			if (this.instrumentRequiresHighQuality(instrumentName)) {
 				const isDownloaded = this.checkIfSampleDownloaded(instrumentName);
 				if (!isDownloaded) {
-					const recordingOption = qualitySelect.querySelector('option[value="recording"]');
+					const recordingOption = qualitySelect.querySelector('option[value="recording"]') as HTMLOptionElement | null;
 					if (recordingOption) {
 						recordingOption.disabled = true;
 						recordingOption.text = 'Use recording (not downloaded)';
@@ -4089,8 +4118,9 @@ export class MaterialControlPanelModal extends Modal {
 		
 		const toggleContainer = toggleGroup.createDiv({ cls: 'ospcc-switch osp-effect-toggle' });
 		const instrumentInfo = INSTRUMENT_INFO[instrumentName as keyof typeof INSTRUMENT_INFO] || INSTRUMENT_INFO.piano;
-		toggleContainer.setAttribute('data-tooltip', `Toggle ${effectName} for ${instrumentInfo.name}`);
-		toggleContainer.setAttribute('title', `Toggle ${effectName} for ${instrumentInfo.name}`);
+		const instrumentDisplayName = (instrumentInfo && typeof instrumentInfo === 'object' && 'name' in instrumentInfo) ? (instrumentInfo as { name: string }).name : instrumentName;
+		toggleContainer.setAttribute('data-tooltip', `Toggle ${effectName} for ${instrumentDisplayName}`);
+		toggleContainer.setAttribute('title', `Toggle ${effectName} for ${instrumentDisplayName}`);
 		
 		const toggleInput = toggleContainer.createEl('input', {
 			type: 'checkbox',
@@ -4218,8 +4248,15 @@ export class MaterialControlPanelModal extends Modal {
 		return !requiresHighQuality;
 	}
 
-	private createInstrumentTitleWithStatus(instrumentKey: string, instrumentInfo: { name: string; icon: string; description: string; defaultFrequencyRange: string }, container: HTMLElement): void {
-		container.appendText(`${instrumentInfo.icon} ${instrumentInfo.name}`);
+	private createInstrumentTitleWithStatus(instrumentKey: string, instrumentInfo: unknown, container: HTMLElement): void {
+		// Type guard to ensure instrumentInfo has name property
+		if (!instrumentInfo || typeof instrumentInfo !== 'object' || !('name' in instrumentInfo)) {
+			return;
+		}
+		const typedInfo = instrumentInfo as { name: string; icon?: string };
+		const name = typedInfo.name;
+		const icon = typedInfo.icon || '';
+		container.appendText(`${icon} ${name}`);
 
 		// Add download status for high-quality instruments
 		if (this.instrumentRequiresHighQuality(instrumentKey)) {
@@ -4256,7 +4293,11 @@ export class MaterialControlPanelModal extends Modal {
 			if (!species) return false;
 
 			// Check cache status
-			const cacheStatus = whaleIntegration.whaleManager.getCacheStatus();
+			const whaleManager = whaleIntegration.whaleManager as { getCacheStatus: () => { cacheBySpecies: Record<string, number> } } | undefined;
+			if (!whaleManager || typeof whaleManager.getCacheStatus !== 'function') {
+				return false;
+			}
+			const cacheStatus = whaleManager.getCacheStatus();
 			return (cacheStatus.cacheBySpecies[species] || 0) > 0;
 		} catch {
 			return false;
@@ -4913,8 +4954,8 @@ All whale samples are authentic recordings from marine research institutions and
 
 		// Get current settings (with fallbacks for undefined)
 		const audioEnhancement = this.plugin.settings.audioEnhancement;
-		const musicality = audioEnhancement?.noteCentricMusicality || {};
-		const currentPreset = musicality.preset || 'balanced';
+		const musicality = audioEnhancement?.noteCentricMusicality;
+		const currentPreset = musicality?.preset || 'balanced';
 
 		// Preset selector
 		new Setting(content)
@@ -4933,9 +4974,8 @@ All whale samples are authentic recordings from marine research institutions and
 							this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 						}
 						if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
-							// Unavoidable cast: Initialize with empty object, properties set individually below
-							// The noteCentricMusicality type requires all properties but we set them conditionally
-							this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+							// Initialize with balanced defaults
+							this.plugin.settings.audioEnhancement.noteCentricMusicality = { ...DEFAULT_NOTE_CENTRIC_MUSICALITY };
 						}
 
 						this.plugin.settings.audioEnhancement.noteCentricMusicality.preset = value as NoteCentricPreset;
@@ -4990,7 +5030,7 @@ All whale samples are authentic recordings from marine research institutions and
 								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
-								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = { ...DEFAULT_NOTE_CENTRIC_MUSICALITY };
 							}
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.timingHumanization = value;
 							await this.plugin.saveSettings();
@@ -5023,7 +5063,7 @@ All whale samples are authentic recordings from marine research institutions and
 								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
-								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = { ...DEFAULT_NOTE_CENTRIC_MUSICALITY };
 							}
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.harmonicAdventurousness = value;
 							await this.plugin.saveSettings();
@@ -5057,7 +5097,7 @@ All whale samples are authentic recordings from marine research institutions and
 								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
-								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = { ...DEFAULT_NOTE_CENTRIC_MUSICALITY };
 							}
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.dynamicRange = value as DynamicRange;
 							await this.plugin.saveSettings();
@@ -5079,7 +5119,7 @@ All whale samples are authentic recordings from marine research institutions and
 								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
-								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = { ...DEFAULT_NOTE_CENTRIC_MUSICALITY };
 							}
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.polyphonicDensity = value as PolyphonicDensity;
 							await this.plugin.saveSettings();
@@ -5100,7 +5140,7 @@ All whale samples are authentic recordings from marine research institutions and
 								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
-								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = { ...DEFAULT_NOTE_CENTRIC_MUSICALITY };
 							}
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.melodicIndependence = value;
 							await this.plugin.saveSettings();
@@ -5134,7 +5174,7 @@ All whale samples are authentic recordings from marine research institutions and
 								this.plugin.settings.audioEnhancement = {} as Partial<AudioMappingConfig> as AudioMappingConfig;
 							}
 							if (!this.plugin.settings.audioEnhancement.noteCentricMusicality) {
-								this.plugin.settings.audioEnhancement.noteCentricMusicality = {};
+								this.plugin.settings.audioEnhancement.noteCentricMusicality = { ...DEFAULT_NOTE_CENTRIC_MUSICALITY };
 							}
 							this.plugin.settings.audioEnhancement.noteCentricMusicality.voiceLeadingStyle = value as VoiceLeadingStyle;
 							await this.plugin.saveSettings();
