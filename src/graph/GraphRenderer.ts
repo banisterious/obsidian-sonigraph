@@ -2,8 +2,8 @@ import * as d3 from 'd3';
 import { GraphNode, GraphLink } from './GraphDataExtractor';
 import { getLogger } from '../logging';
 import { SonicGraphSettings } from '../utils/constants';
-import { ContentAwarePositioning } from './ContentAwarePositioning';
-import { SmartClusteringAlgorithms, ClusteringResult } from './SmartClusteringAlgorithms';
+import { ContentAwarePositioning, TagConnection, TemporalZone, HubNode } from './ContentAwarePositioning';
+import { SmartClusteringAlgorithms, ClusteringResult, Cluster } from './SmartClusteringAlgorithms';
 
 const logger = getLogger('GraphRenderer');
 
@@ -48,22 +48,22 @@ export class GraphRenderer {
   private container: HTMLElement;
   private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
   private g: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>;
-  private linkGroup: d3.Selection<d3.BaseType, unknown, d3.BaseType, unknown>;
-  private nodeGroup: d3.Selection<d3.BaseType, unknown, d3.BaseType, unknown>;
+  private linkGroup: d3.Selection<d3.BaseType, GraphLink, d3.BaseType, unknown>;
+  private nodeGroup: d3.Selection<d3.BaseType, GraphNode, d3.BaseType, unknown>;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private onZoomChangeCallback: ((zoomLevel: number) => void) | null = null;
   // Removed tooltip property - using native browser tooltips
-  
+
   private simulation: d3.Simulation<GraphNode, GraphLink>;
   private config: RenderConfig;
   private forceConfig: ForceConfig;
-  
+
   private nodes: GraphNode[] = [];
   private links: GraphLink[] = [];
   private visibleNodes: Set<string> = new Set();
   private visibleLinks: Set<string> = new Set();
   private animationStyle: 'fade' | 'scale' | 'slide' | 'pop' = 'fade';
-  
+
   // Performance optimization: Viewport culling and batching
   private viewportBounds: { x: number; y: number; width: number; height: number } = { x: 0, y: 0, width: 0, height: 0 };
   private cullingMargin: number = 100; // Extra margin around viewport for smoother scrolling
@@ -71,20 +71,20 @@ export class GraphRenderer {
   private lastUpdateTime: number = 0;
   private updateDebounceMs: number = 33; // Reduced to ~30fps for better performance
   private pendingUpdate: number | null = null;
-  
+
   // Enhanced performance controls
   private performanceMode: 'quality' | 'balanced' | 'performance' = 'quality';
   private isSimulationPaused: boolean = false;
   private frameSkipCounter: number = 0;
   private maxFrameSkip: number = 1; // Skip every other frame for dense graphs
-  
+
   // Phase 3.8: Settings integration
   private layoutSettings: SonicGraphSettings['layout'] | null = null;
-  
+
   // Content-Aware Positioning integration
   private contentAwarePositioning: ContentAwarePositioning | null = null;
   private contentAwareSettings: SonicGraphSettings['contentAwarePositioning'] | null = null;
-  
+
   // Smart Clustering integration
   private smartClustering: SmartClusteringAlgorithms | null = null;
   private smartClusteringSettings: SonicGraphSettings['smartClustering'] | null = null;
@@ -418,7 +418,7 @@ export class GraphRenderer {
     
     const linkSelection = this.g.select('.sonigraph-temporal-links')
       .selectAll('line')
-      .data(validLinks, (d: unknown, i) => this.getLinkId(d, i));
+      .data(validLinks, (d: GraphLink, i) => this.getLinkId(d, i));
 
     // Enter new links with Phase 3.8 enhancements
     const linkEnter = linkSelection.enter()
@@ -567,7 +567,7 @@ export class GraphRenderer {
   /**
    * Hub Highlighting: Temporarily boost visual prominence of hub on hover
    */
-  private temporaryHubBoost(nodeElement: d3.Selection<d3.BaseType, unknown, null, undefined>, node: GraphNode): void {
+  private temporaryHubBoost(nodeElement: d3.Selection<d3.BaseType, GraphNode, null, undefined>, node: GraphNode): void {
     const hubTier = this.getHubTier(node);
     const currentSize = this.calculateNodeSize(node);
     const boostedSize = Math.min(currentSize * 1.2, 20); // 20% boost, max 20px
@@ -588,18 +588,18 @@ export class GraphRenderer {
   /**
    * Hub Highlighting: Remove temporary boost effects
    */
-  private removeHubBoost(nodeElement: d3.Selection<d3.BaseType, unknown, null, undefined>): void {
+  private removeHubBoost(nodeElement: d3.Selection<d3.BaseType, GraphNode, null, undefined>): void {
     nodeElement.select('circle')
       .transition()
       .duration(200)
-      .attr('r', (d: unknown) => this.calculateNodeSize(d as GraphNode))
+      .attr('r', (d: GraphNode) => this.calculateNodeSize(d))
       .style('filter', null); // Reset to CSS filter
 
     // Reset label position
     nodeElement.select('text')
       .transition()
       .duration(200)
-      .attr('dy', (d: unknown) => this.calculateNodeSize(d as GraphNode) + 15);
+      .attr('dy', (d: GraphNode) => this.calculateNodeSize(d) + 15);
   }
 
   /**
@@ -659,7 +659,7 @@ export class GraphRenderer {
     
     const nodeSelection = this.g.select('.sonigraph-temporal-nodes')
       .selectAll('.sonigraph-temporal-node')
-      .data(validNodes, (d: unknown) => d.id);
+      .data(validNodes, (d: GraphNode) => d.id);
 
     // Enter new nodes
     const nodeEnter = nodeSelection.enter()
@@ -693,23 +693,22 @@ export class GraphRenderer {
 
     // Update existing nodes with new sizing and hub classification
     nodeSelection.selectAll('circle')
-      .attr('r', (d: unknown) => this.calculateNodeSize(d as GraphNode))
-      .attr('class', (d: unknown) => `${(d as GraphNode).type}-node ${this.getHubClass(d as GraphNode)}`)
-      .attr('data-connections', (d: unknown) => (d as GraphNode).connections.length)
-      .attr('data-hub-tier', (d: unknown) => this.getHubTier(d as GraphNode).name);
+      .attr('r', (d: GraphNode) => this.calculateNodeSize(d))
+      .attr('class', (d: GraphNode) => `${d.type}-node ${this.getHubClass(d)}`)
+      .attr('data-connections', (d: GraphNode) => d.connections.length)
+      .attr('data-hub-tier', (d: GraphNode) => this.getHubTier(d).name);
 
     // Update existing title elements for tooltips
     nodeSelection.selectAll('title')
-      .text((d: unknown) => {
-        const node = d as GraphNode;
-        const fileName = node.title.split('/').pop() || node.title;
-        const connections = node.connections.length;
+      .text((d: GraphNode) => {
+        const fileName = d.title.split('/').pop() || d.title;
+        const connections = d.connections.length;
         return `${fileName} (${connections} connection${connections !== 1 ? 's' : ''})`;
       });
 
     // Update existing labels positioning based on new node sizes
     nodeSelection.selectAll('text')
-      .attr('dy', (d: unknown) => this.calculateNodeSize(d as GraphNode) + 15);
+      .attr('dy', (d: GraphNode) => this.calculateNodeSize(d) + 15);
 
     // Animate new nodes
     nodeEnter.transition()
@@ -739,19 +738,19 @@ export class GraphRenderer {
       .on('mouseover', (event, d) => {
         // Highlight connected links
         void this.highlightConnectedLinks(d.id, true);
-        
+
         // Hub highlighting: Add special hover effects for hubs
         const hubTier = this.getHubTier(d);
-        const nodeElement = d3.select(event.currentTarget);
-        
+        const nodeElement = d3.select<d3.BaseType, GraphNode>(event.currentTarget as d3.BaseType);
+
         // Add hover class for CSS styling
         void nodeElement.classed('hub-hovered', true);
-        
+
         // For major and mega hubs, temporarily boost their visual prominence
         if (hubTier.name === 'major-hub' || hubTier.name === 'mega-hub') {
           void this.temporaryHubBoost(nodeElement, d);
         }
-        
+
         // Enhanced tooltip for hubs
         if (d.connections.length >= 5) {
           void this.showHubTooltip(d, event);
@@ -760,14 +759,14 @@ export class GraphRenderer {
       .on('mouseout', (event, d) => {
         // Remove highlight from connected links
         void this.highlightConnectedLinks(d.id, false);
-        
+
         // Remove hover effects
-        const nodeElement = d3.select(event.currentTarget);
+        const nodeElement = d3.select<d3.BaseType, GraphNode>(event.currentTarget as d3.BaseType);
         void nodeElement.classed('hub-hovered', false);
-        
+
         // Remove temporary boost
         void this.removeHubBoost(nodeElement);
-        
+
         // Hide hub tooltip
         void this.hideHubTooltip();
       })
@@ -787,7 +786,7 @@ export class GraphRenderer {
    */
   private highlightConnectedLinks(nodeId: string, highlight: boolean): void {
     this.linkGroup
-      .classed('highlighted', function(d: unknown) {
+      .classed('highlighted', function(d: GraphLink) {
         const sourceId = typeof d.source === 'string' ? d.source : d.source.id;
         const targetId = typeof d.target === 'string' ? d.target : d.target.id;
 
@@ -811,7 +810,7 @@ export class GraphRenderer {
    */
   private updateLinkVisibility(): void {
     this.linkGroup
-      .style('display', (d: unknown, i: number) => {
+      .style('display', (d: GraphLink, i: number) => {
         const linkId = this.getLinkId(d, i);
         return this.visibleLinks.has(linkId) ? 'block' : 'none';
       });
@@ -850,15 +849,15 @@ export class GraphRenderer {
     // Update link positions - hide invalid links, update valid ones
     this.linkGroup = this.g.select('.sonigraph-temporal-links').selectAll('line');
     this.linkGroup
-      .style('display', (d: unknown) => {
+      .style('display', (d: GraphLink) => {
         const hasValidCoords = this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target);
         return hasValidCoords ? 'block' : 'none';
       })
-      .filter((d: unknown) => this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target))
-      .attr('x1', (d: unknown) => d.source.x)
-      .attr('y1', (d: unknown) => d.source.y)
-      .attr('x2', (d: unknown) => d.target.x)
-      .attr('y2', (d: unknown) => d.target.y);
+      .filter((d: GraphLink) => this.hasValidCoordinates(d.source) && this.hasValidCoordinates(d.target))
+      .attr('x1', (d: GraphLink) => (typeof d.source === 'string' ? 0 : (d.source.x ?? 0)))
+      .attr('y1', (d: GraphLink) => (typeof d.source === 'string' ? 0 : (d.source.y ?? 0)))
+      .attr('x2', (d: GraphLink) => (typeof d.target === 'string' ? 0 : (d.target.x ?? 0)))
+      .attr('y2', (d: GraphLink) => (typeof d.target === 'string' ? 0 : (d.target.y ?? 0)));
 
     // Update node positions - hide invalid nodes, update valid ones
     this.nodeGroup = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
@@ -877,31 +876,39 @@ export class GraphRenderer {
     // Update link positions - hide invalid links, show only valid and visible ones
     this.linkGroup = this.g.select('.sonigraph-temporal-links').selectAll('line');
     this.linkGroup
-      .style('display', (d: unknown) => {
+      .style('display', (d: GraphLink) => {
+        // Get source and target as nodes
+        const source = typeof d.source === 'string' ? this.nodes.find(n => n.id === d.source) : d.source;
+        const target = typeof d.target === 'string' ? this.nodes.find(n => n.id === d.target) : d.target;
+
         // First check for valid coordinates
-        if (!this.hasValidCoordinates(d.source) || !this.hasValidCoordinates(d.target)) {
+        if (!source || !target || !this.hasValidCoordinates(source) || !this.hasValidCoordinates(target)) {
           return 'none';
         }
 
         // Then check viewport visibility
-        const sourceVisible = this.isNodeInViewport(d.source, bounds);
-        const targetVisible = this.isNodeInViewport(d.target, bounds);
+        const sourceVisible = this.isNodeInViewport(source, bounds);
+        const targetVisible = this.isNodeInViewport(target, bounds);
         return (sourceVisible || targetVisible) ? 'block' : 'none';
       })
-      .filter((d: unknown) => {
+      .filter((d: GraphLink) => {
+        // Get source and target as nodes
+        const source = typeof d.source === 'string' ? this.nodes.find(n => n.id === d.source) : d.source;
+        const target = typeof d.target === 'string' ? this.nodes.find(n => n.id === d.target) : d.target;
+
         // Only update positions for valid and visible links
-        if (!this.hasValidCoordinates(d.source) || !this.hasValidCoordinates(d.target)) {
+        if (!source || !target || !this.hasValidCoordinates(source) || !this.hasValidCoordinates(target)) {
           return false;
         }
 
-        const sourceVisible = this.isNodeInViewport(d.source, bounds);
-        const targetVisible = this.isNodeInViewport(d.target, bounds);
+        const sourceVisible = this.isNodeInViewport(source, bounds);
+        const targetVisible = this.isNodeInViewport(target, bounds);
         return sourceVisible || targetVisible;
       })
-      .attr('x1', (d: unknown) => d.source.x)
-      .attr('y1', (d: unknown) => d.source.y)
-      .attr('x2', (d: unknown) => d.target.x)
-      .attr('y2', (d: unknown) => d.target.y);
+      .attr('x1', (d: GraphLink) => (typeof d.source === 'string' ? 0 : (d.source.x ?? 0)))
+      .attr('y1', (d: GraphLink) => (typeof d.source === 'string' ? 0 : (d.source.y ?? 0)))
+      .attr('x2', (d: GraphLink) => (typeof d.target === 'string' ? 0 : (d.target.x ?? 0)))
+      .attr('y2', (d: GraphLink) => (typeof d.target === 'string' ? 0 : (d.target.y ?? 0)));
 
     // Update node positions - hide invalid nodes, show only valid and visible ones
     this.nodeGroup = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
@@ -950,7 +957,7 @@ export class GraphRenderer {
       const nodeSelection = this.g.select('.sonigraph-temporal-nodes').selectAll('.sonigraph-temporal-node');
       if (!nodeSelection.empty()) {
         nodeSelection.selectAll('circle')
-          .attr('r', (d: unknown) => this.calculateNodeSize(d as GraphNode));
+          .attr('r', (d: GraphNode) => this.calculateNodeSize(d));
       }
     }
     
@@ -1055,7 +1062,7 @@ export class GraphRenderer {
   /**
    * Generate consistent link ID for D3.js data binding
    */
-  private getLinkId(link: unknown, index: number): string {
+  private getLinkId(link: GraphLink, index: number): string {
     const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
     const targetId = typeof link.target === 'string' ? link.target : link.target.id;
     return `${sourceId}-${targetId}-${index}`;
@@ -1073,9 +1080,9 @@ export class GraphRenderer {
   /**
    * Get offset position for path-based grouping
    */
-  private getPathBasedOffset(filePath: string, groups: unknown[]): { x: number; y: number } {
+  private getPathBasedOffset(filePath: string, groups: Array<{ path: string }>): { x: number; y: number } {
     const radius = 100; // Distance from center for group clusters
-    
+
     // Find which group this file belongs to
     for (let i = 0; i < groups.length; i++) {
       const group = groups[i];
@@ -1085,14 +1092,14 @@ export class GraphRenderer {
         // Add some randomness for natural clustering
         const jitteredAngle = angle + (Math.random() - 0.5) * 0.3;
         const jitteredRadius = radius * (0.8 + Math.random() * 0.4);
-        
+
         return {
           x: Math.cos(jitteredAngle) * jitteredRadius,
           y: Math.sin(jitteredAngle) * jitteredRadius
         };
       }
     }
-    
+
     // If no group match, place near center with some scatter
     return {
       x: (Math.random() - 0.5) * 40,
@@ -1563,9 +1570,9 @@ export class GraphRenderer {
       return;
     }
 
-    const tagConnections = debugData.tagConnections || [];
-    const temporalZones = debugData.temporalZones || [];
-    const hubNodes = debugData.hubNodes || [];
+    const tagConnections = (debugData.tagConnections as TagConnection[]) || [];
+    const temporalZones = (debugData.temporalZones as TemporalZone[]) || [];
+    const hubNodes = (debugData.hubNodes as HubNode[]) || [];
 
     logger.debug('debug-viz', 'Updating debug visualization', {
       tagConnections: tagConnections.length || 0,
@@ -1574,7 +1581,7 @@ export class GraphRenderer {
     });
 
     // Create debug group if it doesn't exist
-    let debugGroup = this.g.select('.debug-visualization');
+    let debugGroup = this.g.select<SVGGElement>('.debug-visualization');
     if (debugGroup.empty()) {
       debugGroup = this.g.append('g').attr('class', 'debug-visualization');
     }
@@ -1592,9 +1599,9 @@ export class GraphRenderer {
   /**
    * Render temporal positioning zones
    */
-  private renderTemporalZones(debugGroup: unknown, zones: unknown[]): void {
+  private renderTemporalZones(debugGroup: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, zones: TemporalZone[]): void {
     const zoneSelection = debugGroup.selectAll('.temporal-zone')
-      .data(zones, (d: unknown) => d.name);
+      .data(zones, (d: TemporalZone) => d.name);
 
     // Enter new zones
     const zoneEnter = zoneSelection.enter()
@@ -1607,10 +1614,10 @@ export class GraphRenderer {
 
     // Update existing zones
     zoneSelection.merge(zoneEnter)
-      .attr('cx', (d: unknown) => d.centerX)
-      .attr('cy', (d: unknown) => d.centerY)
-      .attr('r', (d: unknown) => d.radius)
-      .attr('stroke', (d: unknown) => {
+      .attr('cx', (d: TemporalZone) => d.centerX)
+      .attr('cy', (d: TemporalZone) => d.centerY)
+      .attr('r', (d: TemporalZone) => d.radius)
+      .attr('stroke', (d: TemporalZone) => {
         switch (d.name) {
           case 'recent': return '#4ade80'; // Green for recent
           case 'established': return '#3b82f6'; // Blue for established
@@ -1624,7 +1631,7 @@ export class GraphRenderer {
 
     // Add zone labels
     const labelSelection = debugGroup.selectAll('.temporal-zone-label')
-      .data(zones, (d: unknown) => d.name);
+      .data(zones, (d: TemporalZone) => d.name);
 
     const labelEnter = labelSelection.enter()
       .append('text')
@@ -1635,9 +1642,9 @@ export class GraphRenderer {
       .attr('fill-opacity', 0.7);
 
     labelSelection.merge(labelEnter)
-      .attr('x', (d: unknown) => d.centerX)
-      .attr('y', (d: unknown) => d.centerY - d.radius + 20)
-      .attr('fill', (d: unknown) => {
+      .attr('x', (d: TemporalZone) => d.centerX)
+      .attr('y', (d: TemporalZone) => d.centerY - d.radius + 20)
+      .attr('fill', (d: TemporalZone) => {
         switch (d.name) {
           case 'recent': return '#22c55e';
           case 'established': return '#2563eb';
@@ -1645,7 +1652,7 @@ export class GraphRenderer {
           default: return '#6b7280';
         }
       })
-      .text((d: unknown) => d.name.toUpperCase());
+      .text((d: TemporalZone) => d.name.toUpperCase());
 
     labelSelection.exit().remove();
   }
@@ -1653,9 +1660,9 @@ export class GraphRenderer {
   /**
    * Render tag connection links
    */
-  private renderTagConnections(debugGroup: unknown, connections: unknown[]): void {
+  private renderTagConnections(debugGroup: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, connections: TagConnection[]): void {
     const connectionSelection = debugGroup.selectAll('.tag-connection')
-      .data(connections, (d: unknown) => `${d.sourceId}-${d.targetId}`);
+      .data(connections, (d: TagConnection) => `${d.sourceId}-${d.targetId}`);
 
     // Enter new connections
     const connectionEnter = connectionSelection.enter()
@@ -1667,20 +1674,20 @@ export class GraphRenderer {
 
     // Update existing connections
     connectionSelection.merge(connectionEnter)
-      .attr('stroke-width', (d: unknown) => Math.max(1, d.strength * 4))
-      .attr('x1', (d: unknown) => {
+      .attr('stroke-width', (d: TagConnection) => Math.max(1, d.strength * 4))
+      .attr('x1', (d: TagConnection) => {
         const sourceNode = this.nodes.find(n => n.id === d.sourceId);
         return sourceNode?.x || 0;
       })
-      .attr('y1', (d: unknown) => {
+      .attr('y1', (d: TagConnection) => {
         const sourceNode = this.nodes.find(n => n.id === d.sourceId);
         return sourceNode?.y || 0;
       })
-      .attr('x2', (d: unknown) => {
+      .attr('x2', (d: TagConnection) => {
         const targetNode = this.nodes.find(n => n.id === d.targetId);
         return targetNode?.x || 0;
       })
-      .attr('y2', (d: unknown) => {
+      .attr('y2', (d: TagConnection) => {
         const targetNode = this.nodes.find(n => n.id === d.targetId);
         return targetNode?.y || 0;
       });
@@ -1692,9 +1699,9 @@ export class GraphRenderer {
   /**
    * Render hub node indicators
    */
-  private renderHubIndicators(debugGroup: unknown, hubs: unknown[]): void {
+  private renderHubIndicators(debugGroup: d3.Selection<SVGGElement, unknown, HTMLElement, unknown>, hubs: HubNode[]): void {
     const hubSelection = debugGroup.selectAll('.hub-indicator')
-      .data(hubs, (d: unknown) => d.nodeId);
+      .data(hubs, (d: HubNode) => d.nodeId);
 
     // Enter new hub indicators
     const hubEnter = hubSelection.enter()
@@ -1707,15 +1714,15 @@ export class GraphRenderer {
 
     // Update existing hub indicators
     hubSelection.merge(hubEnter)
-      .attr('cx', (d: unknown) => {
+      .attr('cx', (d: HubNode) => {
         const hubNode = this.nodes.find(n => n.id === d.nodeId);
         return hubNode?.x || 0;
       })
-      .attr('cy', (d: unknown) => {
+      .attr('cy', (d: HubNode) => {
         const hubNode = this.nodes.find(n => n.id === d.nodeId);
         return hubNode?.y || 0;
       })
-      .attr('r', (d: unknown) => 15 + (d.centralityScore * 10)); // Scale with centrality
+      .attr('r', (d: HubNode) => 15 + (d.centralityScore * 10)); // Scale with centrality
 
     // Remove old hub indicators
     hubSelection.exit().remove();
@@ -1749,7 +1756,7 @@ export class GraphRenderer {
     // Create cluster group if it doesn't exist
     if (!this.clusterGroup) {
       // Insert cluster group AFTER nodes so it renders on top
-      this.clusterGroup = this.g.append('g')
+      this.clusterGroup = this.g.append<SVGGElement>('g')
         .attr('class', 'cluster-visualization');
     }
 
@@ -1769,7 +1776,7 @@ export class GraphRenderer {
     if (!this.clusterGroup || !this.clusteringResult) return;
 
     const boundarySelection = this.clusterGroup.selectAll('.cluster-boundary')
-      .data(this.clusteringResult.clusters, (d: unknown) => d.id);
+      .data(this.clusteringResult.clusters, (d: Cluster) => d.id);
 
     // Remove old boundaries
     boundarySelection.exit().remove();
@@ -1787,12 +1794,12 @@ export class GraphRenderer {
     const boundaryStyle = this.smartClusteringSettings?.visualization.clusterBoundaries || 'subtle';
 
     boundaryUpdate
-      .attr('cx', (d: unknown) => d.centroid.x)
-      .attr('cy', (d: unknown) => d.centroid.y)
-      .attr('r', (d: unknown) => d.radius) // Use calculated radius without artificial minimum
-      .attr('stroke', (d: unknown) => d.color)
+      .attr('cx', (d: Cluster) => d.centroid.x)
+      .attr('cy', (d: Cluster) => d.centroid.y)
+      .attr('r', (d: Cluster) => d.radius) // Use calculated radius without artificial minimum
+      .attr('stroke', (d: Cluster) => d.color)
       .attr('data-style', boundaryStyle)
-      .attr('data-type', (d: unknown) => d.type);
+      .attr('data-type', (d: Cluster) => d.type);
   }
 
   /**
@@ -1802,7 +1809,7 @@ export class GraphRenderer {
     if (!this.clusterGroup || !this.clusteringResult) return;
 
     const labelSelection = this.clusterGroup.selectAll('.cluster-label')
-      .data(this.clusteringResult.clusters, (d: unknown) => d.id);
+      .data(this.clusteringResult.clusters, (d: Cluster) => d.id);
 
     // Remove old labels
     labelSelection.exit().remove();
@@ -1816,10 +1823,10 @@ export class GraphRenderer {
     const labelUpdate = labelSelection.merge(labelEnter);
 
     labelUpdate
-      .attr('x', (d: unknown) => d.centroid.x)
-      .attr('y', (d: unknown) => d.centroid.y - d.radius + 15) // Position above cluster
-      .attr('data-type', (d: unknown) => d.type)
-      .text((d: unknown) => d.label || `Cluster ${d.nodes.length}`);
+      .attr('x', (d: Cluster) => d.centroid.x)
+      .attr('y', (d: Cluster) => d.centroid.y - d.radius + 15) // Position above cluster
+      .attr('data-type', (d: Cluster) => d.type)
+      .text((d: Cluster) => d.label || `Cluster ${d.nodes.length}`);
   }
 
   /**
@@ -1952,27 +1959,27 @@ export class GraphRenderer {
    */
   private updateVisibleElements(): void {
     if (!this.isDenseGraph) return;
-    
+
     const bounds = this.viewportBounds;
     let visibleLinksCount = 0;
     let hiddenLinksCount = 0;
-    
+
     // Update visible links based on viewport culling
     this.linkGroup.selectAll('line')
-      .style('display', (d: unknown) => {
-        const sourceNode = d.source;
-        const targetNode = d.target;
-        
+      .style('display', (d: GraphLink) => {
+        const sourceNode = typeof d.source === 'string' ? this.nodes.find(n => n.id === d.source) : d.source;
+        const targetNode = typeof d.target === 'string' ? this.nodes.find(n => n.id === d.target) : d.target;
+
         // First check for valid coordinates
-        if (!this.hasValidCoordinates(sourceNode) || !this.hasValidCoordinates(targetNode)) {
+        if (!sourceNode || !targetNode || !this.hasValidCoordinates(sourceNode) || !this.hasValidCoordinates(targetNode)) {
           hiddenLinksCount++;
           return 'none';
         }
-        
+
         // Check if either endpoint is in viewport
         const sourceVisible = this.isNodeInViewport(sourceNode, bounds);
         const targetVisible = this.isNodeInViewport(targetNode, bounds);
-        
+
         if (sourceVisible || targetVisible) {
           visibleLinksCount++;
           return 'block';
@@ -1981,17 +1988,17 @@ export class GraphRenderer {
           return 'none';
         }
       });
-    
+
     // Update visible nodes based on viewport culling
     this.nodeGroup.selectAll('circle')
-      .style('display', (d: unknown) => {
+      .style('display', (d: GraphNode) => {
         // Only show nodes with valid coordinates that are in viewport
         if (!this.hasValidCoordinates(d)) {
           return 'none';
         }
         return this.isNodeInViewport(d, bounds) ? 'block' : 'none';
       });
-    
+
     logger.debug('viewport-culling', `Updated visibility: ${visibleLinksCount} visible, ${hiddenLinksCount} hidden links`);
   }
   
@@ -2023,11 +2030,12 @@ export class GraphRenderer {
   /**
    * Check if a node has valid coordinates (not NaN or undefined)
    */
-  private hasValidCoordinates(node: unknown): boolean {
-    return node && 
-           typeof node.x === 'number' && 
-           typeof node.y === 'number' && 
-           !isNaN(node.x) && 
+  private hasValidCoordinates(node: GraphNode | string): boolean {
+    if (typeof node === 'string') return false;
+    return node &&
+           typeof node.x === 'number' &&
+           typeof node.y === 'number' &&
+           !isNaN(node.x) &&
            !isNaN(node.y) &&
            isFinite(node.x) &&
            isFinite(node.y);
@@ -2073,15 +2081,15 @@ export class GraphRenderer {
   /**
    * Check if a node is within the viewport bounds
    */
-  private isNodeInViewport(node: unknown, bounds: { x: number; y: number; width: number; height: number }): boolean {
+  private isNodeInViewport(node: GraphNode, bounds: { x: number; y: number; width: number; height: number }): boolean {
     if (!this.hasValidCoordinates(node)) {
       return false;
     }
-    
-    return node.x >= bounds.x && 
-           node.x <= bounds.x + bounds.width &&
-           node.y >= bounds.y && 
-           node.y <= bounds.y + bounds.height;
+
+    return (node.x ?? 0) >= bounds.x &&
+           (node.x ?? 0) <= bounds.x + bounds.width &&
+           (node.y ?? 0) >= bounds.y &&
+           (node.y ?? 0) <= bounds.y + bounds.height;
   }
   
   /**
@@ -2114,27 +2122,27 @@ export class GraphRenderer {
     const allLines = this.g.select('.sonigraph-temporal-links').selectAll('line');
     let removedCount = 0;
 
-    allLines.each(function(d: unknown) {
-      const sourceNode = d.source;
-      const targetNode = d.target;
-      
+    allLines.each(function(d: GraphLink) {
+      const sourceNode = typeof d.source === 'string' ? null : d.source;
+      const targetNode = typeof d.target === 'string' ? null : d.target;
+
       // Check if either endpoint has invalid coordinates
-      const sourceInvalid = !sourceNode || 
-        typeof sourceNode.x !== 'number' || 
-        typeof sourceNode.y !== 'number' || 
-        isNaN(sourceNode.x) || 
+      const sourceInvalid = !sourceNode ||
+        typeof sourceNode.x !== 'number' ||
+        typeof sourceNode.y !== 'number' ||
+        isNaN(sourceNode.x) ||
         isNaN(sourceNode.y) ||
         !isFinite(sourceNode.x) ||
         !isFinite(sourceNode.y);
-        
-      const targetInvalid = !targetNode || 
-        typeof targetNode.x !== 'number' || 
-        typeof targetNode.y !== 'number' || 
-        isNaN(targetNode.x) || 
+
+      const targetInvalid = !targetNode ||
+        typeof targetNode.x !== 'number' ||
+        typeof targetNode.y !== 'number' ||
+        isNaN(targetNode.x) ||
         isNaN(targetNode.y) ||
         !isFinite(targetNode.x) ||
         !isFinite(targetNode.y);
-      
+
       if (sourceInvalid || targetInvalid) {
         // Log details about the invalid link for debugging
         if (removedCount < 5) { // Only log first few to avoid spam
@@ -2149,11 +2157,11 @@ export class GraphRenderer {
         removedCount++;
       }
     });
-    
+
     if (removedCount > 0) {
       logger.info('invalid-link-removal', `Force removed ${removedCount} links with invalid coordinates from DOM`);
     }
-    
+
     return removedCount;
   }
 

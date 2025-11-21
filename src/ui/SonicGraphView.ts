@@ -6,9 +6,10 @@
  * Includes timeline controls, settings panel, and cross-navigation to Control Center.
  */
 
-import { ItemView, WorkspaceLeaf, ButtonComponent, Notice, setTooltip, Setting, setIcon, Platform } from 'obsidian';
+import { ItemView, WorkspaceLeaf, ButtonComponent, Notice, setTooltip, Setting, setIcon, Platform, ViewStateResult } from 'obsidian';
 import { GraphDataExtractor, GraphNode } from '../graph/GraphDataExtractor';
 import { GraphRenderer } from '../graph/GraphRenderer';
+import type { AudioMappingConfig } from '../graph/types';
 import { TemporalGraphAnimator } from '../graph/TemporalGraphAnimator';
 import { MusicalMapper } from '../graph/musical-mapper';
 import { AdaptiveDetailManager, FilteredGraphData } from '../graph/AdaptiveDetailManager';
@@ -21,15 +22,28 @@ import { ContinuousLayerManager } from '../audio/layers/ContinuousLayerManager';
 import { NoteVisualizationManager } from '../visualization/NoteVisualizationManager';
 import { ViewPendingState, ViewWithPendingState, DynamicSettings } from '../obsidian-extended';
 import { PanningMode, PanningCurve } from '../audio/spatial/types';
+import type { NoteTriggeredData } from '../audio/playback-events';
 
 const logger = getLogger('SonicGraphView');
 
 export const VIEW_TYPE_SONIC_GRAPH = 'sonic-graph-view';
 
 /**
+ * Musical mapping for a node
+ */
+interface MusicalMapping {
+    nodeId: string;
+    pitch: number;
+    duration: number;
+    velocity: number;
+    timing: number;
+    instrument: string;
+}
+
+/**
  * State interface for Sonic Graph view persistence
  */
-export interface SonicGraphViewState {
+export interface SonicGraphViewState extends Record<string, unknown> {
     // Timeline state
     isTimelineView: boolean;
     isAnimating: boolean;
@@ -154,7 +168,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         return 'chart-network';
     }
 
-    async setState(state: unknown, result: unknown): Promise<void> {
+    async setState(state: unknown, result: ViewStateResult): Promise<void> {
         void logger.debug('state', 'Restoring view state', state);
 
         // Call parent implementation first
@@ -226,7 +240,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         void logger.info('state', 'View state restoration complete');
     }
 
-    getState(): unknown {
+    getState(): Record<string, unknown> {
         logger.info('state', 'getState() called - capturing view state', {
             isTimelineView: this.isTimelineView,
             hasScrubber: !!this.timelineScrubber,
@@ -273,7 +287,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         return state;
     }
 
-    onOpen(): void {
+    async onOpen(): Promise<void> {
         logger.info('sonic-graph-init', 'View onOpen() started');
 
         try {
@@ -497,7 +511,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
                 this.continuousLayerManager = new ContinuousLayerManager(
                     this.plugin.settings,
-                    layerConfig
+                    layerConfig as Partial<import('../audio/layers/types').ContinuousLayerConfig>
                 );
             }
 
@@ -641,7 +655,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             const masterVolume = this.plugin.audioEngine.getMasterVolume();
 
             if (audioContext && masterVolume) {
-                this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+                this.visualizationManager.connectSpectrumToAudio(audioContext as unknown as AudioContext, masterVolume as unknown as AudioNode);
                 void logger.info('visual-display', 'Connected spectrum analyzer to audio after mode switch');
             }
         }
@@ -724,7 +738,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 const masterVolume = this.plugin.audioEngine.getMasterVolume();
 
                 if (audioContext && masterVolume) {
-                    this.visualizationManager.connectSpectrumToAudio(audioContext, masterVolume);
+                    this.visualizationManager.connectSpectrumToAudio(audioContext as unknown as AudioContext, masterVolume as unknown as AudioNode);
                     void logger.info('visual-display', 'Connected spectrum analyzer to audio');
                 }
             }
@@ -756,7 +770,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         }
 
         // Listen for note-triggered events from audio engine
-        this.plugin.audioEngine.on('note-triggered', (data: unknown) => {
+        this.plugin.audioEngine.on('note-triggered', (data: NoteTriggeredData) => {
             if (!this.visualizationManager) {
                 void logger.warn('visual-display', 'Received note event but no visualization manager');
                 return;
@@ -799,7 +813,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         void logger.info('visual-display', 'Audio engine integration setup complete');
     }
 
-    onClose(): void {
+    async onClose(): Promise<void> {
         void logger.info('ui', 'Closing Sonic Graph view - starting cleanup');
 
         try {
@@ -1569,12 +1583,14 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
             // Initialize temporal animator if needed
             if (!this.temporalAnimator) {
-                this.initializeTemporalAnimator().catch(error => {
+                try {
+                    this.initializeTemporalAnimator();
+                } catch (error) {
                     void logger.error('Failed to initialize temporal animator for timeline view', error);
                     // Fall back to static view
                     this.isTimelineView = false;
                     void this.updateViewMode();
-                });
+                }
             } else {
                 // Reset to beginning and hide all nodes
                 this.temporalAnimator.stop();
@@ -4978,7 +4994,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         communityType: keyof typeof this.plugin.settings.communityDetection.communityTypeEnabled,
         displayName: string,
         description: string,
-        settings: unknown
+        settings: typeof this.plugin.settings.communityDetection
     ): void {
         const communityContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
 
@@ -5019,7 +5035,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         eventType: keyof typeof this.plugin.settings.communityEvolution.enabledEventTypes,
         displayName: string,
         description: string,
-        settings: unknown
+        settings: typeof this.plugin.settings.communityEvolution
     ): void {
         const eventContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
 
@@ -5104,7 +5120,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         clusterType: keyof typeof this.plugin.settings.clusterAudio.clusterTypeEnabled,
         displayName: string,
         description: string,
-        settings: unknown
+        settings: typeof this.plugin.settings.clusterAudio
     ): void {
         const clusterContainer = container.createDiv({ cls: 'sonic-graph-cluster-type-container' });
 
@@ -5181,7 +5197,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Get default audio enhancement settings
      */
-    private getDefaultAudioEnhancementSettings(): unknown {
+    private getDefaultAudioEnhancementSettings(): AudioMappingConfig {
         return {
             contentAwareMapping: {
                 enabled: false,
@@ -5202,13 +5218,21 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 rhythmicEnabled: false,
                 harmonicEnabled: false,
                 scale: 'major',
-                key: 'C'
+                key: 'C',
+                ambientDrone: {},
+                rhythmicLayer: {},
+                harmonicPad: {}
             },
             musicalTheory: {
+                enabled: false,
                 scale: 'major',
-                key: 'C',
-                mode: 'ionian',
-                constrainToScale: false
+                rootNote: 'C',
+                enforceHarmony: false,
+                allowChromaticPassing: true,
+                dissonanceThreshold: 0.5,
+                quantizationStrength: 0.5,
+                preferredChordProgression: undefined,
+                dynamicScaleModulation: false
             },
             externalServices: {
                 freesoundApiKey: '',
@@ -5729,7 +5753,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Format group label in type:name format
      */
-    private formatGroupLabel(group: unknown): string {
+    private formatGroupLabel(group: { id: string; name: string; path: string; color: string }): string {
         // Determine type based on group properties
         let type = 'path'; // default
         if (group.name.toLowerCase().includes('file') || group.path.includes('.')) {
@@ -5737,7 +5761,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
         } else if (group.name.toLowerCase().includes('tag')) {
             type = 'tag';
         }
-        
+
         return `${type}:${group.name}`;
     }
     
@@ -6300,7 +6324,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Update time markers along the timeline
      */
-    private updateTimeMarkers(timelineInfo: unknown): void {
+    private updateTimeMarkers(timelineInfo: { startDate: Date; endDate: Date; eventCount: number; duration: number }): void {
         const markersContainer = this.timelineInfo.querySelector('.sonic-graph-timeline-markers');
         if (!markersContainer) return;
 
@@ -6527,7 +6551,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Create a musical mapping for a graph node
      */
-    private createMusicalMappingForNode(node: GraphNode): unknown {
+    private createMusicalMappingForNode(node: GraphNode): MusicalMapping | null {
         // Get settings for audio customization
         const settings = this.getSonicGraphSettings();
         
@@ -6650,7 +6674,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Calculate scale-aware pitch for a node
      * Uses scale degrees instead of chromatic hashing for more musical results
      */
-    private calculateScaleAwarePitch(node: GraphNode, settings: unknown): number {
+    private calculateScaleAwarePitch(node: GraphNode, settings: ReturnType<typeof this.getSonicGraphSettings>): number {
         // Get musical theory settings
         const theorySettings = this.plugin.settings.audioEnhancement?.musicalTheory;
         const scale = theorySettings?.scale || 'major';
@@ -6812,7 +6836,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Calculate rhythmic duration with phrase-aware patterns
      * Creates rhythmic variety through phrase position and file properties
      */
-    private calculateRhythmicDuration(node: GraphNode, settings: unknown): number {
+    private calculateRhythmicDuration(node: GraphNode, settings: ReturnType<typeof this.getSonicGraphSettings>): number {
         const baseDuration = settings.audio.noteDuration || 0.3;
 
         // Position in current phrase (0-7 for 8-note phrases)
@@ -6882,7 +6906,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
      * Calculate dynamic velocity with phrase expression curves
      * Creates musical dynamics through crescendo/diminuendo and accents
      */
-    private calculateDynamicVelocity(node: GraphNode, settings: unknown): number {
+    private calculateDynamicVelocity(node: GraphNode, settings: ReturnType<typeof this.getSonicGraphSettings>): number {
         const baseVelocity = 0.5;
 
         // Position in current phrase
@@ -6922,7 +6946,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
 
         // File type factor (certain file types get emphasis)
         let fileTypeBoost = 0.0;
-        if (node.type === 'md' || node.type === 'txt') {
+        if (node.type === 'note') {
             fileTypeBoost = 0.1; // Emphasize note files
         }
 
@@ -6991,6 +7015,16 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
                 connectionOpacity: 0.6,
                 timelineMarkersEnabled: true,
                 loopAnimation: false
+            },
+            visualDisplay: {
+                enabled: true,
+                mode: 'piano-roll' as const,
+                frameRate: 30,
+                colorScheme: 'layer' as const,
+                showLabels: true,
+                showGrid: true,
+                enableTrails: false,
+                height: 250
             },
             navigation: {
                 enableControlCenter: true,
@@ -7275,6 +7309,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             timeline: { ...defaultSettings.timeline, ...settings.timeline },
             audio: { ...defaultSettings.audio, ...settings.audio },
             visual: { ...defaultSettings.visual, ...settings.visual },
+            visualDisplay: { ...defaultSettings.visualDisplay, ...settings.visualDisplay },
             navigation: { ...defaultSettings.navigation, ...settings.navigation },
             adaptiveDetail: { ...defaultSettings.adaptiveDetail, ...settings.adaptiveDetail },
             layout: { ...defaultSettings.layout, ...settings.layout },
@@ -7615,7 +7650,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
             const instruments = this.plugin.settings.instruments;
             if (instruments) {
                 return Object.entries(instruments)
-                    .filter(([_, config]: [string, unknown]) => config.enabled)
+                    .filter(([_, config]: [string, unknown]) => (config as { enabled?: boolean }).enabled)
                     .map(([name, _]) => name);
             }
         } catch (error) {
@@ -7740,7 +7775,7 @@ export class SonicGraphView extends ItemView implements ViewWithPendingState {
     /**
      * Create fallback mapping when no instruments are enabled
      */
-    private createFallbackMapping(node: GraphNode, fallbackInstrument: string): unknown {
+    private createFallbackMapping(node: GraphNode, fallbackInstrument: string): MusicalMapping {
         const baseFreq = 261.63; // C4
         const fileNameHash = this.hashString(node.title);
         const pitchOffset = (fileNameHash % 24) - 12;
