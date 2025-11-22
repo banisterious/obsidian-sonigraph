@@ -8,6 +8,7 @@
 import { Notice } from 'obsidian';
 import {
     ConnectionTypeMappingConfig,
+    ConnectionTypeMapping,
     ConnectionTypePreset,
     ConnectionType,
     BUILT_IN_PRESETS,
@@ -399,6 +400,7 @@ export class ConnectionTypePresetManager {
                 mappings[connectionType as ConnectionType] = {
                     enabled: mapping.enabled,
                     instrumentFamily: mapping.instrumentFamily,
+                    instrumentNames: mapping.instrumentNames,
                     intensity: mapping.intensity,
                     audioCharacteristics: { ...mapping.audioCharacteristics },
                     linkStrengthAnalysis: { ...mapping.linkStrengthAnalysis },

@@ -534,8 +534,13 @@ export class NoteCentricMapper {
 				contentType: prose.contentType,
 				progressionChoicesLength: progressionChoices.length
 			});
-			// Use fallback progression
-			return this.generateSimpleCenterPhrase(length, prose);
+			// Use simple fallback I-IV-V-I progression
+			const simpleHarmony = [0, 5, 7, 0];
+			const fallbackHarmony: number[] = [];
+			for (let i = 0; i < length; i++) {
+				fallbackHarmony.push(simpleHarmony[i % simpleHarmony.length]);
+			}
+			return fallbackHarmony;
 		}
 
 		// Build harmonic structure with voice leading and stronger cadences

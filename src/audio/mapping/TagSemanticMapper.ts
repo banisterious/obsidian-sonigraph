@@ -120,7 +120,7 @@ export class TagSemanticMapper {
             // Step 3: Select instrument based on semantic analysis
             void reasoning.push('Selecting instrument based on semantic analysis');
             const { instrument, instrumentConfig, confidence, alternativeInstruments } =
-                void this.selectInstrumentFromSemantics(analysis, tags);
+                this.selectInstrumentFromSemantics(analysis, tags);
 
             // Step 4: Generate musical properties
             void reasoning.push('Generating musical properties from semantic analysis');

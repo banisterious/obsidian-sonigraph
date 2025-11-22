@@ -328,7 +328,7 @@ export const BUILT_IN_PRESETS: ConnectionTypePreset[] = [
                 {
                     enabled: true,
                     instrumentFamily: family,
-                    instrumentNames: [], // Will be populated by the mapper
+                    instrumentNames: [] as string[], // Will be populated by the mapper
                     intensity: 0.7,
                     audioCharacteristics: DEFAULT_CONNECTION_CHARACTERISTICS[type as ConnectionType],
                     priority: 5,
@@ -504,7 +504,7 @@ export const DEFAULT_CONNECTION_TYPE_MAPPING_CONFIG: ConnectionTypeMappingConfig
             {
                 enabled: type === 'wikilink' || type === 'embed', // Enable core types by default
                 instrumentFamily: family,
-                instrumentNames: [],
+                instrumentNames: [] as string[],
                 intensity: 0.7,
                 audioCharacteristics: DEFAULT_CONNECTION_CHARACTERISTICS[type as ConnectionType],
                 priority: 5,

@@ -167,6 +167,6 @@ export interface AudioMappingConfig {
 		dynamicRange: string;
 		polyphonicDensity: string;
 		melodicIndependence: number;
-		voiceLeadingStyle: string;
+		voiceLeadingStyle: 'smooth' | 'balanced' | 'chromatic';
 	};
 } 

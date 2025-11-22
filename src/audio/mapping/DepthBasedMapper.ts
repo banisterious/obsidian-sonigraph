@@ -153,6 +153,7 @@ export interface DepthMappingConfig {
 export interface DepthMapping extends MusicalMapping {
 	depth: number;
 	direction: 'center' | 'incoming' | 'outgoing' | 'bidirectional';
+	pan?: number;                 // Stereo panning position (-1 to 1)
 
 	// Polyphonic voicing support (Phase 2)
 	chordFrequencies?: number[];  // All frequencies in chord (if voicing enabled)
@@ -481,7 +482,7 @@ export class DepthBasedMapper {
 			try {
 				const { ProseAnalyzer } = await import('../../utils/ProseAnalyzer');
 				const centerFile = this.app.vault.getAbstractFileByPath(data.centerNode.path);
-				if (centerFile && 'cachedRead' in centerFile) {
+				if (centerFile && centerFile instanceof TFile) {
 					const content = await this.app.vault.cachedRead(centerFile);
 					proseAnalysis = ProseAnalyzer.analyze(content);
 					logger.info('prose-analysis', 'Analyzed prose structure', {

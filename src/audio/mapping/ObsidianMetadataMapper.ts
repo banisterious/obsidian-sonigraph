@@ -5,7 +5,7 @@
  * zero-latency vault analysis without file I/O operations.
  */
 
-import { TFile, CachedMetadata, App } from 'obsidian';
+import { TFile, CachedMetadata, HeadingCache, App } from 'obsidian';
 import { InstrumentMapping, AudioMappingConfig } from '../../graph/types';
 import { getLogger } from '../../logging';
 
@@ -374,7 +374,7 @@ export class ObsidianMetadataMapper {
     /**
      * Map heading structure to rhythm characteristics
      */
-    private mapHeadingsToRhythm(headings?: Array<unknown>): RhythmMapping {
+    private mapHeadingsToRhythm(headings?: HeadingCache[]): RhythmMapping {
         const headingCount = headings?.length || 0;
         
         if (headingCount === 0) {

@@ -257,10 +257,12 @@ export class ConnectionTypeMapper {
                 return null;
             }
 
-            const targetFile = targetNode ?
-                this.app.vault.getAbstractFileByPath(targetNode.id) : null;
-            if (targetFile && !(targetFile instanceof TFile)) {
-                return null;
+            let targetFile: TFile | null = null;
+            if (targetNode) {
+                const targetFileCandidate = this.app.vault.getAbstractFileByPath(targetNode.id);
+                if (targetFileCandidate && targetFileCandidate instanceof TFile) {
+                    targetFile = targetFileCandidate;
+                }
             }
 
             const metadata = this.app.metadataCache.getFileCache(sourceFile);
