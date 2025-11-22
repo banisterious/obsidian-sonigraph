@@ -1,4 +1,6 @@
 // Import required types from constants
+import * as Tone from 'tone';
+
 export interface EffectNode {
     id: string;
     type: 'reverb' | 'chorus' | 'filter' | 'delay' | 'distortion' | 'compressor' | 'eq3';
@@ -57,38 +59,43 @@ export interface EffectParameters {
     frequency?: number;
     delayTime?: number;
     feedback?: number;
-    
+
     // Reverb parameters
     decay?: number;
     preDelay?: number;
-    
+
     // Chorus parameters
     depth?: number;
-    
+
     // Filter parameters
     type?: 'lowpass' | 'highpass' | 'bandpass' | 'notch';
     rolloff?: -12 | -24 | -48 | -96;
     Q?: number;
-    
+
     // Distortion parameters
     distortion?: number;
     oversample?: '2x' | '4x' | 'none';
-    
+
     // Compressor parameters
     threshold?: number;
     ratio?: number;
     attack?: number;
     release?: number;
     knee?: number;
-    
+
     // EQ3 parameters
     low?: number;
     mid?: number;
     high?: number;
+
+    // Index signature for additional parameters
+    [key: string]: unknown;
 }
 
+export type ToneEffectNode = Tone.Reverb | Tone.Chorus | Tone.Filter | Tone.Delay | Tone.Distortion | Tone.Compressor | Tone.EQ3;
+
 export interface EffectInstance {
-    node: unknown; // Tone.js effect instance
+    node: ToneEffectNode; // Tone.js effect instance
     type: string;
     parameters: EffectParameters;
     enabled: boolean;

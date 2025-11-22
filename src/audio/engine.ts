@@ -1,5 +1,5 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, Frequency } from 'tone';
+import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, Frequency, ToneAudioNode } from 'tone';
 import type { SamplerOptions } from 'tone';
 import { App } from 'obsidian';
 import { MusicalMapping } from '../graph/types';
@@ -9,6 +9,7 @@ import { ElectronicEngine } from './electronic-engine';
 import { RhythmicPercussionEngine } from './percussion';
 import { VoiceManager } from './voice-management';
 import { EffectBusManager } from './effects';
+import { EffectType, SendBus, ReturnBus } from './effects/types';
 import { InstrumentConfigLoader } from './configs/InstrumentConfigLoader';
 import { getLogger, LoggerFactory } from '../logging';
 import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackErrorData } from './playback-events';
@@ -178,7 +179,7 @@ export class AudioEngine {
 		return this.effectBusManager.getEffectChain(instrumentName);
 	}
 
-	addEffectToChain(instrumentName: string, effectType: unknown, position?: number): string {
+	addEffectToChain(instrumentName: string, effectType: EffectType, position?: number): string {
 		return this.effectBusManager.addEffectToChain(instrumentName, effectType, position);
 	}
 
@@ -201,11 +202,11 @@ export class AudioEngine {
 	/**
 	 * Bus management delegates
 	 */
-	getSendBuses(): Map<string, unknown> {
+	getSendBuses(): Map<string, SendBus> {
 		return this.effectBusManager.getSendBuses();
 	}
 
-	getReturnBuses(): Map<string, new (...args: unknown[]) => unknown> {
+	getReturnBuses(): Map<string, ReturnBus> {
 		return this.effectBusManager.getReturnBuses();
 	}
 
@@ -224,29 +225,29 @@ export class AudioEngine {
 		}
 	}
 
-	get effectChains(): Map<string, unknown[]> {
+	get effectChains(): Map<string, EffectNode[]> {
 		// Convert EffectBusManager chains to legacy format
-		const legacyChains = new Map();
+		const legacyChains = new Map<string, EffectNode[]>();
 		// Implementation would go here if needed
 		return legacyChains;
 	}
 
-	get sendBuses(): Map<string, new (...args: unknown[]) => unknown> {
+	get sendBuses(): Map<string, SendBus> {
 		return this.effectBusManager.getSendBuses();
 	}
 
-	get returnBuses(): Map<string, unknown> {
+	get returnBuses(): Map<string, ReturnBus> {
 		return this.effectBusManager.getReturnBuses();
 	}
 
-	get masterEffectsNodes(): Map<string, unknown> {
+	get masterEffectsNodes(): Map<string, ToneAudioNode> {
 		// Legacy access to master effects - could be implemented if needed
-		return new Map();
+		return new Map<string, ToneAudioNode>();
 	}
 
-	get effectNodeInstances(): Map<string, unknown> {
+	get effectNodeInstances(): Map<string, ToneAudioNode> {
 		// Legacy access to effect instances - could be implemented if needed
-		return new Map();
+		return new Map<string, ToneAudioNode>();
 	}
 
 	get masterReverb(): unknown {
@@ -799,13 +800,13 @@ export class AudioEngine {
 		// Initialize send buses
 		for (const [, sendBusArray] of routingMatrix.sends) {
 			for (const sendBus of sendBusArray) {
-				this.sendBuses.set(sendBus.id, sendBus);
+				this.sendBuses.set(sendBus.id, sendBus as unknown as SendBus);
 			}
 		}
 
-		// Initialize return buses  
+		// Initialize return buses
 		for (const [busId, returnBus] of routingMatrix.returns) {
-			this.returnBuses.set(busId, returnBus);
+			this.returnBuses.set(busId, returnBus as unknown as ReturnBus);
 		}
 
 		logger.debug('enhanced-routing', 'Send/return buses initialized', {
@@ -843,22 +844,25 @@ export class AudioEngine {
 		void logger.debug('enhanced-routing', 'Enhanced instrument connections established');
 	}
 
-	private connectToMasterChain(instrumentOutput: unknown): void {
-		let output = instrumentOutput;
-		
+	private connectToMasterChain(instrumentOutput: ToneAudioNode): void {
+		let output: ToneAudioNode = instrumentOutput;
+
 		// Connect through master effects if enabled
 		if (this.masterEffectsNodes.has('compressor')) {
-			output = output.connect(this.masterEffectsNodes.get('compressor'));
+			const compressor = this.masterEffectsNodes.get('compressor');
+			if (compressor) output = output.connect(compressor);
 		}
-		
+
 		if (this.masterEffectsNodes.has('eq')) {
-			output = output.connect(this.masterEffectsNodes.get('eq'));
+			const eq = this.masterEffectsNodes.get('eq');
+			if (eq) output = output.connect(eq);
 		}
-		
+
 		if (this.masterEffectsNodes.has('reverb')) {
-			output = output.connect(this.masterEffectsNodes.get('reverb'));
+			const reverb = this.masterEffectsNodes.get('reverb');
+			if (reverb) output = output.connect(reverb);
 		}
-		
+
 		// Finally connect to master volume
 		if (this.volume) {
 			void output.connect(this.volume);

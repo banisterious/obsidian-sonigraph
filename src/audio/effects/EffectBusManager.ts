@@ -1,11 +1,13 @@
 import { Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3 } from 'tone';
+import * as Tone from 'tone';
 import {
     EffectNode,
     SendBus,
     ReturnBus,
     EffectParameters,
     EffectBusMetrics,
-    EffectType
+    EffectType,
+    ToneEffectNode
 } from './types';
 import { getLogger } from '../../logging';
 
@@ -16,8 +18,8 @@ export class EffectBusManager {
     private effectChains: Map<string, EffectNode[]> = new Map();
     private sendBuses: Map<string, SendBus> = new Map();
     private returnBuses: Map<string, ReturnBus> = new Map();
-    private masterEffectsNodes: Map<string, unknown> = new Map();
-    private effectNodeInstances: Map<string, unknown> = new Map();
+    private masterEffectsNodes: Map<string, ToneEffectNode> = new Map();
+    private effectNodeInstances: Map<string, ToneEffectNode> = new Map();
 
     // Master effects
     private masterReverb: Reverb | null = null;
@@ -106,11 +108,11 @@ export class EffectBusManager {
     /**
      * Initialize master effects chain
      */
-    private initializeMasterEffects(): Promise<void> {
+    private async initializeMasterEffects(): Promise<void> {
         // Master Reverb
         this.masterReverb = new Reverb(2.0).toDestination();
         this.masterEffectsNodes.set('master-reverb', this.masterReverb);
-        
+
         // Master EQ
         this.masterEQ = new EQ3({
             low: 0,
@@ -118,8 +120,8 @@ export class EffectBusManager {
             high: 0
         }).connect(this.masterReverb);
         this.masterEffectsNodes.set('master-eq', this.masterEQ);
-        
-        // Master Compressor  
+
+        // Master Compressor
         this.masterCompressor = new Compressor({
             threshold: -24,
             ratio: 12,
@@ -183,7 +185,7 @@ export class EffectBusManager {
     /**
      * Create Tone.js effect instance
      */
-    private createEffectInstance(type: EffectType, parameters: EffectParameters): unknown {
+    private createEffectInstance(type: EffectType, parameters: EffectParameters): ToneEffectNode | null {
         switch (type) {
             case 'reverb':
                 return new Reverb(parameters.decay || 1.5);
@@ -235,38 +237,38 @@ export class EffectBusManager {
     /**
      * Connect instrument through its effect chain
      */
-    connectInstrumentEnhanced(instrument: unknown, instrumentName: string): void {
+    connectInstrumentEnhanced(instrument: Tone.ToneAudioNode, instrumentName: string): void {
         if (!this.enhancedRouting) return;
-        
+
         const chain = this.effectChains.get(instrumentName);
         if (!chain || chain.length === 0) {
             // No effects - connect directly to master chain
             void this.connectToMasterChain(instrument);
             return;
         }
-        
+
         // Connect through effect chain
-        let currentNode = instrument;
-        
+        let currentNode: Tone.ToneAudioNode = instrument;
+
         for (const effectNode of chain) {
             if (!effectNode.enabled || effectNode.bypassed) continue;
-            
+
             const effectInstance = this.effectNodeInstances.get(effectNode.id);
             if (effectInstance) {
                 currentNode = currentNode.connect(effectInstance);
             }
         }
-        
+
         // Connect final node to master chain
         void this.connectToMasterChain(currentNode);
-        
+
         logger.debug('routing', `Connected ${instrumentName} through effect chain`);
     }
 
     /**
      * Connect to master effects chain
      */
-    private connectToMasterChain(node: unknown): unknown {
+    private connectToMasterChain(node: Tone.ToneAudioNode): Tone.ToneAudioNode {
         if (this.masterCompressor) {
             return node.connect(this.masterCompressor);
         } else {
@@ -366,13 +368,13 @@ export class EffectBusManager {
         if (!effectNode) return false;
         
         effectNode.bypassed = !effectNode.bypassed;
-        
+
         // Update actual effect instance
         const effectInstance = this.effectNodeInstances.get(effectId);
-        if (effectInstance && effectInstance.wet) {
+        if (effectInstance && 'wet' in effectInstance) {
             effectInstance.wet.value = effectNode.bypassed ? 0 : 1;
         }
-        
+
         logger.debug('effects', `Toggled ${effectId} bypass: ${effectNode.bypassed}`);
         return effectNode.bypassed;
     }
@@ -401,40 +403,40 @@ export class EffectBusManager {
     /**
      * Apply parameters to effect instance
      */
-    private applyParametersToInstance(instance: unknown, type: EffectType, parameters: EffectParameters): void {
+    private applyParametersToInstance(instance: ToneEffectNode, type: EffectType, parameters: EffectParameters): void {
         switch (type) {
             case 'reverb':
-                if (parameters.decay !== undefined) instance.decay = parameters.decay;
-                if (parameters.preDelay !== undefined) instance.preDelay = parameters.preDelay;
-                if (parameters.wet !== undefined) instance.wet.value = parameters.wet;
+                if (parameters.decay !== undefined) (instance as Reverb).decay = parameters.decay;
+                if (parameters.preDelay !== undefined) (instance as Reverb).preDelay = parameters.preDelay;
+                if (parameters.wet !== undefined && 'wet' in instance) instance.wet.value = parameters.wet;
                 break;
-                
+
             case 'chorus':
-                if (parameters.frequency !== undefined) instance.frequency.value = parameters.frequency;
-                if (parameters.delayTime !== undefined) instance.delayTime = parameters.delayTime;
-                if (parameters.depth !== undefined) instance.depth = parameters.depth;
+                if (parameters.frequency !== undefined) (instance as Chorus).frequency.value = parameters.frequency;
+                if (parameters.delayTime !== undefined) (instance as Chorus).delayTime = parameters.delayTime;
+                if (parameters.depth !== undefined) (instance as Chorus).depth = parameters.depth;
                 break;
-                
+
             case 'filter':
-                if (parameters.frequency !== undefined) instance.frequency.value = parameters.frequency;
-                if (parameters.Q !== undefined) instance.Q.value = parameters.Q;
+                if (parameters.frequency !== undefined) (instance as Filter).frequency.value = parameters.frequency;
+                if (parameters.Q !== undefined) (instance as Filter).Q.value = parameters.Q;
                 break;
-                
+
             case 'delay':
-                if (parameters.delayTime !== undefined) instance.delayTime.value = parameters.delayTime;
-                if (parameters.wet !== undefined) instance.wet.value = parameters.wet;
+                if (parameters.delayTime !== undefined) (instance as Delay).delayTime.value = parameters.delayTime;
+                if (parameters.wet !== undefined && 'wet' in instance) instance.wet.value = parameters.wet;
                 break;
-                
+
             case 'distortion':
-                if (parameters.distortion !== undefined) instance.distortion = parameters.distortion;
+                if (parameters.distortion !== undefined) (instance as Distortion).distortion = parameters.distortion;
                 break;
-                
+
             case 'eq3':
-                if (parameters.low !== undefined) instance.low.value = parameters.low;
-                if (parameters.mid !== undefined) instance.mid.value = parameters.mid;
-                if (parameters.high !== undefined) instance.high.value = parameters.high;
+                if (parameters.low !== undefined) (instance as EQ3).low.value = parameters.low;
+                if (parameters.mid !== undefined) (instance as EQ3).mid.value = parameters.mid;
+                if (parameters.high !== undefined) (instance as EQ3).high.value = parameters.high;
                 break;
-                
+
             // Add other effect types as needed
         }
     }

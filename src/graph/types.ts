@@ -140,7 +140,7 @@ export interface AudioMappingConfig {
 	};
 	chordFusion?: {
 		enabled: boolean;
-		mode: string;
+		mode: 'smart' | 'direct';
 		timingWindow: number;
 		minimumNotes: number;
 		temporalGrouping: string;

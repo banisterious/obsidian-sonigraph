@@ -5,6 +5,7 @@
  */
 
 import { GraphNode } from '../../graph/GraphDataExtractor';
+import * as Tone from 'tone';
 
 /**
  * Audio theme configuration for each cluster type
@@ -137,13 +138,14 @@ export interface ActiveClusterAudio {
   theme: ClusterAudioTheme;
 
   // Audio instances (will be Tone.js objects)
-  audioSource: unknown; // Tone.Synth or similar
-  effectChain: unknown; // Tone effects chain
+  audioSource: Tone.PolySynth; // Tone.Synth or similar
+  effectChain: Tone.Filter; // Tone effects chain
 
   // Current audio parameters
   currentFrequency: number;
   currentVolume: number;
   currentFilter: number;
+  activeFrequencies?: number[]; // Frequencies currently being played
 
   // State tracking
   isPlaying: boolean;

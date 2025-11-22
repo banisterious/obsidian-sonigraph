@@ -412,7 +412,7 @@ export class ClusterAudioMapper {
   /**
    * Execute the actual audio effect for a transition
    */
-  private executeTransitionEffect(transition: ClusterTransitionEvent): Promise<void> {
+  private async executeTransitionEffect(transition: ClusterTransitionEvent): Promise<void> {
     const theme = this.themeGenerator.getThemeForClusterType(transition.clusterType);
     const config = transition.audioConfig;
     const volume = this.settings.transitionVolume;
@@ -749,8 +749,8 @@ export class ClusterAudioMapper {
   /**
    * Get Tone.js oscillator type for texture
    */
-  private getOscillatorTypeForTexture(texture: string): string {
-    const textureMap: Record<string, string> = {
+  private getOscillatorTypeForTexture(texture: string): 'sine' | 'square' | 'triangle' | 'sawtooth' {
+    const textureMap: Record<string, 'sine' | 'square' | 'triangle' | 'sawtooth'> = {
       smooth: 'sine',
       granular: 'sawtooth',
       harmonic: 'triangle',
@@ -806,6 +806,7 @@ export class ClusterAudioMapper {
 
     // Trigger chord
     activeCluster.audioSource.triggerAttack(frequencies);
+    activeCluster.activeFrequencies = frequencies; // Store for later release
     activeCluster.isPlaying = true;
 
     logger.debug('cluster-play', 'Started cluster audio playback', {
@@ -828,10 +829,8 @@ export class ClusterAudioMapper {
 
     // Smooth parameter changes to prevent audio crackling
     if (Math.abs(newFrequency - activeCluster.currentFrequency) > 5) {
-      // Significant frequency change - ramp to new frequency
-      if (activeCluster.isPlaying) {
-        activeCluster.audioSource.frequency.rampTo(newFrequency, 0.5);
-      }
+      // Significant frequency change - store new frequency
+      // Note: PolySynth doesn't have direct frequency access; would need to retrigger notes
       activeCluster.currentFrequency = newFrequency;
     }
 
@@ -855,8 +854,8 @@ export class ClusterAudioMapper {
     logger.debug('cluster-stop', 'Stopping cluster audio', { clusterId });
 
     try {
-      if (activeCluster.isPlaying) {
-        activeCluster.audioSource.triggerRelease();
+      if (activeCluster.isPlaying && activeCluster.activeFrequencies) {
+        activeCluster.audioSource.triggerRelease(activeCluster.activeFrequencies);
         activeCluster.isPlaying = false;
       }
 
