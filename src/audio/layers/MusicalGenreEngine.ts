@@ -5,11 +5,11 @@
  * Each genre has unique synthesis parameters, sample sets, and modulation patterns.
  */
 
-import { 
-  PolySynth, 
-  FMSynth, 
-  AMSynth, 
-  NoiseSynth, 
+import {
+  PolySynth,
+  FMSynth,
+  AMSynth,
+  NoiseSynth,
   MetalSynth,
   Sampler,
   Volume,
@@ -24,6 +24,7 @@ import {
   Phaser,
   start
 } from 'tone';
+import type { InputNode } from 'tone';
 
 import {
   MusicalGenre,
@@ -57,6 +58,16 @@ interface ModulationPattern {
 
 type EffectType = 'reverb' | 'delay' | 'chorus' | 'distortion' | 'filter' | 'phaser' | 'bitcrusher' | 'pingpong';
 
+/**
+ * Union type for all effects used in genre engine
+ */
+type GenreEffectNode = Reverb | Delay | Chorus | Distortion | Filter | Phaser | BitCrusher | PingPongDelay;
+
+/**
+ * Union type for all synths used in genre engine
+ */
+type GenreSynth = PolySynth | FMSynth | AMSynth | NoiseSynth | MetalSynth | Sampler;
+
 export class MusicalGenreEngine {
   private currentGenre: MusicalGenre;
   private settings: SonigraphSettings | undefined;
@@ -64,13 +75,13 @@ export class MusicalGenreEngine {
   private isPlaying = false;
 
   // Synthesis components
-  private primarySynth: PolySynth | FMSynth | AMSynth | NoiseSynth | MetalSynth | Sampler | null = null;
-  private supportingSynths: Map<string, unknown> = new Map();
+  private primarySynth: GenreSynth | null = null;
+  private supportingSynths: Map<string, GenreSynth> = new Map();
   private synthVolume: Volume;
 
   // Effects chain
-  private effects: Map<string, unknown> = new Map();
-  private effectsChain: unknown[] = [];
+  private effects: Map<string, GenreEffectNode> = new Map();
+  private effectsChain: GenreEffectNode[] = [];
 
   // Modulation
   private lfos: Map<string, LFO> = new Map();
@@ -275,8 +286,11 @@ export class MusicalGenreEngine {
     try {
       // Update filter cutoff
       if (params.filterCutoff && this.effects.has('filter')) {
-        const filter = this.effects.get('filter');
-        filter.frequency.rampTo(params.filterCutoff, 1);
+        const filterNode = this.effects.get('filter');
+        if (filterNode) {
+          const filter = filterNode as Filter;
+          filter.frequency.rampTo(params.filterCutoff, 1);
+        }
       }
       
       // Update intensity (affects volume and brightness)
@@ -307,7 +321,7 @@ export class MusicalGenreEngine {
   /**
    * Connect to audio destination
    */
-  connect(destination: unknown): void {
+  connect(destination: InputNode): void {
     this.synthVolume.connect(destination);
   }
   
@@ -375,7 +389,7 @@ export class MusicalGenreEngine {
     }
   }
   
-  private createSynth(type: string, params: GenreParameters): unknown {
+  private createSynth(type: string, params: GenreParameters): GenreSynth {
     switch (type) {
       case 'fm':
         return new FMSynth({
@@ -458,8 +472,8 @@ export class MusicalGenreEngine {
     const params = genreConfig.parameters;
 
     for (const effectType of genreConfig.effectChain) {
-      let effect: unknown;
-      
+      let effect: GenreEffectNode | null = null;
+
       switch (effectType) {
         case 'reverb':
           effect = new Reverb(2);
@@ -525,19 +539,21 @@ export class MusicalGenreEngine {
   }
   
   private connectAudioChain(): void {
-    let currentNode: unknown = this.primarySynth;
-    
+    let currentNode: InputNode | null = this.primarySynth;
+
     // Connect supporting synths to a gain node first
     // (Simplified - would need proper mixing in full implementation)
-    
+
     // Connect through effects chain
-    for (const effect of this.effectsChain) {
-      void currentNode.connect(effect);
-      currentNode = effect;
+    if (currentNode) {
+      for (const effect of this.effectsChain) {
+        currentNode.connect(effect);
+        currentNode = effect;
+      }
+
+      // Connect to volume control
+      currentNode.connect(this.synthVolume);
     }
-    
-    // Connect to volume control
-    void currentNode.connect(this.synthVolume);
   }
   
   private loadGenreSamples(categories: string[]): void {
@@ -1323,10 +1339,13 @@ export class MusicalGenreEngine {
   private updateBrightness(intensity: number): void {
     // Update filter cutoff to affect brightness
     if (this.effects.has('filter')) {
-      const filter = this.effects.get('filter');
-      const baseCutoff = this.getGenreConfiguration().parameters.filterCutoff;
-      const targetCutoff = baseCutoff + (intensity * 800);
-      filter.frequency.rampTo(targetCutoff, 2);
+      const filterNode = this.effects.get('filter');
+      if (filterNode) {
+        const filter = filterNode as Filter;
+        const baseCutoff = this.getGenreConfiguration().parameters.filterCutoff;
+        const targetCutoff = baseCutoff + (intensity * 800);
+        filter.frequency.rampTo(targetCutoff, 2);
+      }
     }
   }
   
