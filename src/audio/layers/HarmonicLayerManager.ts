@@ -23,7 +23,8 @@ import {
   ClusterInfo,
   MusicalScale,
   ContinuousLayerError,
-  LayerState
+  LayerState,
+  MusicalGenre
 } from './types';
 import { SonigraphSettings } from '../../utils/constants';
 import { getLogger } from '../../logging';
@@ -104,7 +105,6 @@ export class HarmonicLayerManager {
     
     // Create synthesis components
     this.chordSynth = new PolySynth(FMSynth, {
-      maxPolyphony: 8, // Limit polyphony to prevent voice overflow
       envelope: {
         attack: 2,
         decay: 1,
@@ -115,9 +115,9 @@ export class HarmonicLayerManager {
         type: 'sine'
       }
     });
+    this.chordSynth.maxPolyphony = 8; // Limit polyphony to prevent voice overflow
     
     this.padSynth = new PolySynth(AMSynth, {
-      maxPolyphony: 8, // Limit polyphony to prevent voice overflow
       envelope: {
         attack: 3,
         decay: 2,
@@ -128,7 +128,8 @@ export class HarmonicLayerManager {
         type: 'sawtooth'
       }
     });
-    
+    this.padSynth.maxPolyphony = 8; // Limit polyphony to prevent voice overflow
+
     this.masterVolume = new Volume(-25);
     this.filter = new Filter(1200, 'lowpass');
     this.reverb = new Reverb(3);
@@ -335,15 +336,15 @@ export class HarmonicLayerManager {
   /**
    * Get current state
    */
-  getState() {
+  getState(): LayerState {
     return {
       isPlaying: this.isPlaying,
-      enabled: this.config.enabled,
-      currentChord: this.harmonicState.currentChord?.root,
-      scale: `${this.currentScale.key} ${this.currentScale.name}`,
+      currentGenre: 'ambient' as MusicalGenre, // HarmonicLayer is primarily ambient
+      intensity: this.config.chordComplexity / 10, // Use complexity as intensity proxy
+      lastParameterUpdate: Date.now(),
       activeVoices: this.activeVoices,
       cpuUsage: this.cpuUsage,
-      clusterInfluence: this.config.clusterInfluence
+      memoryUsage: 0 // Not tracking memory in this layer
     };
   }
   

@@ -23,7 +23,8 @@ import {
   RhythmicLayerConfig,
   ActivityMetrics,
   ContinuousLayerError,
-  LayerState
+  LayerState,
+  MusicalGenre
 } from './types';
 import { SonigraphSettings } from '../../utils/constants';
 import { getLogger } from '../../logging';
@@ -109,7 +110,6 @@ export class RhythmicLayerManager {
     });
     
     this.arpSynth = new PolySynth(FMSynth, {
-      maxPolyphony: 8, // Limit polyphony to prevent voice overflow
       envelope: {
         attack: 0.01,
         decay: 0.1,
@@ -117,6 +117,7 @@ export class RhythmicLayerManager {
         release: 0.3
       }
     });
+    this.arpSynth.maxPolyphony = 8; // Limit polyphony to prevent voice overflow
     
     this.masterVolume = new Volume(-30); // Start quiet
     this.filter = new Filter(800, 'lowpass');
@@ -309,14 +310,15 @@ export class RhythmicLayerManager {
   /**
    * Get current state
    */
-  getState() {
+  getState(): LayerState {
     return {
       isPlaying: this.isPlaying,
-      enabled: this.config.enabled,
-      tempo: getTransport().bpm.value,
+      currentGenre: 'electronic' as MusicalGenre, // RhythmicLayer is primarily electronic
+      intensity: this.config.percussionIntensity,
+      lastParameterUpdate: Date.now(),
       activeVoices: this.activeVoices,
       cpuUsage: this.cpuUsage,
-      activePatterns: Array.from(this.activePatterns)
+      memoryUsage: 0 // Not tracking memory in this layer
     };
   }
   
