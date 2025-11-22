@@ -19,6 +19,7 @@ export interface InstrumentConfig {
     requiresHighQuality?: boolean; // Only available when high-quality samples are enabled
     useHighQuality?: boolean; // Whether to use high-quality samples by default (false = synthesis, true = recording)
     octaveOffset?: number; // Octave transpose offset (e.g., -1 for bass instruments, +1 for piccolo)
+    [key: string]: unknown; // Index signature for additional properties
 }
 
 export interface InstrumentCollection {

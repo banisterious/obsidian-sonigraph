@@ -9,7 +9,7 @@ import { ElectronicEngine } from './electronic-engine';
 import { RhythmicPercussionEngine } from './percussion';
 import { VoiceManager } from './voice-management';
 import { EffectBusManager } from './effects';
-import { EffectType, SendBus, ReturnBus } from './effects/types';
+import { EffectType, SendBus, ReturnBus, ToneEffectNode } from './effects/types';
 import { InstrumentConfigLoader } from './configs/InstrumentConfigLoader';
 import { getLogger, LoggerFactory } from '../logging';
 import { PlaybackEventEmitter, PlaybackEventType, PlaybackEventData, PlaybackErrorData } from './playback-events';
@@ -71,7 +71,7 @@ interface SynthWithVoiceTracking {
 export class AudioEngine {
 	private instruments: Map<string, PolySynth | Sampler> = new Map();
 	private instrumentVolumes: Map<string, Volume> = new Map();
-	private instrumentEffects: Map<string, Map<string, unknown>> = new Map(); // Per-instrument effects
+	private instrumentEffects: Map<string, Map<string, ToneEffectNode>> = new Map(); // Per-instrument effects
 	private isInitialized = false;
 	private isPlaying = false;
 	private isMinimalMode = false; // Issue #010 Fix: Track if we're in minimal initialization mode
@@ -589,7 +589,7 @@ export class AudioEngine {
 			this.instrumentVolumes.set(instrumentName, volume);
 			
 			// Create effects with settings from constants or defaults
-			const effectMap = new Map<string, unknown>();
+			const effectMap = new Map<string, ToneEffectNode>();
 			const effectSettings = instrumentSettings?.effects ?? DEFAULT_SETTINGS.instruments[instrumentName as keyof typeof DEFAULT_SETTINGS.instruments]?.effects;
 			
 			// Create reverb for this instrument
@@ -738,7 +738,7 @@ export class AudioEngine {
 		});
 	}
 
-	private async createEffectInstance(node: EffectNode): Promise<unknown> {
+	private async createEffectInstance(node: EffectNode): Promise<ToneAudioNode | null> {
 		interface EffectSettings {
 			params: Record<string, unknown>;
 		}
@@ -1020,14 +1020,15 @@ export class AudioEngine {
 						resolve(samplerInstance);
 					},
 					onerror: (error: unknown) => {
+						const errorMessage = error instanceof Error ? error.message : String(error);
 						logger.error('samples', `${instrumentName} samples failed to load`, {
-							error: error?.message || error,
+							error: errorMessage,
 							config: {
 								baseUrl: config.baseUrl,
 								sampleCount: Object.keys(config.urls || {}).length
 							}
 						});
-						reject(new Error(`Sample loading failed: ${error?.message || error}`));
+						reject(new Error(`Sample loading failed: ${errorMessage}`));
 					}
 				});
 				
@@ -1395,7 +1396,14 @@ export class AudioEngine {
 		const maxVoices = this.getInstrumentPolyphonyLimit(whaleType);
 
 		// Define whale-specific synthesis characteristics based on species
-		let config: unknown;
+		let config: {
+			harmonicity?: number;
+			modulationIndex?: number;
+			oscillator?: { type: 'sine' | 'square' | 'triangle' | 'sawtooth' | 'pulse' };
+			modulation?: { type: 'sine' | 'square' | 'triangle' | 'sawtooth' | 'pulse' };
+			envelope?: { attack: number; decay: number; sustain: number; release: number };
+			modulationEnvelope?: { attack: number; decay: number; sustain: number; release: number };
+		};
 		
 		switch (whaleType) {
 			case 'whaleBlue':
@@ -1506,11 +1514,8 @@ export class AudioEngine {
 				break;
 		}
 
-		const whaleSynth = new PolySynth({
-			voice: FMSynth,
-			maxPolyphony: maxVoices,
-			options: config
-		});
+		const whaleSynth = new PolySynth(FMSynth, config);
+		whaleSynth.maxPolyphony = maxVoices;
 
 		logger.debug('environmental', `Created ${whaleType} synthesizer with specific characteristics`, {
 			whaleType,
@@ -2742,8 +2747,9 @@ export class AudioEngine {
 	 */
 	updateReverbSettings(settings: { decay?: number; preDelay?: number; wet?: number }, instrument: string): void {
 		const instrumentEffects = this.instrumentEffects.get(instrument);
-		const reverb = instrumentEffects?.get('reverb');
-		if (reverb) {
+		const reverbNode = instrumentEffects?.get('reverb');
+		if (reverbNode) {
+			const reverb = reverbNode as Reverb;
 			if (settings.decay !== undefined) {
 				reverb.decay = settings.decay;
 			}
@@ -2764,8 +2770,9 @@ export class AudioEngine {
 	 */
 	updateChorusSettings(settings: { frequency?: number; delayTime?: number; depth?: number; feedback?: number; spread?: number }, instrument: string): void {
 		const instrumentEffects = this.instrumentEffects.get(instrument);
-		const chorus = instrumentEffects?.get('chorus');
-		if (chorus) {
+		const chorusNode = instrumentEffects?.get('chorus');
+		if (chorusNode) {
+			const chorus = chorusNode as Chorus;
 			if (settings.frequency !== undefined) {
 				chorus.frequency.value = settings.frequency;
 			}
@@ -2792,8 +2799,9 @@ export class AudioEngine {
 	 */
 	updateFilterSettings(settings: { frequency?: number; Q?: number; type?: 'lowpass' | 'highpass' | 'bandpass' }, instrument: string): void {
 		const instrumentEffects = this.instrumentEffects.get(instrument);
-		const filter = instrumentEffects?.get('filter');
-		if (filter) {
+		const filterNode = instrumentEffects?.get('filter');
+		if (filterNode) {
+			const filter = filterNode as Filter;
 			if (settings.frequency !== undefined) {
 				filter.frequency.value = settings.frequency;
 			}
@@ -2814,8 +2822,9 @@ export class AudioEngine {
 	 */
 	setReverbEnabled(enabled: boolean, instrument: string): void {
 		const instrumentEffects = this.instrumentEffects.get(instrument);
-		const reverb = instrumentEffects?.get('reverb');
-		if (reverb) {
+		const reverbNode = instrumentEffects?.get('reverb');
+		if (reverbNode) {
+			const reverb = reverbNode as Reverb;
 			const instrumentSettings = (this.settings.instruments as Record<string, unknown>)[instrument] as Record<string, unknown>;
 			const effects = instrumentSettings?.effects as Record<string, unknown>;
 			const reverbSettings = effects?.reverb as Record<string, unknown>;
@@ -2833,8 +2842,9 @@ export class AudioEngine {
 	 */
 	setChorusEnabled(enabled: boolean, instrument: string): void {
 		const instrumentEffects = this.instrumentEffects.get(instrument);
-		const chorus = instrumentEffects?.get('chorus');
-		if (chorus) {
+		const chorusNode = instrumentEffects?.get('chorus');
+		if (chorusNode) {
+			const chorus = chorusNode as Chorus;
 			chorus.wet.value = enabled ? 1 : 0; // Full wet when enabled, dry when disabled
 			logger.debug('effects', `Chorus ${enabled ? 'enabled' : 'disabled'} for ${instrument}`);
 		} else {
@@ -2847,8 +2857,9 @@ export class AudioEngine {
 	 */
 	setFilterEnabled(enabled: boolean, instrument: string): void {
 		const instrumentEffects = this.instrumentEffects.get(instrument);
-		const filter = instrumentEffects?.get('filter');
-		if (filter) {
+		const filterNode = instrumentEffects?.get('filter');
+		if (filterNode) {
+			const filter = filterNode as Filter;
 			// For filters, we can't use wet/dry, so we bypass by setting frequency very high or very low
 			if (enabled) {
 				const instrumentSettings = this.settings.instruments[instrument as keyof typeof this.settings.instruments];
@@ -2870,14 +2881,14 @@ export class AudioEngine {
 		const states: { [instrument: string]: { reverb: boolean; chorus: boolean; filter: boolean } } = {};
 		
 		this.instrumentEffects.forEach((effectMap, instrumentName) => {
-			const reverb = effectMap.get('reverb');
-			const chorus = effectMap.get('chorus');
-			const filter = effectMap.get('filter');
+			const reverbNode = effectMap.get('reverb');
+			const chorusNode = effectMap.get('chorus');
+			const filterNode = effectMap.get('filter');
 
 			states[instrumentName] = {
-				reverb: reverb ? reverb.wet.value > 0 : false,
-				chorus: chorus ? chorus.wet.value > 0 : false,
-				filter: filter ? filter.frequency.value < 15000 : false // Consider enabled if cutoff is reasonable
+				reverb: reverbNode ? (reverbNode as Reverb).wet.value > 0 : false,
+				chorus: chorusNode ? (chorusNode as Chorus).wet.value > 0 : false,
+				filter: filterNode ? ((filterNode as Filter).frequency.value as number) < 15000 : false // Consider enabled if cutoff is reasonable
 			};
 		});
 
@@ -5076,22 +5087,28 @@ export class AudioEngine {
 
 			// Apply parameter change based on effect type
 			switch (effectType) {
-				case 'reverb':
-					if (paramName === 'decay') effect.decay = value;
-					else if (paramName === 'preDelay') effect.preDelay = value;
-					else if (paramName === 'wet') effect.wet.value = value;
+				case 'reverb': {
+					const reverb = effect as Reverb;
+					if (paramName === 'decay') reverb.decay = value;
+					else if (paramName === 'preDelay') reverb.preDelay = value;
+					else if (paramName === 'wet') reverb.wet.value = value;
 					break;
-				case 'chorus':
-					if (paramName === 'frequency') effect.frequency.value = value;
-					else if (paramName === 'depth') effect.depth.value = value;
-					else if (paramName === 'delayTime') effect.delayTime.value = value;
-					else if (paramName === 'feedback') effect.feedback.value = value;
+				}
+				case 'chorus': {
+					const chorus = effect as Chorus;
+					if (paramName === 'frequency') chorus.frequency.value = value;
+					else if (paramName === 'depth') chorus.depth = value;
+					else if (paramName === 'delayTime') chorus.delayTime = value;
+					else if (paramName === 'feedback') chorus.feedback.value = value;
 					break;
-				case 'filter':
-					if (paramName === 'frequency') effect.frequency.value = value;
-					else if (paramName === 'Q') effect.Q.value = value;
-					else if (paramName === 'type') effect.type = value;
+				}
+				case 'filter': {
+					const filter = effect as Filter;
+					if (paramName === 'frequency') filter.frequency.value = value;
+					else if (paramName === 'Q') filter.Q.value = value;
+					else if (paramName === 'type') filter.type = value as unknown as 'lowpass' | 'highpass' | 'bandpass';
 					break;
+				}
 			}
 		} catch (error) {
 			void logger.warn('audio-engine', 'Failed to apply immediate parameter change:', error);
@@ -5140,27 +5157,34 @@ export class AudioEngine {
 			if (!effect) return;
 
 			// Bypass by setting wet to 0 or restoring original wet value
-			if (effectType === 'reverb' || effectType === 'chorus') {
+			if (effectType === 'reverb') {
+				const reverb = effect as Reverb;
 				if (bypassed) {
-					effect.wet.value = 0;
+					reverb.wet.value = 0;
 				} else {
 					// Restore from settings
 					const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
-					if (instrumentSettings?.effects[effectType as keyof typeof instrumentSettings.effects]) {
-						const effectSettings = instrumentSettings.effects[effectType as keyof typeof instrumentSettings.effects];
-						if ('wet' in effectSettings.params) {
-							effect.wet.value = effectSettings.params.wet;
-						}
+					if (instrumentSettings?.effects.reverb) {
+						reverb.wet.value = instrumentSettings.effects.reverb.params.wet;
 					}
 				}
+			} else if (effectType === 'chorus') {
+				const chorus = effect as Chorus;
+				if (bypassed) {
+					chorus.wet.value = 0;
+				} else {
+					// Restore wet value (chorus doesn't store wet in params, use default)
+					chorus.wet.value = 1.0;
+				}
 			} else if (effectType === 'filter') {
+				const filter = effect as Filter;
 				// For filter, bypass by setting frequency very high or restoring
 				if (bypassed) {
-					effect.frequency.value = 20000; // Effectively no filtering
+					filter.frequency.value = 20000; // Effectively no filtering
 				} else {
 					const instrumentSettings = this.settings.instruments[instrumentName as keyof SonigraphSettings['instruments']];
 					if (instrumentSettings?.effects.filter) {
-						effect.frequency.value = instrumentSettings.effects.filter.params.frequency;
+						filter.frequency.value = instrumentSettings.effects.filter.params.frequency;
 					}
 				}
 			}
@@ -5207,8 +5231,8 @@ export class AudioEngine {
 				const effectMap = this.instrumentEffects.get(instrumentName);
 				if (effectMap) {
 					effectMap.forEach((effect, effectType) => {
-						if (effectType === 'reverb' && effect.wet.value > 0) estimatedCPU += 10;
-						if (effectType === 'chorus' && effect.wet.value > 0) estimatedCPU += 5;
+						if (effectType === 'reverb' && (effect as Reverb).wet.value > 0) estimatedCPU += 10;
+						if (effectType === 'chorus' && (effect as Chorus).wet.value > 0) estimatedCPU += 5;
 						if (effectType === 'filter') estimatedCPU += 2;
 					});
 				}
