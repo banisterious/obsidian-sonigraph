@@ -28,6 +28,7 @@ export interface MusicalMapping {
 	velocity: number;
 	timing: number;
 	instrument?: string;
+	nodeTitle?: string;
 	hasBeenTriggered?: boolean;
 	metadata?: {
 		isChord?: boolean;
@@ -37,7 +38,7 @@ export interface MusicalMapping {
 			instrument?: string;
 		}>;
 		chordSize?: number;
-		[key: string]: Record<string, unknown>; // Allow additional metadata
+		[key: string]: unknown; // Allow additional metadata
 	};
 }
 
@@ -150,6 +151,7 @@ export interface AudioMappingConfig {
 			harmonic: boolean;
 			rhythmic: boolean;
 			ambient: boolean;
+			[key: string]: boolean;
 		};
 		connectionChords: boolean;
 		contextualHarmony: boolean;

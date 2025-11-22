@@ -1,5 +1,5 @@
 // Import Tone.js with ESM-compatible approach
-import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, Frequency, ToneAudioNode } from 'tone';
+import { start, Volume, PolySynth, FMSynth, AMSynth, Sampler, Player, getContext, getTransport, Reverb, Chorus, Filter, Delay, Distortion, Compressor, EQ3, Frequency, ToneAudioNode } from 'tone';
 import type { SamplerOptions } from 'tone';
 import { App } from 'obsidian';
 import { MusicalMapping } from '../graph/types';
@@ -92,7 +92,7 @@ export class AudioEngine {
 	private performanceMetrics: Map<string, { cpuUsage: number; latency: number }> = new Map();
 	private isPreviewMode: boolean = false;
 	private previewInstrument: string | null = null;
-	private previewNote: MusicalMapping | null = null;
+	private previewNote: unknown = null;
 
 	// Performance optimization properties - moved to VoiceManager
 	// Effect routing properties - moved to EffectBusManager
@@ -258,19 +258,19 @@ export class AudioEngine {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
-	get masterEQ(): unknown {
+	get masterEQ(): EQ3 | null {
 		return null; // Legacy property access
 	}
 
-	set masterEQ(value: unknown) {
+	set masterEQ(value: EQ3 | null) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
-	get masterCompressor(): unknown {
+	get masterCompressor(): Compressor | null {
 		return null; // Legacy property access
 	}
 
-	set masterCompressor(value: unknown) {
+	set masterCompressor(value: Compressor | null) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
@@ -3617,7 +3617,7 @@ export class AudioEngine {
 			// Tone.js Sampler works better with note names than raw Hz values
 			let playbackValue: number | string = detunedFrequency;
 			if (synth.constructor.name === 'Sampler') {
-				const freq = new Frequency(detunedFrequency, 'hz');
+				const freq = new (Frequency as unknown as new (val: number, units: string) => typeof Frequency)(detunedFrequency, 'hz');
 				playbackValue = freq.toNote(); // Convert to note name like "G3"
 			}
 
@@ -3719,7 +3719,7 @@ export class AudioEngine {
 				hasNodeId: !!nodeId,
 				hasApp: !!this.app
 			});
-			void this.playBufferedNote(mapping, elapsedTime);
+			void this.playBufferedNote({ ...mapping, nodeId: nodeId || '', nodeTitle: nodeTitle || '', timing: 0 }, elapsedTime);
 			return;
 		}
 
@@ -3729,7 +3729,7 @@ export class AudioEngine {
 		}
 
 		const bucket = this.temporalChordBuckets.get(bucketKey);
-		bucket.push({ mapping: { ...mapping, nodeId, nodeTitle }, nodeId, timestamp: Date.now() });
+		bucket.push({ mapping: { ...mapping, nodeId: nodeId || '', nodeTitle: nodeTitle || '', timing: 0 }, nodeId, timestamp: Date.now() });
 
 		logger.debug('chord-fusion', 'Note added to temporal bucket', {
 			pitch: mapping.pitch,
@@ -3776,7 +3776,7 @@ export class AudioEngine {
 
 		// Add note to buffer with timestamp
 		this.chordBuffer.push({
-			mapping: { ...mapping, nodeId, nodeTitle },
+			mapping: { ...mapping, nodeId: nodeId || '', nodeTitle: nodeTitle || '', timing: 0 },
 			timestamp: now,
 			elapsedTime,
 			nodeId
