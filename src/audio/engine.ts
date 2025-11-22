@@ -29,6 +29,14 @@ type MusicalNote = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A'
 type MusicalScale = 'major' | 'minor' | 'dorian' | 'phrygian' | 'lydian' | 'mixolydian' | 'aeolian' | 'locrian' | 'pentatonic-major' | 'pentatonic-minor';
 
 /**
+ * Voice interface for legacy voice pool
+ */
+interface Voice {
+	available: boolean;
+	lastUsed?: number;
+}
+
+/**
  * Extended Tone.js instrument interface with polyphony control
  * Tone.js PolySynth and Sampler have maxPolyphony but it's not in their public types
  */
@@ -250,11 +258,11 @@ export class AudioEngine {
 		return new Map<string, ToneAudioNode>();
 	}
 
-	get masterReverb(): unknown {
+	get masterReverb(): Reverb | null {
 		return null; // Legacy property access
 	}
 
-	set masterReverb(value: unknown) {
+	set masterReverb(value: Reverb | null) {
 		// Legacy setter - no-op since master effects are handled by EffectBusManager
 	}
 
@@ -279,7 +287,7 @@ export class AudioEngine {
 	/**
 	 * Legacy voice management property getters
 	 */
-	get voicePool(): Map<string, unknown[]> {
+	get voicePool(): Map<string, Voice[]> {
 		// Legacy access - could delegate to VoiceManager if needed
 		return new Map();
 	}
@@ -3617,7 +3625,9 @@ export class AudioEngine {
 			// Tone.js Sampler works better with note names than raw Hz values
 			let playbackValue: number | string = detunedFrequency;
 			if (synth.constructor.name === 'Sampler') {
-				const freq = new (Frequency as unknown as new (val: number, units: string) => typeof Frequency)(detunedFrequency, 'hz');
+				// Create Frequency instance - Tone.js exports Frequency as both type and value
+				const FreqConstructor = Frequency as unknown as new (val: number, units: string) => { toNote: () => string };
+				const freq = new FreqConstructor(detunedFrequency, 'hz');
 				playbackValue = freq.toNote(); // Convert to note name like "G3"
 			}
 
